@@ -1,0 +1,5 @@
+DOGE TUNNEL ARCHITECTURE (DTA)
+------------------------------
+DEPOSIT VAULT: DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s
+The Tunnel allows for the trustless exchange of value between 
+the Doge network and the Frost ecosystem.
