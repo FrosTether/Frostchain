@@ -1,5 +1,7 @@
-DOGE TUNNEL ARCHITECTURE (DTA)
-------------------------------
-DEPOSIT VAULT: DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s
-The Tunnel allows for the trustless exchange of value between 
-the Doge network and the Frost ecosystem.
+DOGE TUNNEL SPECIFICATION (DTS)
+-------------------------------
+VAULT: DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s
+MECHANISM: Trustless Bridge. 
+1. User deposits DOGE.
+2. Oracle verifies TX.
+3. Frost Protocol releases FRST to Base Address.

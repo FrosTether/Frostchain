@@ -1,5 +1,5 @@
-FINUX OS SPECIFICATION // CODENAME: ICELAND
--------------------------------------------
-Finux (FrostOS) is a custom mobile-first operating system designed for 
-decentralized compilation and secure asset management. 
-Target Release: Pi Day 2026.
+FINUX OS: CODENAME ICELAND
+--------------------------
+A mobile-first, decentralized compilation environment.
+Designed to run on low-power ARM devices (Pixel/Android).
+Integrates directly with the Frost Protocol for asset management.
