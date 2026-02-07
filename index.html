@@ -1,17 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>FROST PROTOCOL // INDEX</title>
-    <style>body{background:#050505;color:#00e5ff;font-family:monospace;padding:40px;}a{color:#fff;display:block;margin:10px 0;text-decoration:none;border:1px solid #333;padding:10px;}a:hover{background:#00e5ff;color:#000;}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FROST PROTOCOL // HUB</title>
+    <style>
+        body { background: #050505; color: #00e5ff; font-family: 'Courier New', monospace; padding: 20px; max-width: 800px; margin: auto; }
+        h1 { border-bottom: 2px solid #00e5ff; padding-bottom: 10px; letter-spacing: 2px; }
+        h3 { color: #fff; margin-top: 40px; border-left: 4px solid #00e5ff; padding-left: 15px; text-transform: uppercase; }
+        
+        /* LINK STYLING */
+        a.link-box { 
+            display: flex; justify-content: space-between; align-items: center;
+            text-decoration: none; color: #aaa; background: #111; 
+            padding: 15px; margin-bottom: 10px; border: 1px solid #222; 
+            transition: all 0.2s;
+        }
+        a.link-box:hover { background: #00e5ff; color: #000; border-color: #fff; cursor: pointer; }
+        
+        .tag { font-size: 10px; background: #222; color: #fff; padding: 2px 6px; border-radius: 2px; }
+        a.link-box:hover .tag { background: #000; color: #00e5ff; }
+
+        .footer { margin-top: 60px; font-size: 10px; color: #444; text-align: center; border-top: 1px solid #222; padding-top: 20px; }
+    </style>
 </head>
 <body>
-    <h1>FROST PROTOCOL // HUB</h1>
+
+    <h1>FROST PROTOCOL // 13.37%</h1>
+    <p>Decentralized Asset Layer & Finux Operating System.</p>
+    
     <h3>// PLAY-TO-EARN ARCADE</h3>
-    <a href="arcade.html">🎮 ENTER ARCADE (Ms. Frostman)</a>
-    <a href="wallet.html">💎 FCN ASSET WALLET (Withdraw)</a>
-    <h3>// INFRASTRUCTURE</h3>
-    <a href="tunnel.html">>> DOGE TUNNEL (Bridge)</a>
-    <a href="whitepaper_v1.txt">📄 Whitepapers</a>
-    <div style="margin-top:40px;font-size:10px;color:#666;">CONTACT: voluntaryistj@gmail.com</div>
+    <a href="arcade.html" class="link-box">
+        <span>🎮 MS. FROSTMAN (Play)</span>
+        <span class="tag">EARN FCN</span>
+    </a>
+    <a href="wallet.html" class="link-box">
+        <span>💎 FCN ASSET WALLET (Cash Out)</span>
+        <span class="tag">WEB3 LINKED</span>
+    </a>
+
+    <h3>// NETWORK BRIDGES</h3>
+    <a href="tunnel.html" class="link-box">
+        <span>🚇 DOGE TUNNEL (Bridge)</span>
+        <span class="tag">ACTIVE</span>
+    </a>
+    <a href="miner.html" class="link-box">
+        <span>⛏️ LEGACY MINER</span>
+        <span class="tag">V1.0</span>
+    </a>
+
+    <h3>// CLASSIFIED DOCS</h3>
+    <a href="whitepaper_v1.txt" class="link-box">📄 Whitepaper V1 (The Standard)</a>
+    <a href="finux_os.txt" class="link-box">📄 Finux OS Specification</a>
+    <a href="governance_34.txt" class="link-box">📄 34% Governance Model</a>
+
+    <div class="footer">
+        STATUS: GHOST_MODE // CONTACT: voluntaryistj@gmail.com <br>
+        CONTRACT: 0x1d5a73e89d2b2ffc4ad1c84aba21af5ca3e331c9
+    </div>
+
 </body>
 </html>
