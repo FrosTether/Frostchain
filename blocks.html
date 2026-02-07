@@ -1,0 +1,150 @@
+<!DOCTYPE html><html><head><title>FrosTether | Genesis</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="theme.css">
+<script src="ledger.js"></script>
+</head>
+<body onload="Game.init()">
+    <div class="hud">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="color:var(--gold); font-weight:900;">GENESIS_BETA // RC337</span>
+            <span id="countdown" style="color:var(--neon-blue); font-size:10px; font-weight:bold;">T-MINUS: --:--:--</span>
+        </div>
+
+        <div class="pool-bar">
+            <div style="display:flex; justify-content:space-between; font-size:10px;">
+                <span>ROLLBACK POOL CAP:</span>
+                <span id="pool-val" style="color:var(--neon-green);">13.37 FTC</span>
+            </div>
+            <div class="progress-bg"><div id="pool-fill" style="width:100%;"></div></div>
+            <div style="display:flex; justify-content:space-between; font-size:9px; color:#aaa; margin-top:2px;">
+                <span>NETWORK: <span style="color:var(--gold);">ROLLBACK MODE</span></span>
+                <span style="color:var(--neon-blue);">REWARD: 2x SHUFFLE</span>
+            </div>
+        </div>
+        
+        <div id="slot-machine" style="display:none;" class="pf-container">
+            <div style="text-align:center; color:var(--gold); font-weight:bold;">🎰 JOEY BONES [GENESIS]</div>
+            <div class="slot-row"><div id="s1">💀</div><div id="s2">💀</div><div id="s3">💀</div></div>
+            <button class="btn-triad" style="width:100%; color:var(--gold);" onclick="Game.spin()">SPIN (10 FNR)</button>
+        </div>
+        
+        <div class="triad-container">
+            <button class="btn-triad" style="color:var(--grc);" onclick="Game.mineManual()">⛏️ MINE FNR</button>
+            <button class="btn-triad" style="color:var(--gold);" onclick="Game.toggleSlots()">🎰 SLOTS</button>
+            <button class="btn-triad" style="color:var(--neon-blue);" onclick="alert('LAUNCH DATE: FEB 24')">📅 FEB 24</button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; font-size:12px; margin-top:5px;">
+            <span>WALLET: <span id="ftc">0</span> FTC</span>
+            <span style="color:var(--gold);">PENDING: <span id="pending">0</span> FTC</span>
+        </div>
+    </div>
+    
+    <div id="game-view"><canvas id="c"></canvas></div>
+    <div class="btn-ignite" onclick="Game.ignite()">❤️‍🔥</div>
+    <div id="tray"></div>
+
+    <script>
+    const SHAPES = [ [[1]], [[1,1]], [[1,1,1]], [[2,2],[2,2]], [[4,4,4,4]] ];
+    const Game = {
+        grid: Array(9).fill().map(()=>Array(9).fill(0)),
+        init() {
+            this.l = Ledger.init();
+            this.cvs = document.getElementById('c'); this.ctx = this.cvs.getContext('2d');
+            this.resize(); this.spawn(); this.loop(); this.update();
+            setInterval(() => this.updateCountdown(), 1000);
+            window.addEventListener('pointermove', e => this.move(e));
+            window.addEventListener('pointerup', e => this.drop(e));
+        },
+        updateCountdown() {
+            let diff = this.l.launch_date - Date.now();
+            let d = Math.floor(diff / 86400000);
+            let h = Math.floor((diff % 86400000) / 3600000);
+            let m = Math.floor((diff % 3600000) / 60000);
+            let s = Math.floor((diff % 60000) / 1000);
+            document.getElementById('countdown').innerText = "T-MINUS: "+d+"d "+h+"h "+m+"m "+s+"s";
+        },
+        toggleSlots() { let el = document.getElementById('slot-machine'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; },
+        spin() {
+            let res = Ledger.spinSlots(10);
+            if(res.hash === 'INS_FUNDS') return alert("NEED 10 FNR");
+            document.getElementById('s1').innerText = res.symbols[0];
+            document.getElementById('s2').innerText = res.symbols[1];
+            document.getElementById('s3').innerText = res.symbols[2];
+            this.update();
+        },
+        spawn() {
+            const tray = document.getElementById('tray'); tray.innerHTML=''; this.pieces=[];
+            for(let i=0; i<3; i++){
+                let s = SHAPES[Math.floor(Math.random()*SHAPES.length)];
+                let p = {s, used:false}; this.pieces.push(p);
+                let d = document.createElement('div'); d.className='p-box';
+                let c = document.createElement('canvas'); c.width=90; c.height=90;
+                this.drawPiece(c.getContext('2d'), s, 90, 90, 22);
+                c.addEventListener('pointerdown', e => { e.preventDefault(); if(p.used) return; this.grab(e,p,c); });
+                d.appendChild(c); tray.appendChild(d);
+            }
+            this.update();
+        },
+        grab(e,p,el){ this.dragged={p,el}; el.style.position='fixed'; el.classList.add('drag-active'); this.move(e); },
+        move(e){
+            if(!this.dragged) return;
+            this.dragged.el.style.left = (e.clientX-45)+'px';
+            this.dragged.el.style.top = (e.clientY-190)+'px';
+            let r = this.cvs.getBoundingClientRect();
+            this.preview = { x: Math.floor((e.clientX-r.left)/this.sz), y: Math.floor((e.clientY-r.top-140)/this.sz) };
+        },
+        drop(e){
+            if(!this.dragged) return;
+            let {p,el}=this.dragged; el.classList.remove('drag-active');
+            if(this.preview && this.canPlace(p.s, this.preview.x, this.preview.y)) {
+                this.place(p.s, this.preview.x, this.preview.y);
+                p.used=true; el.style.display='none';
+                this.check(); if(this.pieces.every(x=>x.used)) this.spawn();
+            } else { el.style.position='static'; }
+            this.dragged = null; this.preview = null;
+        },
+        canPlace(s,gx,gy){
+            for(let y=0; y<s.length; y++) for(let x=0; x<s[y].length; x++)
+                if(s[y][x] && (gy+y>=9 || gx+x>=9 || gx+x<0 || gy+y<0 || this.grid[gy+y][gx+x])) return false;
+            return true;
+        },
+        place(s,gx,gy){ for(let y=0; y<s.length; y++) for(let x=0; x<s[y].length; x++) if(s[y][x]) this.grid[gy+y][gx+x]=1; },
+        check() {
+            let cleared = 0;
+            for(let i=0; i<9; i++){
+                if(this.grid[i].every(x=>x)) { this.grid[i].fill(0); cleared++; }
+                if(this.grid.every(r=>r[i])) { this.grid.forEach(r=>r[i]=0); cleared++; }
+            }
+            if(cleared){ Ledger.mine(cleared * 0.5); this.update(); }
+        },
+        ignite() { this.grid = Array(9).fill().map(()=>Array(9).fill(0)); this.spawn(); },
+        drawPiece(ctx, s, w, h, sz) {
+            ctx.fillStyle = '#ffcc00';
+            let ox=(w-s[0].length*sz)/2, oy=(h-s.length*sz)/2;
+            s.forEach((r,y)=>r.forEach((c,x)=>{ if(c){ ctx.beginPath(); ctx.roundRect(ox+x*sz, oy+y*sz, sz-2, sz-2, 6); ctx.fill(); } }));
+        },
+        loop() {
+            this.ctx.fillStyle='#0f0a1a'; this.ctx.fillRect(0,0,this.cvs.width,this.cvs.height);
+            this.grid.forEach((r,y)=>r.forEach((c,x)=>{
+                this.ctx.fillStyle = c ? '#ffcc00' : '#1a0d26';
+                this.ctx.fillRect(x*this.sz+1, y*this.sz+1, this.sz-2, this.sz-2);
+            }));
+            if(this.dragged && this.preview){
+                this.ctx.globalAlpha = 0.5; this.ctx.fillStyle='#fff';
+                this.dragged.p.s.forEach((r,y)=>r.forEach((c,x)=>{ if(c) this.ctx.fillRect((this.preview.x+x)*this.sz, (this.preview.y+y)*this.sz, this.sz, this.sz); }));
+                this.ctx.globalAlpha = 1.0;
+            }
+            requestAnimationFrame(()=>this.loop());
+        },
+        resize() { let s=Math.min(window.innerWidth-20, 380); this.cvs.width=s; this.cvs.height=s; this.sz=s/9; },
+        mineManual() { this.l.fnr += 5; this.update(); },
+        update() {
+            document.getElementById('pending').innerText = this.l.pending.toFixed(2);
+            document.getElementById('ftc').innerText = this.l.ftc.toFixed(2);
+            document.getElementById('pool-val').innerText = this.l.pool_cap.toFixed(2) + " FTC";
+            document.getElementById('pool-fill').style.width = ((this.l.pool_cap / 13.37)*100) + "%";
+        }
+    };
+    </script>
+</body></html>

@@ -1,0 +1,53 @@
+#!/bin/bash
+# FINUX INFINITY v28.5 - FULL OPTIMIZATION
+echo ">> ⚡ OPTIMIZING ENGINE: LINKING PERSISTENCE..."
+
+mkdir -p fuel_staging/games
+
+# 1. BUILD THE PERSISTENT BURN ENGINE
+cat << 'EOF' > fuel_staging/games/gem.html
+<!DOCTYPE html><html><head><title>💎 GEM | SOVEREIGN ENGINE</title>
+<style>
+    body { background:#000; color:#ff4081; font-family:monospace; text-align:center; margin:0; }
+    .status-bar { background:#111; padding:10px; color:#81c784; border-bottom:1px solid #333; font-size:1.2em; }
+    .controls { padding:20px; display:flex; justify-content:center; gap:10px; }
+    button { background:#ff4081; color:#000; border:none; padding:12px 24px; border-radius:5px; font-weight:900; cursor:pointer; transition: 0.3s; }
+    button:hover { transform: scale(1.05); box-shadow: 0 0 15px #ff4081; }
+    .gas { background:#81c784; }
+    iframe { width:100%; height:65vh; border:none; border-top:2px solid #222; }
+</style></head><body>
+    <div class="status-bar">TREASURY: <span id="t-val">16000</span> USD.i | RATIO: 10:1</div>
+    <div class="controls">
+        <button onclick="burn(10)">🔀 SHUFFLE (BURN 10)</button>
+        <button class="gas" onclick="gasUp()">⛽ GAS (+1 PROFIT)</button>
+        <button onclick="window.location.href='../index.html'">⚖️ VAULT</button>
+    </div>
+    <iframe src="https://vishalsingh2972.github.io/JS-CandyCrushSaga/"></iframe>
+
+    <script>
+        let treasury = localStorage.getItem('frost_treasury') ? parseInt(localStorage.getItem('frost_treasury')) : 16000;
+        document.getElementById('t-val').innerText = treasury;
+
+        function burn(amt) {
+            console.log("🔥 Burn Protocol Initiated...");
+            // Trigger 509 DOGE Pulse simulation
+            alert(`🔥 10 LEGACY UNITS PURGED. BOARD RESETTING...`);
+        }
+
+        function gasUp() {
+            treasury += 1;
+            document.getElementById('t-val').innerText = treasury;
+            localStorage.setItem('frost_treasury', treasury);
+            console.log(`⛽ Sovereign Gain: ${treasury}`);
+            // Logic to sync with FrostChain_DB would go here via a local fetch
+        }
+    </script>
+</body></html>
+EOF
+
+# 2. BUILD THE HUB
+# [Existing Index.html code remains optimized for mobile/desktop Finux]
+
+# 3. AUTO-DEPLOY
+surge fuel_staging frostgamesnet.surge.sh
+echo ">> ✅ OPTIMIZATION COMPLETE. PERSISTENT STORAGE ACTIVE VIA LOCALSTORAGE."

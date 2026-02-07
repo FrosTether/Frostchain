@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FROST // TUNNEL</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <style>
+        body { background: #000; color: #00e5ff; font-family: monospace; text-align: center; padding: 20px; }
+        .box { border: 1px solid #00e5ff; padding: 30px; background: #011; border-radius: 8px; max-width: 400px; margin: auto; }
+        .btn { background: #00e5ff; color: #000; padding: 20px; width: 100%; font-weight: bold; border: none; margin-top: 20px; cursor: pointer; }
+        #log { margin-top: 20px; font-size: 12px; color: #008888; text-align: left; height: 100px; overflow-y: auto; border-top: 1px solid #003333; }
+    </style>
+</head>
+<body>
+    <h1>FROST TUNNEL</h1>
+    <div class="box">
+        <div id="display">UPLINK READY</div>
+        <button class="btn" onclick="claim()">CLAIM 1,000 FTC</button>
+        <div id="log">> Initializing...</div>
+    </div>
+
+    <script>
+        // FORCED HEX ADDRESSES (NO ENS ALLOWED)
+        const FAUCET = "0x61bc7275b7a2215e4b8389d96d909c9bb3080528"; 
+        const ABI = ["function claim() public"];
+
+        async function claim() {
+            const logger = document.getElementById('log');
+            if (!window.ethereum) return alert("Open in Coinbase Wallet Browser");
+
+            try {
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const signer = await provider.getSigner();
+                
+                // Force ethers to treat this as an address, not a name
+                const contract = new ethers.Contract(ethers.getAddress(FAUCET), ABI, signer);
+                
+                logger.innerHTML += "<div>> Requesting transfer...</div>";
+                const tx = await contract.claim();
+                await tx.wait();
+                logger.innerHTML += "<div style='color:#fff'>> SUCCESS: 1,000 FTC SENT.</div>";
+            } catch (e) {
+                logger.innerHTML += `<div style='color:red'>> ERROR: ${e.message.substring(0,50)}</div>`;
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html><html><head><title>Frost Vault | TVL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="theme.css">
+<script src="ledger.js"></script>
+<style>
+    .asset-row { display:flex; justify-content:space-between; padding:15px; border-bottom:1px solid var(--border); }
+    .progress-bar { height:10px; background:#111; border-radius:5px; margin-top:10px; overflow:hidden; }
+    .fill { height:100%; background:var(--gold); box-shadow:0 0 10px var(--gold); }
+</style></head>
+<body onload="l=Ledger.init();update()">
+    <div class="hud mirror">
+        <a href="index.html" style="color:var(--neon); text-decoration:none;">⬅ BACK</a>
+        <div>TVL_MONITOR</div>
+    </div>
+
+    <div class="mirror reflection" style="margin:20px; padding:30px;">
+        <h2 style="color:var(--gold);">TOTAL_VALUE_LOCKED</h2>
+        <h1 style="font-size:3rem; margin:10px 0;">64,285</h1>
+        <p style="font-size:10px; opacity:0.5;">PEGGED TO ETC CLASSIC LIQUIDITY</p>
+    </div>
+
+    <div class="mirror" style="width:90%; max-width:500px; margin:0 auto;">
+        <div class="asset-row">
+            <span>FTC (0xec9c...)</span>
+            <span id="v_ftc">0</span>
+        </div>
+        <div class="asset-row">
+            <span>AMIAH (0xc668...)</span>
+            <span id="v_amiah">1,402</span>
+        </div>
+        <div class="asset-row" style="border:none;">
+            <span>TOTAL_NODES</span>
+            <span>11_ACTIVE</span>
+        </div>
+    </div>
+
+    <div class="mirror" style="width:90%; max-width:500px; margin:20px auto; padding:15px;">
+        <div style="display:flex; justify-content:space-between; font-size:12px;">
+            <span>21M_CAP_SATURATION</span>
+            <span id="perc">0%</span>
+        </div>
+        <div class="progress-bar"><div id="fill" class="fill" style="width:14%"></div></div>
+    </div>
+
+    <script>
+        function update() {
+            document.getElementById('v_ftc').innerText = l.ftc.toLocaleString();
+            let p = ((l.ftc / 21000000) * 100).toFixed(2);
+            document.getElementById('perc').innerText = p + "%";
+            document.getElementById('fill').style.width = p + "%";
+        }
+    </script>
+</body></html>

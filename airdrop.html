@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FROST // AIRDROP SPOT</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <style>
+        :root { --frost: #00e5ff; --bg: #050505; --panel: #0a1010; }
+        body { background: var(--bg); color: var(--frost); font-family: 'Courier New', monospace; padding: 20px; margin: 0; }
+        .header { border-bottom: 2px solid var(--frost); padding-bottom: 10px; margin-bottom: 20px; text-shadow: 0 0 10px var(--frost); }
+        .panel { background: var(--panel); border: 1px solid #004444; padding: 15px; margin-bottom: 15px; border-radius: 4px; }
+        .label { font-size: 10px; color: #008888; text-transform: uppercase; margin-bottom: 5px; }
+        .value { font-size: 18px; font-weight: bold; color: #fff; }
+        
+        input { background: #000; border: 1px solid var(--frost); color: #fff; width: 100%; padding: 12px; box-sizing: border-box; margin-top: 5px; font-family: monospace; }
+        .node-btn { background: #002222; border: 1px solid var(--frost); color: var(--frost); padding: 8px; font-size: 11px; margin-right: 5px; cursor: pointer; }
+        
+        .btn-blast { background: var(--frost); color: #000; padding: 20px; border: none; width: 100%; font-weight: bold; cursor: pointer; margin-top: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        .btn-blast:active { background: #fff; transform: translateY(2px); }
+        
+        #terminal { height: 150px; overflow-y: auto; background: #000; border: 1px solid #003333; padding: 10px; font-size: 11px; margin-top: 20px; color: #008888; }
+        .success { color: #00ff00; } .error { color: #ff3300; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>FROST_SPOT // v1.0</h2>
+        <small>SUPPLY COMMAND & CONTROL</small>
+    </div>
+
+    <div class="panel">
+        <div class="label">Total Supply in Wallet</div>
+        <div id="myBal" class="value">0.00 FTC</div>
+    </div>
+
+    <div class="panel">
+        <div class="label">Target Node (Address)</div>
+        <input type="text" id="targetAddr" placeholder="0x...">
+        <div style="margin-top:10px;">
+            <button class="node-btn" onclick="setNode('0x356066263B7e80036C569D0Ff36A96E243006D20')">KYLE (AGGYBALL)</button>
+            <button class="node-btn" onclick="setNode('')">CLEAR</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="label">Surge Amount</div>
+        <input type="number" id="surgeAmt" value="1000000">
+        <div style="margin-top:10px;">
+            <button class="node-btn" onclick="setAmt(1000000)">1M</button>
+            <button class="node-btn" onclick="setAmt(5000000)">5M</button>
+            <button class="node-btn" onclick="setAmt(10000000)">10M</button>
+        </div>
+    </div>
+
+    <button id="mainBtn" class="btn-blast" onclick="initiateAirdrop()">Initiate Airdrop Blast</button>
+
+    <div id="terminal">
+        <div>> SYSTEM ONLINE.</div>
+        <div>> WAITING FOR UPLINK...</div>
+    </div>
+
+    <script>
+        const FTC_CA = "0x61bc7275b7a2215e4b8389d96d909c9bb3080528";
+        const ABI = [
+            "function transfer(address to, uint256 amount) public returns (bool)",
+            "function balanceOf(address) view returns (uint256)"
+        ];
+
+        let provider, signer, contract;
+
+        function log(msg, cls="") {
+            const t = document.getElementById('terminal');
+            t.innerHTML += `<div class="${cls}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+            t.scrollTop = t.scrollHeight;
+        }
+
+        function setNode(addr) { document.getElementById('targetAddr').value = addr; }
+        function setAmt(n) { document.getElementById('surgeAmt').value = n; }
+
+        async function connect() {
+            if (!window.ethereum) return log("NO WALLET DETECTED", "error");
+            provider = new ethers.BrowserProvider(window.ethereum);
+            signer = await provider.getSigner();
+            contract = new ethers.Contract(FTC_CA, ABI, signer);
+            updateBalance();
+        }
+
+        async function updateBalance() {
+            const addr = await signer.getAddress();
+            const bal = await contract.balanceOf(addr);
+            document.getElementById('myBal').innerText = parseFloat(ethers.formatUnits(bal, 18)).toLocaleString() + " FTC";
+        }
+
+        async function initiateAirdrop() {
+            if (!contract) await connect();
+            
+            const target = document.getElementById('targetAddr').value;
+            const amountStr = document.getElementById('surgeAmt').value;
+            
+            if (!target.startsWith('0x')) return log("INVALID TARGET ADDRESS", "error");
+
+            try {
+                log(`PREPARING BLAST: ${amountStr} FTC -> ${target.substring(0,8)}...`);
+                const amount = ethers.parseUnits(amountStr, 18);
+                
+                const tx = await contract.transfer(target, amount);
+                log("BLAST SENT! WAITING FOR IMPACT...", "success");
+                
+                await tx.wait();
+                log("IMPACT CONFIRMED. DISTRIBUTION SUCCESSFUL.", "success");
+                updateBalance();
+            } catch (e) {
+                log("BLAST FAILED: " + (e.reason || e.message).substring(0,50), "error");
+            }
+        }
+
+        // Auto-connect on load
+        window.onload = connect;
+    </script>
+</body>
+</html>
