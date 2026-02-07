@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>FROST ARCADE</title>
+    <style>
+        body { background: #000; color: #fff; font-family: monospace; text-align: center; }
+        canvas { border: 2px solid #00e5ff; background: #111; margin: 20px; }
+        .hud { display: flex; justify-content: space-between; max-width: 640px; margin: 0 auto; color: #00e5ff; }
+        .btn { padding: 10px 20px; background: #333; color: #fff; border: 1px solid #555; cursor: pointer; }
+        .btn-save { background: #00e5ff; color: #000; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>MS. FROSTMAN // FCN MINER</h1>
+    <div class="hud">
+        <div>SCORE (FCN): <span id="scoreVal">0</span></div>
+        <div>
+            <button class="btn" onclick="saveGame()">💾 SAVE STATE</button>
+            <button class="btn btn-save" onclick="window.location.href='wallet.html'">💰 OPEN WALLET</button>
+        </div>
+    </div>
+    
+    <canvas id="gameCanvas" width="640" height="480"></canvas>
+    <div style="font-size:12px; color:#666;">SPACE: JUMP | CLICK 'OPEN WALLET' TO WITHDRAW TOKENS</div>
+
+    <script>
+        // GAME ENGINE
+        let score = 0;
+        let canvas = document.getElementById('gameCanvas');
+        let ctx = canvas.getContext('2d');
+        
+        // Load Save
+        const savedData = JSON.parse(localStorage.getItem('frost_arcade_save'));
+        if (savedData) { score = savedData.score; document.getElementById('scoreVal').innerText = score; }
+
+        // Simple Clicker Mechanic (Replace with actual game logic)
+        canvas.addEventListener('click', () => {
+            score += 10; // Earn 10 FCN per click
+            document.getElementById('scoreVal').innerText = score;
+            drawGame();
+        });
+
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#00e5ff";
+            ctx.font = "20px Courier";
+            ctx.fillText("CLICK TO MINE FCN", 220, 240);
+            ctx.fillText("CURRENT ASSETS: " + score, 220, 270);
+        }
+        
+        function saveGame() {
+            localStorage.setItem('frost_arcade_save', JSON.stringify({ score: score }));
+            alert("GAME SAVED. ASSETS SECURED IN BROWSER.");
+        }
+
+        setInterval(drawGame, 100);
+    </script>
+</body>
+</html>
