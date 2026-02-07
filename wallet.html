@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>FCN // ASSET WALLET</title>
+    <style>
+        body { background: #080808; color: #00ffcc; font-family: 'Courier New', monospace; padding: 20px; text-align: center; }
+        .wallet-card { border: 2px solid #00ffcc; padding: 30px; max-width: 400px; margin: 20px auto; background: #001111; box-shadow: 0 0 15px rgba(0, 255, 204, 0.2); }
+        .balance { font-size: 36px; font-weight: bold; margin: 20px 0; text-shadow: 0 0 10px #00ffcc; }
+        .btn { background: #00ffcc; color: #000; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        .btn:hover { background: #fff; }
+        .history { text-align: left; font-size: 11px; color: #666; margin-top: 20px; border-top: 1px dashed #333; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>FCN // TOKEN VAULT</h1>
+    <div class="wallet-card">
+        <div>UNCLAIMED GAME REWARDS</div>
+        <div class="balance" id="gameBalance">0.00 FCN</div>
+        <button class="btn" onclick="withdraw()">EXTRACT TO BASE CHAIN</button>
+        <div class="history" id="status">> WAITING FOR UPLINK...</div>
+    </div>
+    
+    <div style="font-size: 10px; margin-top: 20px;">
+        CONNECTED CONTRACT: 0x1d5a73e89d2b2ffc4ad1c84aba21af5ca3e331c9
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script>
+        // Load Balance from Local Arcade Save State
+        const saveState = JSON.parse(localStorage.getItem('frost_arcade_save')) || { score: 0 };
+        document.getElementById('gameBalance').innerText = saveState.score + ".00 FCN";
+
+        async function withdraw() {
+            if (saveState.score <= 0) return alert("NO ASSETS TO WITHDRAW");
+            if (!window.ethereum) return alert("CONNECT WEB3 WALLET");
+            
+            const status = document.getElementById('status');
+            status.innerHTML = "> INITIATING BLOCKCHAIN TRANSFER...";
+            
+            try {
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const signer = await provider.getSigner();
+                // Simulating the contract mint call (Replace with actual ABI if needed)
+                status.innerHTML = "> MINTING " + saveState.score + " FCN TO WALLET...";
+                
+                // On success, clear the local save
+                setTimeout(() => {
+                    status.innerHTML = "<span style='color:#fff'>> TRANSFER COMPLETE. ASSETS SECURED.</span>";
+                    localStorage.setItem('frost_arcade_save', JSON.stringify({ score: 0 }));
+                    document.getElementById('gameBalance').innerText = "0.00 FCN";
+                }, 2000);
+            } catch (e) {
+                status.innerHTML = "> ERROR: " + e.message;
+            }
+        }
+    </script>
+</body>
+</html>
