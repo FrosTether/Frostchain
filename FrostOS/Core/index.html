@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>FROST VAULT | RC264</title>
+    <style>
+        :root { --gold: #FFD700; --neon: #00f0ff; --bg: #000; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Courier New', monospace; }
+        body { 
+            background: var(--bg); color: var(--gold); height: 100dvh; 
+            display: flex; flex-direction: column; align-items: center; 
+            padding: 40px 20px; overflow: hidden;
+            background: radial-gradient(circle at top, #1a0033, #000 90%);
+        }
+        h1 { font-size: 2rem; letter-spacing: 10px; text-shadow: 0 0 20px var(--gold); margin-bottom: 50px; text-align: center; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; max-width: 300px; }
+        .btn { 
+            display: flex; align-items: center; justify-content: center; padding: 25px; 
+            border: 2px solid var(--gold); border-radius: 20px; text-decoration: none; 
+            color: var(--gold); font-weight: 900; font-size: 1.1rem; transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .btn:active { background: var(--gold); color: #000; transform: scale(0.95); }
+        .btn.neon { border-color: var(--neon); color: var(--neon); }
+        .btn.neon:active { background: var(--neon); color: #000; }
+        .bridge { margin-top: auto; font-size: 0.7rem; color: #444; cursor: pointer; }
+    </style>
+</head>
+<body onclick="igniteAudio()">
+    <h1>FROST VAULT</h1>
+
+    <div class="grid">
+        <a href="blocks.html" class="btn">🎯 ACCRUE_BLOCKS</a>
+        <a href="gem.html" class="btn">🎰 SOVEREIGN_SLOTS</a>
+        <a href="crush.html" class="btn neon">💎 CRYPTO_CRUSH</a>
+    </div>
+
+    <div class="bridge" onclick="auth()">[ V28.2_DACTYL_HANDSHAKE ]</div>
+
+    <script>
+        let audioCtx = null;
+        function igniteAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.value = 528; gain.gain.value = 0.01;
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start(); console.log("528Hz_ACTIVE");
+        }
+        function auth() { if(prompt("HANDSHAKE:") === "YYNY") alert("VAULT_OPEN"); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html><html><head><title>Frost Casino</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="theme.css">
+<script src="ledger.js"></script>
+<style>
+    .slot-machine { display: flex; gap: 10px; padding: 20px; background: #000; border: 3px solid var(--gold); border-radius: 10px; justify-content: center; margin: 20px 0; }
+    .reel { width: 60px; height: 80px; background: #111; border: 1px solid var(--neon); display: flex; align-items: center; justify-content: center; font-size: 30px; border-radius: 5px; }
+    .dice-zone { padding: 40px; text-align: center; border: 2px dashed var(--gold); margin-top: 20px; }
+    #dice-val { font-size: 50px; color: var(--gold); text-shadow: 0 0 15px var(--gold); }
+</style></head>
+<body onload="l=Ledger.init();u()">
+    <div class="hud">
+        <a href="index.html" class="btn" style="border:none; padding:5px;">⬅</a>
+        <div>🎰 FTC: <span id="ftc">0</span></div>
+    </div>
+
+    <div class="mirror reflection" style="margin-top:20px; padding:20px; width:85%; text-align:center;">
+        <h2 style="color:var(--gold); margin:0;">GOLDEN SLATS</h2>
+    </div>
+
+    <div class="slot-machine">
+        <div id="r1" class="reel">🧊</div>
+        <div id="r2" class="reel">🧊</div>
+        <div id="r3" class="reel">🧊</div>
+    </div>
+    <button class="btn" style="width:80%;" onclick="spin()">SPIN (2 FTC)</button>
+
+    <div class="dice-zone mirror">
+        <div style="font-size:10px; color:var(--gold); letter-spacing:3px;">JOEY_BONES_DICE</div>
+        <div id="dice-val">🎲</div>
+        <button class="btn" style="margin-top:20px;" onclick="roll()">ROLL BONES (1 FTC)</button>
+    </div>
+
+    <script>
+    const symbols = ["🧊", "💎", "🪙", "⚡", "🔥"];
+    function u(){ document.getElementById('ftc').innerText = l.ftc; }
+    
+    function spin() {
+        if(l.ftc < 2) return alert("NEED 2 FTC");
+        l.ftc -= 2; Ledger.save(l); u();
+        Ledger.sfx('burn');
+        let count = 0;
+        let iv = setInterval(() => {
+            document.getElementById('r1').innerText = symbols[Math.floor(Math.random()*symbols.length)];
+            document.getElementById('r2').innerText = symbols[Math.floor(Math.random()*symbols.length)];
+            document.getElementById('r3').innerText = symbols[Math.floor(Math.random()*symbols.length)];
+            if(count++ > 15) {
+                clearInterval(iv);
+                checkSlots();
+            }
+        }, 100);
+    }
+
+    function checkSlots() {
+        let r1 = document.getElementById('r1').innerText;
+        let r2 = document.getElementById('r2').innerText;
+        let r3 = document.getElementById('r3').innerText;
+        if(r1 === r2 && r2 === r3) {
+            alert("JACKPOT! +100 FTC");
+            l.ftc += 100; Ledger.sfx('limitless');
+        }
+        Ledger.save(l); u();
+    }
+
+    function roll() {
+        if(l.ftc < 1) return alert("NEED 1 FTC");
+        l.ftc -= 1; Ledger.save(l); u();
+        let d = Math.floor(Math.random() * 6) + 1;
+        document.getElementById('dice-val').innerText = d;
+        if(d === 6) {
+            alert("JOEY BONES PAYS OUT! +10 FTC");
+            l.ftc += 10; Ledger.sfx('limitless');
+        }
+        Ledger.save(l); u();
+    }
+    </script>
+</body></html>

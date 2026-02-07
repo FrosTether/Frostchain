@@ -1,0 +1,51 @@
+<!DOCTYPE html><html><head><title>Frost Vault | Gallery</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="theme.css">
+<script src="ledger.js"></script>
+<style>
+    .master-key-container { width: 90%; margin: 20px auto; padding: 20px; border: 2px solid var(--gold); border-radius: 20px; text-align: center; display: none; }
+    .key-glow { color: var(--gold); text-shadow: 0 0 15px var(--gold); font-size: 1.2rem; letter-spacing: 3px; }
+    .gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; width: 95%; max-width: 500px; }
+    .nft-card { height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; border-color: #afeeee; }
+    .ice-text { color: #afeeee; text-shadow: 0 0 5px #00f0ff; }
+</style></head>
+<body onload="init()">
+    <div class="hud mirror">
+        <a href="index.html" style="color:var(--neon); text-decoration:none;">⬅ HUB</a>
+        <div class="ice-text">AMIAH_DOODLES_ARCHIVE</div>
+    </div>
+
+    <div id="masterKey" class="mirror reflection master-key-container">
+        <div class="key-glow">✨ MASTER_KEY_ACTIVE ✨</div>
+        <p style="font-size: 9px; margin-top: 10px; opacity: 0.8;">ORIGIN_WALKER // EPOCH_0_VERIFIED</p>
+    </div>
+
+    <div class="gallery-grid" id="grid">
+        <div class="mirror nft-card">
+            <div style="font-size:40px;">🧊</div>
+            <div class="ice-text" style="margin-top:10px;">DOODLE_#101</div>
+        </div>
+        <div class="mirror nft-card">
+            <div style="font-size:40px;">💎</div>
+            <div class="ice-text" style="margin-top:10px;">DOODLE_#205</div>
+        </div>
+        <div class="mirror nft-card">
+            <div style="font-size:40px;">❄️</div>
+            <div class="ice-text" style="margin-top:10px;">DOODLE_#312</div>
+        </div>
+        <div class="mirror nft-card">
+            <div style="font-size:40px;">🧩</div>
+            <div class="ice-text" style="margin-top:10px;">DOODLE_#404</div>
+        </div>
+    </div>
+
+    <script>
+        function init() {
+            let l = Ledger.init();
+            if(l.claimedBadge) {
+                document.getElementById('masterKey').style.display = 'block';
+                Ledger.sfx('badge');
+            }
+        }
+    </script>
+</body></html>

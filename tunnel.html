@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FROST // DOGE TUNNEL</title>
+    <style>
+        :root { --doge: #ffcc00; --frost: #00e5ff; --bg: #050505; }
+        body { background: var(--bg); color: var(--frost); font-family: 'Courier New', monospace; text-align: center; padding: 20px; }
+        .container { border: 2px solid var(--doge); max-width: 500px; margin: 0 auto; padding: 30px; background: #080808; box-shadow: 0 0 30px rgba(255, 204, 0, 0.1); }
+        h1 { color: var(--doge); letter-spacing: 4px; margin-bottom: 5px; }
+        .address-box { background: #111; border: 1px dashed var(--doge); padding: 15px; font-size: 11px; color: #fff; margin: 15px 0; word-break: break-all; }
+        input { background: #000; border: 1px solid var(--frost); color: #fff; width: 100%; padding: 15px; margin: 10px 0; box-sizing: border-box; font-family: monospace; }
+        .btn { background: var(--doge); color: #000; border: none; padding: 20px; width: 100%; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 16px; }
+        .btn:hover { background: #fff; box-shadow: 0 0 20px var(--doge); }
+        #status { margin-top: 20px; font-size: 10px; color: #555; text-align: left; height: 100px; overflow-y: auto; border-top: 1px solid #222; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>DOGE TUNNEL</h1>
+    <p style="font-size: 10px; color: #666;">FROST PROTOCOL // BRIDGE V1.0</p>
+
+    <div class="container">
+        <div style="font-size: 10px; color: var(--doge); text-align: left;">1. DEPOSIT DOGE HERE</div>
+        <div class="address-box">DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s</div>
+
+        <div style="font-size: 10px; color: var(--frost); text-align: left; margin-top: 20px;">2. YOUR BASE ADDRESS (RECEIVE FRST)</div>
+        <input type="text" id="baseWallet" placeholder="0x...">
+
+        <div style="font-size: 10px; color: #fff; text-align: left; margin-top: 10px;">3. DOGE TX HASH</div>
+        <input type="text" id="txHash" placeholder="Transaction ID...">
+
+        <button class="btn" onclick="logSwap()">Initiate Tunnel Swap</button>
+        
+        <div id="status">> WAITING FOR INPUT...</div>
+    </div>
+
+    <script>
+        // CONFIGURATION
+        const DOGE_VAULT = "DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s";
+        const FRST_CONTRACT = "0x1d5a73e89d2b2ffc4ad1c84aba21af5ca3e331c9";
+
+        function log(msg, color="#555") {
+            const s = document.getElementById('status');
+            s.innerHTML += `<div style='color:${color}'>> ${msg}</div>`;
+            s.scrollTop = s.scrollHeight;
+        }
+
+        function logSwap() {
+            const base = document.getElementById('baseWallet').value;
+            const tx = document.getElementById('txHash').value;
+
+            if (!base.startsWith("0x") || base.length !== 42) {
+                return log("ERROR: INVALID BASE ADDRESS", "red");
+            }
+            if (tx.length < 10) {
+                return log("ERROR: INVALID TX HASH", "red");
+            }
+
+            // SIMULATED LOGGING (In production, this would send to a server)
+            log("UPLINK SECURE...", "var(--frost)");
+            log("VERIFYING DOGE DEPOSIT...", "var(--doge)");
+            setTimeout(() => {
+                log(`DATA LOGGED for ${base.substring(0,6)}...`, "#fff");
+                log("STATUS: PENDING ACCOUNTING REVIEW", "#fff");
+                log("ESTIMATED ARRIVAL: < 1 HOUR", "var(--frost)");
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
+/

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FROST OS // MINER v1.0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/4.5.0/web3.min.js"></script>
+    <style>
+        body {
+            background-color: #050505;
+            color: #00e5ff;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            margin: 0;
+            overflow: hidden;
+        }
+        #terminal {
+            border: 2px solid #00e5ff;
+            height: 60vh;
+            padding: 10px;
+            overflow-y: auto;
+            background: rgba(0, 20, 40, 0.9);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+            margin-bottom: 20px;
+        }
+        .log { margin: 5px 0; border-bottom: 1px solid #003333; }
+        .success { color: #00ff00; }
+        .error { color: #ff3333; }
+        .info { color: #ffff00; }
+        
+        #controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            background: #00e5ff;
+            color: #000;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            flex: 1;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        button:active { background: #fff; }
+        button:disabled { background: #333; color: #666; }
+
+        .glitch { animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <h2>FROST PROTOCOL <span class="glitch">_</span></h2>
+    <div id="status">SYSTEM READY... WAITING FOR UPLINK</div>
+    
+    <div id="terminal">
+        <div class="log">> FROST OS KERNEL LOADED</div>
+        <div class="log">> TARGET: 0x61bc...0528 (FTC)</div>
+    </div>
+
+    <div id="controls">
+        <button id="btnConnect" onclick="connectWallet()">CONNECT WALLET</button>
+        <button id="btnMine" onclick="startMining()" disabled>INITIALIZE MINING SEQUENCE</button>
+    </div>
+
+    <script>
+        // CONFIGURATION
+        const CONTRACT_ADDRESS = "0x61bc7275b7a2215e4b8389d96d909c9bb3080528"; // Frost Coin
+        const BOSS_WALLET = "0x6556fBB94508bFa8CE919f691ef71d4181D36D20";
+        
+        // ABI (The language the blockchain speaks)
+        const ABI = [
+            {"inputs":[],"name":"surgeMint","outputs":[],"stateMutability":"nonpayable","type":"function"}
+        ];
+
+        let web3;
+        let contract;
+        let account;
+        let mining = false;
+
+        function log(msg, type="") {
+            const term = document.getElementById("terminal");
+            const div = document.createElement("div");
+            div.className = "log " + type;
+            div.innerHTML = `> [${new Date().toLocaleTimeString()}] ${msg}`;
+            term.appendChild(div);
+            term.scrollTop = term.scrollHeight;
+        }
+
+        async function connectWallet() {
+            if (window.ethereum) {
+                try {
+                    web3 = new Web3(window.ethereum);
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    account = accounts[0];
+                    
+                    document.getElementById("btnConnect").style.display = "none";
+                    document.getElementById("btnMine").disabled = false;
+                    document.getElementById("status").innerText = "CONNECTED: " + account.substring(0,6) + "...";
+                    
+                    contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+                    log("UPLINK ESTABLISHED. READY TO MINE.", "success");
+                    
+                } catch (e) {
+                    log("CONNECTION FAILED: " + e.message, "error");
+                }
+            } else {
+                log("NO WALLET DETECTED. OPEN IN COINBASE WALLET BROWSER.", "error");
+            }
+        }
+
+        async function startMining() {
+            if (mining) return;
+            mining = true;
+            document.getElementById("btnMine").innerText = "MINING IN PROGRESS...";
+            
+            log("INITIATING SURGE SEQUENCE...", "info");
+            
+            // The Loop
+            while (mining) {
+                try {
+                    // Estimate Gas first to catch errors early
+                    const gas = await contract.methods.surgeMint().estimateGas({ from: account });
+                    
+                    log("Constructing Block...", "info");
+                    
+                    // Send Transaction
+                    await contract.methods.surgeMint().send({
+                        from: account,
+                        gas: gas,
+                        // Legacy gas for wider compatibility or EIP-1559 if supported
+                    });
+
+                    log("SUCCESS: BLOCK MINED. FTC SECURED.", "success");
+                    
+                } catch (e) {
+                    log("MINING INTERRUPTED: " + e.message, "error");
+                    // If user rejects, stop mining. If network error, keep trying.
+                    if (e.message.includes("User denied")) {
+                        mining = false;
+                        document.getElementById("btnMine").innerText = "RESUME MINING";
+                        log("SEQUENCE HALTED BY USER.", "error");
+                        break;
+                    }
+                }
+                
+                // Small delay to prevent freezing
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        }
+    </script>
+</body>
+</html>
