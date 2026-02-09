@@ -1,0 +1,234 @@
+2026-02-08 06:53:36.555	    489358168160	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 06:53:36.555	    489358168160	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 06:53:36.555	    489358168160	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 06:53:36.555	    489358168160	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 06:53:36.555	    489358168160	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 06:53:36.558	    489358168160	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 06:53:36.911	    489358168160	ERROR	util	src/common/util.cpp:109	Error locking fd 13: 11 (Try again)
+2026-02-08 06:53:36.911	    489358168160	ERROR	util	src/common/util.cpp:309	Failed to lock /data/data/com.termux/files/home/Finux/wallets/Frostnerjo_Genesis.keys: Try again
+2026-02-08 06:53:36.911	    489358168160	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:6508	!is_keys_file_locked(). THROW EXCEPTION: error::wallet_internal_error
+2026-02-08 06:53:36.913	    489358168160	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: internal error: "/data/data/com.termux/files/home/Finux/wallets/Frostnerjo_Genesis.keys" is opened by another wallet program
+2026-02-08 07:00:46.975	    485810376800	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 07:00:46.976	    485810376800	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 07:00:46.976	    485810376800	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 07:00:46.976	    485810376800	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 07:00:46.976	    485810376800	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 07:00:46.978	    485810376800	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 07:00:47.382	    485810376800	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 07:00:47.385	    485810376800	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 07:27:32.310	    506129723488	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 07:27:32.310	    506129723488	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 07:27:32.310	    506129723488	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 07:27:32.310	    506129723488	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 07:27:32.310	    506129723488	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 07:27:32.313	    506129723488	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 07:27:32.839	    506129723488	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 07:27:32.843	    506129723488	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 07:28:18.381	    500826103904	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 07:28:18.381	    500826103904	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 07:28:18.381	    500826103904	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 07:28:18.381	    500826103904	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 07:28:18.381	    500826103904	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 07:28:18.382	    500826103904	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 07:28:18.700	    500826103904	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 07:28:18.702	    500826103904	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 07:38:22.339	    516675756128	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 07:38:22.339	    516675756128	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 07:38:22.339	    516675756128	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 07:38:22.339	    516675756128	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 07:38:22.340	    516675756128	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 07:38:22.342	    516675756128	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 07:38:23.796	    516675756128	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 07:38:23.800	    516675756128	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 09:02:01.563	    480290812000	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 09:02:01.563	    480290812000	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 09:02:01.563	    480290812000	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 09:02:01.563	    480290812000	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 09:02:01.564	    480290812000	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 09:02:01.566	    480290812000	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 09:02:02.548	    480290812000	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 09:02:02.551	    480290812000	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 09:02:17.330	    488843870304	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 09:02:17.330	    488843870304	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 09:02:17.330	    488843870304	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 09:02:17.330	    488843870304	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 09:02:17.330	    488843870304	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 09:02:17.333	    488843870304	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 09:02:18.356	    488843870304	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 09:02:18.358	    488843870304	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 17:08:52.307	    482733445216	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 17:08:52.308	    482733445216	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 17:08:52.308	    482733445216	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 17:08:52.308	    482733445216	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 17:08:52.309	    482733445216	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 17:08:52.313	    482733445216	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 17:08:53.503	    482733445216	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 17:08:53.506	    482733445216	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 17:31:29.576	    512441729120	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 17:31:29.579	    512441729120	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 17:31:29.579	    512441729120	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 17:31:29.579	    512441729120	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 17:31:29.579	    512441729120	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 17:31:29.582	    512441729120	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 17:31:30.496	    512441729120	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 17:31:30.499	    512441729120	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 21:15:32.983	    534854488160	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 21:15:32.983	    534854488160	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 21:15:32.983	    534854488160	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 21:15:32.983	    534854488160	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 21:15:32.983	    534854488160	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 21:15:32.986	    534854488160	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 21:15:33.917	    534854488160	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 21:15:33.921	    534854488160	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 21:16:21.066	    534185963616	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 21:16:21.067	    534185963616	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 21:16:21.067	    534185963616	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 21:16:21.067	    534185963616	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 21:16:21.067	    534185963616	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 21:16:21.069	    534185963616	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 21:16:22.425	    534185963616	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 21:16:22.429	    534185963616	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 21:21:05.312	    540843597920	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 21:21:05.313	    540843597920	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 21:21:05.313	    540843597920	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 21:21:05.313	    540843597920	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 21:21:05.313	    540843597920	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 21:21:05.316	    540843597920	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 21:21:06.280	    540843597920	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 21:21:06.284	    540843597920	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 21:23:35.169	    487581630560	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 21:23:35.169	    487581630560	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 21:23:35.169	    487581630560	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 21:23:35.173	    487581630560	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 21:23:35.173	    487581630560	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 21:23:35.176	    487581630560	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 21:23:36.175	    487581630560	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 21:23:36.179	    487581630560	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 21:28:34.652	    541272285280	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 21:28:34.652	    541272285280	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 21:28:34.652	    541272285280	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 21:28:34.652	    541272285280	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 21:28:34.653	    541272285280	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 21:28:34.656	    541272285280	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 21:28:35.353	    541272285280	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 21:28:35.356	    541272285280	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 22:10:14.950	    488264568928	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 22:10:14.951	    488264568928	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 22:10:14.951	    488264568928	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 22:10:14.951	    488264568928	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 22:10:14.952	    488264568928	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 22:10:14.958	    488264568928	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 22:10:17.583	    488264568928	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 22:10:17.587	    488264568928	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 22:17:26.479	    504181391456	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 22:17:26.479	    504181391456	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 22:17:26.479	    504181391456	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 22:17:26.479	    504181391456	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 22:17:26.480	    504181391456	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 22:17:26.484	    504181391456	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 22:17:27.242	    504181391456	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 22:17:27.246	    504181391456	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 22:29:57.811	    545753309280	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 22:29:57.811	    545753309280	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 22:29:57.811	    545753309280	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 22:29:57.811	    545753309280	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 22:29:57.812	    545753309280	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 22:29:57.817	    545753309280	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 22:30:01.294	    545753309280	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 22:30:01.310	    545753309280	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 22:36:10.521	    487955337312	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 22:36:10.522	    487955337312	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 22:36:10.522	    487955337312	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 22:36:10.522	    487955337312	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 22:36:10.522	    487955337312	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 22:36:10.525	    487955337312	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 22:36:11.261	    487955337312	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 22:36:11.263	    487955337312	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 22:52:16.006	    529697693792	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 22:52:16.006	    529697693792	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 22:52:16.006	    529697693792	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 22:52:16.006	    529697693792	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 22:52:16.007	    529697693792	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 22:52:16.009	    529697693792	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 22:52:17.227	    529697693792	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 22:52:17.231	    529697693792	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 22:52:51.700	    517813047392	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 22:52:51.700	    517813047392	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 22:52:51.700	    517813047392	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 22:52:51.700	    517813047392	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 22:52:51.700	    517813047392	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 22:52:51.702	    517813047392	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 22:52:53.093	    517813047392	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 22:52:53.096	    517813047392	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 22:56:52.674	    494874800224	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 22:56:52.674	    494874800224	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 22:56:52.674	    494874800224	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 22:56:52.674	    494874800224	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 22:56:52.674	    494874800224	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 22:56:52.676	    494874800224	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 22:56:53.408	    494874800224	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 22:56:53.410	    494874800224	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 22:57:04.543	    507143352416	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 22:57:04.543	    507143352416	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 22:57:04.543	    507143352416	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 22:57:04.543	    507143352416	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 22:57:04.543	    507143352416	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 22:57:04.546	    507143352416	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 22:57:05.520	    507143352416	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 22:57:05.521	    507143352416	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 23:31:00.667	    530992664672	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 23:31:00.667	    530992664672	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 23:31:00.667	    530992664672	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 23:31:00.667	    530992664672	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 23:31:00.667	    530992664672	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 23:31:00.672	    530992664672	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 23:31:01.400	    530992664672	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 23:31:01.404	    530992664672	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-08 23:31:12.176	    500340314208	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-08 23:31:12.176	    500340314208	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-08 23:31:12.176	    500340314208	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-08 23:31:12.176	    500340314208	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-08 23:31:12.177	    500340314208	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-08 23:31:12.181	    500340314208	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-08 23:31:13.442	    500340314208	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-08 23:31:13.445	    500340314208	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-09 04:43:48.471	    489203327072	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-09 04:43:48.471	    489203327072	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-09 04:43:48.471	    489203327072	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-09 04:43:48.471	    489203327072	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-09 04:43:48.472	    489203327072	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-09 04:43:48.479	    489203327072	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-09 04:43:52.717	    489203327072	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-09 04:43:52.725	    489203327072	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-09 05:29:52.239	    487676747872	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-09 05:29:52.239	    487676747872	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-09 05:29:52.239	    487676747872	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-09 05:29:52.240	    487676747872	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-09 05:29:52.240	    487676747872	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-09 05:29:52.250	    487676747872	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-09 05:30:00.536	    487676747872	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-09 05:30:00.541	    487676747872	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-09 05:37:11.398	    547166322784	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-09 05:37:11.398	    547166322784	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-09 05:37:11.398	    547166322784	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-09 05:37:11.399	    547166322784	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-09 05:37:11.399	    547166322784	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-09 05:37:11.415	    547166322784	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-09 05:37:13.686	    547166322784	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-09 05:37:13.693	    547166322784	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-09 05:38:39.227	    485989814368	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-09 05:38:39.227	    485989814368	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-09 05:38:39.227	    485989814368	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-09 05:38:39.227	    485989814368	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-09 05:38:39.227	    485989814368	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-09 05:38:39.230	    485989814368	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-09 05:38:39.771	    485989814368	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-09 05:38:39.773	    485989814368	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
+2026-02-09 05:52:08.191	    519124529248	INFO	logging	contrib/epee/src/mlog.cpp:274	New log categories: *:WARNING,net:FATAL,net.http:FATAL,net.ssl:FATAL,net.p2p:FATAL,net.cn:FATAL,daemon.rpc:FATAL,global:INFO,verify:FATAL,serialization:FATAL,daemon.rpc.payment:ERROR,stacktrace:INFO,logging:INFO,msgwriter:INFO
+2026-02-09 05:52:08.192	    519124529248	INFO	msgwriter	src/common/scoped_message_writer.h:102	This is the RPC monero wallet. It needs to connect to a monero
+2026-02-09 05:52:08.192	    519124529248	INFO	msgwriter	src/common/scoped_message_writer.h:102	daemon to work correctly.
+2026-02-09 05:52:08.193	    519124529248	INFO	msgwriter	src/common/scoped_message_writer.h:102	Monero 'Fluorine Fermi' (v0.18.4.5-release)
+2026-02-09 05:52:08.194	    519124529248	INFO	msgwriter	src/common/scoped_message_writer.h:102	Logging to monero-wallet-rpc.log
+2026-02-09 05:52:08.212	    519124529248	WARNING	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4909	Loading wallet...
+2026-02-09 05:52:11.754	    519124529248	ERROR	wallet.wallet2	src/wallet/wallet2.cpp:5374	!r. THROW EXCEPTION: error::invalid_password
+2026-02-09 05:52:11.771	    519124529248	ERROR	wallet.rpc	src/wallet/wallet_rpc_server.cpp:4971	Wallet initialization failed: invalid password
