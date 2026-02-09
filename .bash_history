@@ -1,34 +1,3 @@
-            document.body.classList.add('shake');
-        }
-
-        function checkLines() {
-            let lines = [];
-            // Rows
-            for(let y=0; y<9; y++) if(grid[y].every(c => c===1)) lines.push({type:'r', i:y});
-            // Cols
-            for(let x=0; x<9; x++) if(grid.every(r => r[x]===1)) lines.push({type:'c', i:x});
-            
-            if(lines.length > 0) {
-                AudioEngine.sfxMine();
-                if(lines.length > 1) AudioEngine.sfxExplode();
-                
-                // Clear Logic
-                lines.forEach(l => {
-                    if(l.type === 'r') grid[l.i].fill(0);
-                    else grid.forEach(r => r[l.i] = 0);
-                });
-                
-                pool += lines.length * 0.5;
-                document.getElementById('score').innerText = pool.toFixed(2);
-                document.getElementById('status').innerText = "MINING_HASH_" + Math.random().toString(16).substr(2,6).toUpperCase();
-            }
-        }
-
-        function drawShape(ctx, s, w, h, t_sz, color) {
-            let ox = (w - s[0].length*t_sz)/2;
-            let oy = (h - s.length*t_sz)/2;
-            ctx.fillStyle = color;
-            s.forEach((r,y) => r.forEach((c,x) => {
                 if(c) {
                     ctx.shadowBlur = 10; ctx.shadowColor = color;
                     ctx.fillRect(ox + x*t_sz + 1, oy + y*t_sz + 1, t_sz-2, t_sz-2);
@@ -498,3 +467,34 @@ echo -e "\n\033[1;35m[LIVE]\033[0m REFRESH https://fpu4eva.surge.sh NOW."
 echo "--- MONITORING CLAIMS ---"
 tail -f ~/node.log
 python ~/Finux/fnr_validator.py
+cat << 'EOF' > deploy_frost.sh
+#!/bin/bash
+
+# --- FROST PROTOCOL DEPLOYMENT ---
+echo "--- Initializing Vanish-Style Deployment to fpu4eva.surge.sh ---"
+
+# 1. GitHub Sync
+echo "[*] Pushing to GitHub (FrosTether/frost-protocol)..."
+git add .
+git commit -m "Update: 8s Parallel Handshake & Thermal Colors"
+git push origin main
+
+# 2. Surge Broadcast
+echo "[*] Broadcasting to Surge..."
+# If you have a build folder (like /dist), change the '.' to './dist'
+surge . fpu4eva.surge.sh
+
+echo "--- DEPLOYMENT COMPLETE: Check fpu4eva.surge.sh ---"
+EOF
+
+chmod +x deploy_frost.sh
+./deploy_frost.sh
+ls
+sh ./start_node.sh
+nano 2.py
+chmod +x 2.py
+bash 2.py
+# Update the script to point to the correct directory
+python3 $HOME/finux/core/FrostMaster.py --frequency 963 --dual-verify --masternode-linked
+ls
+sh ./mine_fnr.sh
