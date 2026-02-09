@@ -1,5 +1,0 @@
-<!DOCTYPE html><html><head><title>FROST CRUSH</title><style>body{background:#000;color:#ff00ff;text-align:center;font-family:monospace;padding:20px;} .grid{display:grid;grid-template-columns:repeat(5,40px);gap:5px;margin:20px auto;width:220px;} .cell{width:40px;height:40px;background:#333;border:1px solid #555;cursor:pointer;} button{padding:15px;background:#222;color:#fff;border:1px solid #ff00ff;width:100%;max-width:300px;}</style></head><body><h1>FROST CRUSH</h1><div>MINED: <span id="score">0</span> FCN</div><div class="grid" id="grid"></div><button onclick="save()">💾 BANK TOKENS</button><script>
-let score=0; const g=document.getElementById('grid');
-for(let i=0;i<25;i++){let c=document.createElement('div');c.className='cell';c.onclick=()=>{score+=10;document.getElementById('score').innerText=score;c.style.background='#fff';setTimeout(()=>c.style.background='#333',200);};g.appendChild(c);}
-function save(){ let cur=JSON.parse(localStorage.getItem('fcn'))||0; localStorage.setItem('fcn',cur+score); window.location='wallet.html'; }
-</script></body></html>

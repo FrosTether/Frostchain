@@ -1,5 +1,0 @@
-<!DOCTYPE html><html><head><title>FROST BLOCKS</title><style>body{background:#000;color:#00e5ff;text-align:center;font-family:monospace;padding:20px;}canvas{border:2px solid #00e5ff;background:#111;}button{padding:15px;background:#333;color:#fff;border:1px solid #00e5ff;cursor:pointer;width:100%;max-width:300px;margin-top:10px;}</style></head><body><h1>FROST BLOCKS</h1><div>SCORE: <span id="score">0</span> FCN</div><canvas id="cvs" width="240" height="400"></canvas><br><button onclick="save()">💾 SAVE & EXIT</button><script>
-// Placeholder Game Logic for Blocks
-let score=0; setInterval(()=>{score+=5;document.getElementById('score').innerText=score;},1000);
-function save(){ let cur=JSON.parse(localStorage.getItem('fcn'))||0; localStorage.setItem('fcn',cur+score); window.location='wallet.html'; }
-</script></body></html>

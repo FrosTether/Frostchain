@@ -1,7 +1,0 @@
-DOGE TUNNEL SPECIFICATION (DTS)
--------------------------------
-VAULT: DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s
-MECHANISM: Trustless Bridge. 
-1. User deposits DOGE.
-2. Oracle verifies TX.
-3. Frost Protocol releases FRST to Base Address.

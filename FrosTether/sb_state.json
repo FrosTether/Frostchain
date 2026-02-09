@@ -1,0 +1,26 @@
+{
+    "registers": [
+        {
+            "rank": 1,
+            "user_id": "voluntaryistj.frostchain",
+            "balance": 133.37,
+            "tier": "SB_AIRDROP",
+            "timestamp": "2026-02-08 17:51:07.733827"
+        },
+        {
+            "rank": 2,
+            "user_id": "voluntaryistj.frostchain",
+            "balance": 133.37,
+            "tier": "SB_AIRDROP",
+            "timestamp": "2026-02-08 17:51:35.815855"
+        },
+        {
+            "rank": 3,
+            "user_id": "larrystraub.frostchain",
+            "balance": 1.0,
+            "timestamp": "2026-02-08 17:53:29.958958"
+        }
+    ],
+    "count": 3,
+    "total_distributed": 266.74
+}

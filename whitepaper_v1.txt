@@ -1,9 +1,0 @@
-FROST PROTOCOL V1: THE 13.37 STANDARD
--------------------------------------
-ARCHITECT: voluntaryistj
-CONTRACT: 0x1d5a73e89d2b2ffc4ad1c84aba21af5ca3e331c9
-FOUNDER FLOAT: 13.37% (13,370,000 FRST) - FIXED & IMMUTABLE.
-GOVERNANCE: 34% (Finux Treasury)
-
-The Frost Protocol is a decentralized operating layer for the Base Network.
-It establishes a direct bridge between Dogecoin (Liquidity) and Finux (Compute).

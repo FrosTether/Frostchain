@@ -1,5 +1,0 @@
-FINUX OS: CODENAME ICELAND
---------------------------
-A mobile-first, decentralized compilation environment.
-Designed to run on low-power ARM devices (Pixel/Android).
-Integrates directly with the Frost Protocol for asset management.

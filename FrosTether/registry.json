@@ -1,0 +1,12 @@
+{
+  "voluntaryistj.frostchain": {
+    "evm_addr": "0xAfE43ae3F18F8Dde3bF77Bb269a956732029b12a",
+    "doge_addr": "DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s",
+    "role": "Architect"
+  },
+  "frostcoin.frostchain": {
+    "evm_addr": "0xContractAddressHere",
+    "doge_addr": "DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s",
+    "role": "Asset"
+  }
+}
