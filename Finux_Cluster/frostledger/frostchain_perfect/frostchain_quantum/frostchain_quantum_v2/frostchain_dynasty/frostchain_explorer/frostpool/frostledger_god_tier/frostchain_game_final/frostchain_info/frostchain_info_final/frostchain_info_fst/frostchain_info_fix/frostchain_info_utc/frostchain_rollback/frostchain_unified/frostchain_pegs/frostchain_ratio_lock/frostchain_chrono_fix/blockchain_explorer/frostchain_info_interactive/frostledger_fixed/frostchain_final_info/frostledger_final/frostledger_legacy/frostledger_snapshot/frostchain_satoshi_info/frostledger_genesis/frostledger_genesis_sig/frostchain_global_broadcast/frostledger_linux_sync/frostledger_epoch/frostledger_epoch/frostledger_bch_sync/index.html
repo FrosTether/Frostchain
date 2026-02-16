@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FSP GOD-TIER V82 // BCH_SYNC</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { 
+  --bg: #000; --text: #e0e0e0; --orange: #ff6600; --iota: #00e0ff; 
+  --burgundy: #800020; --gold: #ffd700; --quantum: #ff00ff; --bch: #8dc351;
+}
+* { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+body { 
+  background: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; 
+  height: 100vh; overflow: hidden; display: flex; flex-direction: column; 
+}
+
+.header { background: #111; border-bottom: 2px solid var(--bch); padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+.auth-tag { font-size: 10px; color: var(--gold); font-weight: bold; letter-spacing: 1px; }
+
+.main { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+.grid { display: grid; grid-template-columns: repeat(9, 38px); grid-template-rows: repeat(9, 38px); gap: 2px; border: 4px solid #1a1a1a; padding: 4px; }
+.cell { width: 38px; height: 38px; background: #080808; border: 1px solid #111; display:flex; align-items:center; justify-content:center; }
+.cell.obj-iota::after { content: "•"; color: var(--iota); font-size: 28px; text-shadow: 0 0 10px var(--iota); }
+
+/* QUANTUM TERMINAL */
+.log-wrap { width: 95%; height: 160px; background: rgba(5,5,5,0.98); border: 1px solid #222; margin-top: 20px; padding: 10px; overflow: hidden; }
+.log-line { font-size: 9px; line-height: 1.5; margin-bottom: 4px; border-left: 2px solid #333; padding-left: 10px; }
+.gold { color: var(--gold); font-weight: bold; }
+.quantum { color: var(--quantum); }
+
+.status-bar { background: #111; border-top: 2px solid var(--orange); padding: 15px; display: flex; justify-content: space-between; font-size: 11px; }
+.val { color: var(--orange); font-weight: bold; }
+</style>
+</head>
+<body onload="init()">
+
+<div class="header">
+  <div>FSP GOD-TIER <span style="color:var(--orange)">V82</span></div>
+  <div class="auth-tag">SATOSHI_SIGNATURE_OK // BCH_HEIGHT_FIX</div>
+</div>
+
+<div class="main">
+  <div class="grid" id="grid"></div>
+  
+  <div class="log-wrap" id="log">
+    <div class="log-line gold">> COINBASE: "Sign the block. Alex what is the Genius Act? much Quantum Fungible wow!"</div>
+    <div class="log-line quantum">> BLOCK_SIG: 683050920 [TEMPORAL_ANCHOR]</div>
+    <div class="log-line">> BCH_HEIGHT: 937,783 [SYNCED_FEB_2026]</div>
+    <div class="log-line">> NETWORK_STATE: PARITY_ACTIVE</div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div>HEIGHT: <span class="val" id="height">937,783</span></div>
+  <div style="color:var(--bch)">CHAIN: <span id="chain">BCH_FORK_FROST</span></div>
+  <div style="color:var(--iota)">TIMESTAMP: <span id="unix">000000001</span></div>
+</div>
+
+<script>
+// Anchor to Feb 11, 2026 BCH Height
+const BCH_BASE = 937783;
+const START_MS = Date.now();
+
+function init() {
+  const g = document.getElementById('grid');
+  for(let i=0; i<81; i++) {
+    const c = document.createElement('div'); c.className = 'cell';
+    if(i===40) c.classList.add('obj-iota');
+    g.appendChild(c);
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+function tick() {
+    const elapsedSeconds = Math.floor((Date.now() - START_MS) / 1000);
+    // BCH average block time is 600s, but Frost is 300s.
+    // We increment every 300s to maintain the Frost reward cadence.
+    const blocksAdded = Math.floor(elapsedSeconds / 300);
+    const currentHeight = BCH_BASE + blocksAdded;
+    
+    document.getElementById('height').innerText = currentHeight.toLocaleString();
+    document.getElementById('unix').innerText = Math.floor(Date.now()/1000).toString().padStart(10, '0');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grayson's Wallet | Bio-Locked</title>
+    <style>
+        :root { --bg: #000; --accent: #00ff41; --text: #eee; --panel: #111; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; user-select: none; }
+        
+        /* LOCK SCREEN */
+        #lock-screen { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .lock-icon { font-size: 3rem; color: var(--accent); margin-bottom: 20px; text-shadow: 0 0 20px var(--accent); }
+        
+        .pin-dots { display: flex; gap: 15px; margin-bottom: 30px; }
+        .dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--accent); background: transparent; transition: 0.2s; }
+        .dot.filled { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        
+        .numpad { display: grid; grid-template-columns: repeat(3, 80px); gap: 20px; }
+        .num-btn { width: 80px; height: 80px; border-radius: 50%; background: #111; border: 1px solid #333; color: #fff; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
+        .num-btn:active { background: var(--accent); color: #000; }
+
+        /* FINGERPRINT OVERLAY */
+        #bio-scan { margin-top: 30px; display: flex; flex-direction: column; align-items: center; cursor: pointer; opacity: 0.5; transition: 0.3s; }
+        #bio-scan.active { opacity: 1; color: var(--accent); }
+        .bio-icon { width: 60px; height: 60px; border: 2px solid currentColor; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+
+        /* DASHBOARD */
+        #app { display: none; padding: 20px; height: 100vh; box-sizing: border-box; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+        
+        .card { background: var(--panel); border-radius: 12px; padding: 20px; margin-bottom: 15px; border: 1px solid #222; }
+        .card-title { color: #888; font-size: 0.7rem; letter-spacing: 1px; margin-bottom: 10px; }
+        .balance { font-size: 1.5rem; font-weight: bold; color: #fff; }
+        
+        /* SETTINGS MODAL */
+        #settings-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; flex-direction: column; align-items: center; justify-content: center; }
+        .input-box { background: #111; border: 1px solid var(--accent); color: #fff; padding: 15px; font-size: 1.2rem; text-align: center; margin: 10px; width: 200px; letter-spacing: 5px; }
+        .action-btn { background: var(--accent); color: #000; padding: 15px 30px; border: none; font-weight: bold; margin-top: 20px; cursor: pointer; width: 220px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="lock-screen">
+        <div class="lock-icon">🔒</div>
+        <div class="pin-dots" id="pin-dots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        
+        <div class="numpad">
+            <div class="num-btn" onclick="press(1)">1</div><div class="num-btn" onclick="press(2)">2</div><div class="num-btn" onclick="press(3)">3</div>
+            <div class="num-btn" onclick="press(4)">4</div><div class="num-btn" onclick="press(5)">5</div><div class="num-btn" onclick="press(6)">6</div>
+            <div class="num-btn" onclick="press(7)">7</div><div class="num-btn" onclick="press(8)">8</div><div class="num-btn" onclick="press(9)">9</div>
+            <div class="num-btn" style="color:red;" onclick="clearPin()">C</div>
+            <div class="num-btn" onclick="press(0)">0</div>
+            <div class="num-btn" style="color:var(--accent);" onclick="unlock()">⏎</div>
+        </div>
+
+        <div id="bio-scan" onclick="scanFingerprint()">
+            <div class="bio-icon">⚡</div>
+            <div style="font-size: 0.7rem; margin-top: 10px;">TOUCH ID</div>
+        </div>
+    </div>
+
+    <div id="app">
+        <div class="header">
+            <div>drfrost.frostchain</div>
+            <div onclick="openSettings()" style="color:var(--accent); font-size:1.2rem; cursor:pointer;">⚙️</div>
+        </div>
+
+        <div class="card" style="border-left: 4px solid #f7931a;">
+            <div class="card-title">NEWKIRK LEGACY VAULT</div>
+            <div class="balance">30.337 BTC</div>
+            <div style="font-size:0.9rem; color:#8dc351; margin-top:5px;">133.70 BCH</div>
+        </div>
+
+        <div class="card" style="border-left: 4px solid #ff00ff;">
+            <div class="card-title">FROST PROTOCOL YIELD</div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                <span>FTC</span> <span style="color:var(--accent);">3.1M</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+                <span>FRST</span> <span style="color:#ff00ff;">31.4M</span>
+            </div>
+        </div>
+
+        <button class="action-btn" style="width:100%; background:#222; color:#fff; border:1px solid #333;" onclick="location.reload()">LOCK DEVICE</button>
+    </div>
+
+    <div id="settings-modal">
+        <h2 style="color:var(--accent)">SECURITY CENTER</h2>
+        <div style="color:#888; font-size:0.8rem; margin-bottom:20px;">UPDATE ACCESS CREDENTIALS</div>
+        
+        <input type="number" id="new-pin" class="input-box" placeholder="NEW PIN" oninput="if(this.value.length>4) this.value=this.value.slice(0,4)">
+        
+        <button class="action-btn" onclick="saveNewPin()">SAVE NEW PIN</button>
+        <button class="action-btn" style="background:#222; color:var(--accent); border:1px solid var(--accent);" onclick="enableBio()">LINK FINGERPRINT</button>
+        <button class="action-btn" style="background:transparent; color:#555; border:none;" onclick="closeSettings()">CANCEL</button>
+    </div>
+
+    <script>
+        // --- CORE SECURITY LOGIC ---
+        let inputPin = "";
+        let savedPin = localStorage.getItem('frost_pin') || "0000";
+        let bioEnabled = localStorage.getItem('frost_bio') === "true";
+
+        // INIT
+        if(bioEnabled) {
+            document.getElementById('bio-scan').classList.add('active');
+            document.querySelector('.bio-icon').innerText = "👆"; // Fingerprint icon
+        }
+
+        function press(n) {
+            if(inputPin.length < 4) {
+                inputPin += n;
+                updateDots();
+            }
+        }
+
+        function clearPin() {
+            inputPin = "";
+            updateDots();
+        }
+
+        function updateDots() {
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((d, i) => {
+                if(i < inputPin.length) d.classList.add('filled');
+                else d.classList.remove('filled');
+            });
+        }
+
+        function unlock() {
+            if(inputPin === savedPin) {
+                grantAccess();
+            } else {
+                navigator.vibrate(200); // Haptic Feedback for error
+                clearPin();
+            }
+        }
+
+        function scanFingerprint() {
+            if(!bioEnabled) return;
+            // SIMULATED BIOMETRIC HANDSHAKE
+            document.querySelector('.bio-icon').style.color = "#fff";
+            document.querySelector('.bio-icon').innerText = "Scanning...";
+            setTimeout(() => {
+                document.querySelector('.bio-icon').style.color = "var(--accent)";
+                grantAccess();
+            }, 800);
+        }
+
+        function grantAccess() {
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+        }
+
+        // --- SETTINGS ---
+        function openSettings() {
+            document.getElementById('settings-modal').style.display = 'flex';
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        function saveNewPin() {
+            const val = document.getElementById('new-pin').value;
+            if(val.length === 4) {
+                localStorage.setItem('frost_pin', val);
+                savedPin = val;
+                alert("PIN UPDATED SUCCESSFULLY.");
+                closeSettings();
+            } else {
+                alert("PIN MUST BE 4 DIGITS");
+            }
+        }
+
+        function enableBio() {
+            const confirmBio = confirm("LINK THIS DEVICE'S BIOMETRICS TO YOUR WALLET?");
+            if(confirmBio) {
+                localStorage.setItem('frost_bio', "true");
+                bioEnabled = true;
+                alert("FINGERPRINT LINKED.");
+                closeSettings();
+            }
+        }
+    </script>
+</body>
+</html>

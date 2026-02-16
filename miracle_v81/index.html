@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Quantum Pool</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --xmr: #ff6600; --btc: #f7931a; --alpha: #ff00ff; --theta: #00ffff; --delta: #ff9900; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #tangle-canvas { position: fixed; inset: 0; z-index: 1; opacity: 0.5; }
+        #ui-layer { position: relative; z-index: 10; display: grid; grid-template-rows: 60px 1fr 60px; height: 100vh; pointer-events: none; }
+        #ui-layer * { pointer-events: auto; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(0,255,65,0.3); background: rgba(0,0,0,0.95); }
+        .main { display: grid; grid-template-columns: 340px 1fr 340px; gap: 20px; padding: 20px; overflow: hidden; }
+        .panel { background: rgba(0,0,0,0.9); border: 1px solid #333; padding: 15px; display: flex; flex-direction: column; border-radius: 4px; overflow-y: auto; max-height: 100%; box-shadow: 0 0 15px rgba(0,255,65,0.05); }
+
+        /* POOL STATS */
+        .pool-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #222; font-size: 0.7rem; color: #888; }
+        .pool-val { color: #fff; font-weight: bold; }
+        .tag { font-size: 0.6rem; padding: 2px 4px; color: #000; border-radius: 2px; font-weight: bold; margin-right: 5px; }
+
+        /* BRAINWAVE CONTROLS */
+        .brainwave-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+        .wave-btn { background: #111; border: 1px solid #444; color: #666; padding: 10px; cursor: pointer; font-size: 0.6rem; text-align: center; text-transform: uppercase; transition: 0.2s; }
+        .wave-btn:hover { border-color: #888; }
+        .wave-btn.active.alpha { border-color: var(--alpha); color: var(--alpha); box-shadow: 0 0 10px var(--alpha); }
+        .wave-btn.active.theta { border-color: var(--theta); color: var(--theta); box-shadow: 0 0 10px var(--theta); }
+        .wave-btn.active.delta { border-color: var(--delta); color: var(--delta); box-shadow: 0 0 10px var(--delta); }
+
+        .btn-mine { width: 100%; padding: 15px; background: var(--term); color: #000; font-weight: bold; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 15px; }
+        .btn-mine.active { background: #ff3333; color: #fff; }
+
+        /* LOG */
+        .log-row { display: flex; justify-content: space-between; font-size: 0.6rem; border-bottom: 1px solid #222; padding: 4px 0; animation: flash 0.5s; }
+        @keyframes flash { from { background: rgba(0,255,65,0.2); } to { background: transparent; } }
+
+        .footer { background: rgba(0,0,0,0.95); border-top: 1px solid #333; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+        .lbl { font-size: 0.5rem; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="header">
+            <div style="font-weight:bold; letter-spacing:2px; font-size:1.1rem;">MIRACLE_POOL // <span style="color:var(--term)">QUANTUM_AUDIO</span></div>
+            <div style="text-align:right;">
+                <div class="lbl">CARRIER_BLOCK</div>
+                <div style="color:var(--gold); font-size:0.9rem;">741.frostchain</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="lbl">AGGREGATED_POOL_HASHRATE</div>
+                <div class="pool-row">
+                    <span><span class="tag" style="background:var(--btc)">BTC</span>Worker_1</span>
+                    <span class="pool-val" id="h-btc">0.00 PH/s</span>
+                </div>
+                <div class="pool-row">
+                    <span><span class="tag" style="background:#8dc351">BCH</span>Worker_2</span>
+                    <span class="pool-val" id="h-bch">0.00 PH/s</span>
+                </div>
+                <div class="pool-row">
+                    <span><span class="tag" style="background:var(--xmr)">XMR</span>Worker_3</span>
+                    <span class="pool-val" id="h-xmr">0.00 MH/s</span>
+                </div>
+                
+                <div class="lbl" style="margin-top:20px;">1/9TH_SUPPLY_RESERVOIRS</div>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:5px;">
+                    <div style="border:1px solid #222; padding:5px; text-align:center; font-size:0.6rem; color:#666;">174Hz</div>
+                    <div style="border:1px solid #222; padding:5px; text-align:center; font-size:0.6rem; color:#666;">285Hz</div>
+                    <div style="border:1px solid #222; padding:5px; text-align:center; font-size:0.6rem; color:#666;">396Hz</div>
+                    <div style="border:1px solid #222; padding:5px; text-align:center; font-size:0.6rem; color:#666;">417Hz</div>
+                    <div style="border:1px solid #222; padding:5px; text-align:center; font-size:0.6rem; color:#666;">528Hz</div>
+                    <div style="border:1px solid #222; padding:5px; text-align:center; font-size:0.6rem; color:#666;">639Hz</div>
+                    <div style="border:1px solid #222; padding:5px; text-align:center; font-size:0.6rem; color:#666;">741Hz</div>
+                    <div style="border:1px solid #222; padding:5px; text-align:center; font-size:0.6rem; color:#666;">852Hz</div>
+                    <div style="border:1px solid #222; padding:5px; text-align:center; font-size:0.6rem; color:#666;">963Hz</div>
+                </div>
+            </div>
+
+            <div></div>
+
+            <div class="panel">
+                <div class="lbl">MINER_IDENTITY</div>
+                <input type="text" id="alias" placeholder="name.frostchain" style="background:#000; border:1px solid #333; color:var(--cyan); width:100%; padding:10px; margin:5px 0 15px 0; font-family:inherit; font-size:0.8rem;">
+                
+                <div class="lbl">BRAINWAVE_MODULATION</div>
+                <div class="brainwave-bar">
+                    <div id="btn-alpha" class="wave-btn active alpha" onclick="setWave('alpha')">ALPHA [11Hz]</div>
+                    <div id="btn-theta" class="wave-btn" onclick="setWave('theta')">THETA [6Hz]</div>
+                    <div id="btn-delta" class="wave-btn" onclick="setWave('delta')">DELTA [3Hz]</div>
+                </div>
+
+                <button id="mine-btn" class="btn-mine" onclick="toggleMining()">INITIALIZE QUANTUM MINER</button>
+
+                <div class="lbl">HARD_CAP_REWARDS</div>
+                <div style="border:1px solid var(--gold); padding:10px; margin-bottom:15px; text-align:center; background:rgba(255, 215, 0, 0.05);">
+                    <div style="font-size:1.2rem; color:#fff;">13.37 FTC</div>
+                    <div style="font-size:0.9rem; color:var(--xmr);">+ 2.50 FNR</div>
+                </div>
+
+                <div class="lbl">ENTROPY_LOG</div>
+                <div id="m-list" style="margin-top:5px; max-height:150px; overflow-y:auto;"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div style="font-size:0.6rem; color:#666;">IOTA_TANGLE_HD // QUANTUM_AUDIO_ACTIVE // POOL_AGGREGATED</div>
+            <div style="text-align:right;">
+                <div class="lbl">EPOCH_TIMER</div>
+                <div style="font-size:2rem; color:#fff; font-weight:bold;" id="timer">300</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG
+        let isMining = false;
+        let currentWave = 'alpha';
+        let timerInterval = null;
+        let timeRemaining = 300;
+        
+        // VISUALIZER
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initTangle() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<80; i++) particles.push({
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+                vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5, size: Math.random()*2
+            });
+        }
+
+        function drawTangle() {
+            if(!isMining) return;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            
+            // Speed Modifier based on Brainwave
+            const speedMod = currentWave === 'alpha' ? 1.5 : (currentWave === 'theta' ? 0.8 : 0.3);
+            const color = currentWave === 'alpha' ? '#00ff41' : (currentWave === 'theta' ? '#00ffff' : '#ff9900');
+
+            particles.forEach((p, i) => {
+                p.x += p.vx * speedMod; p.y += p.vy * speedMod;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1;
+                if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                
+                particles.slice(i+1).forEach(p2 => {
+                    if(Math.hypot(p.x-p2.x, p.y-p2.y) < 120) {
+                        ctx.strokeStyle = color;
+                        ctx.globalAlpha = 0.2;
+                        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+                        ctx.globalAlpha = 1.0;
+                    }
+                });
+                ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(drawTangle);
+        }
+
+        // CONTROLS
+        function setWave(w) {
+            currentWave = w;
+            document.querySelectorAll('.wave-btn').forEach(b => b.className = 'wave-btn');
+            document.getElementById(`btn-${w}`).classList.add('active', w);
+        }
+
+        function toggleMining() {
+            isMining = !isMining;
+            const btn = document.getElementById('mine-btn');
+            if(isMining) {
+                btn.innerText = "TERMINATE QUANTUM LOOP"; btn.classList.add('active');
+                initTangle(); drawTangle(); startTimer();
+            } else {
+                btn.innerText = "INITIALIZE QUANTUM MINER"; btn.classList.remove('active');
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                stopTimer();
+            }
+        }
+
+        // LOGIC
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeRemaining = 300;
+            document.getElementById('timer').innerText = timeRemaining;
+            
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                document.getElementById('timer').innerText = timeRemaining;
+                
+                // Update Pool Stats (Simulated)
+                if(timeRemaining % 3 === 0) {
+                     document.getElementById('h-btc').innerText = (40 + Math.random()*5).toFixed(2) + " PH/s";
+                     document.getElementById('h-bch').innerText = (12 + Math.random()*2).toFixed(2) + " PH/s";
+                     document.getElementById('h-xmr').innerText = (300 + Math.random()*50).toFixed(2) + " MH/s";
+                }
+
+                if(timeRemaining <= 0) {
+                    executeMint();
+                    timeRemaining = 300;
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('timer').innerText = "300";
+            document.getElementById('h-btc').innerText = "0.00 PH/s";
+            document.getElementById('h-bch').innerText = "0.00 PH/s";
+            document.getElementById('h-xmr').innerText = "0.00 MH/s";
+        }
+
+        function executeMint() {
+            const log = document.getElementById('m-list');
+            const row = document.createElement('div');
+            row.className = 'log-row';
+            const color = currentWave === 'alpha' ? 'var(--term)' : (currentWave === 'theta' ? 'var(--cyan)' : 'var(--delta)');
+            
+            row.innerHTML = `<span style="color:${color}">[QUANTUM_HIT]</span><span>REWARD: 13.37 FTC</span>`;
+            log.prepend(row);
+        }
+        
+        window.onresize = initTangle;
+    </script>
+</body>
+</html>

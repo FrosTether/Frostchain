@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostMiner | Grayson Tangle Sync</title>
+    <style>
+        :root { 
+            --bg: #000; --ice: #00ffff; --term: #00ff41; --xmr: #ff6600; 
+            --alpha: #ff00ff; --theta: #00ffff; --delta: #ffff00; --gamma: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        /* IMAGE 2: NEURAL IOTA TANGLE */
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.7; filter: contrast(1.2); }
+
+        /* DASHBOARD LAYOUT */
+        #dashboard { width: 98%; height: 95vh; display: grid; grid-template-rows: 90px 1fr 60px; gap: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; border-bottom: 2px solid var(--ice); background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); }
+        .main { display: grid; grid-template-columns: 420px 1fr 420px; gap: 20px; padding: 15px; overflow: hidden; }
+
+        /* GLASS PANELS */
+        .panel { background: rgba(5, 5, 10, 0.95); border: 1px solid rgba(255,255,255,0.05); padding: 25px; border-radius: 24px; backdrop-filter: blur(25px); display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .stat-val { font-size: 2.5rem; font-weight: 900; color: #fff; letter-spacing: -2px; }
+
+        /* GRAYSON API BUTTON */
+        .grayson-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: var(--ice); color: #000; font-weight: 900; cursor: pointer; letter-spacing: 2px; margin-bottom: 20px; box-shadow: 0 0 25px var(--ice); transition: 0.3s; }
+        .grayson-btn:hover { transform: scale(1.02); }
+        .grayson-btn.sync { background: var(--term); box-shadow: 0 0 25px var(--term); }
+
+        /* PRESET BUTTONS */
+        .p-btn { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #666; border-radius: 8px; cursor: pointer; margin-bottom: 8px; font-weight: bold; }
+        .p-btn.active[data-t="ALPHA"] { border-color: var(--alpha); color: var(--alpha); box-shadow: 0 0 15px var(--alpha); }
+        .p-btn.active[data-t="THETA"] { border-color: var(--theta); color: var(--theta); box-shadow: 0 0 15px var(--theta); }
+        .p-btn.active[data-t="DELTA"] { border-color: var(--delta); color: var(--delta); box-shadow: 0 0 15px var(--delta); }
+
+        #frostchat { margin-top: auto; font-size: 0.55rem; color: #444; height: 160px; overflow-y: auto; border-top: 1px solid #222; padding-top: 10px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div style="font-size:0.55rem; color:#666; letter-spacing:3px;">PRIMARY_SETTLEMENT_RIG</div>
+                <div style="font-size: 1.8rem; font-weight: 900; letter-spacing: 8px;">FROST<span style="color:var(--ice)">MINER</span></div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size:0.55rem; color:var(--term);">DRAKE QUORUM x1.05 ACTIVE</div>
+                <div class="stat-val" id="total-hash">842.11 PH/s</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <button id="grayson-sync" class="grayson-btn" onclick="initGrayson()">SYNC GRAYSON API</button>
+                
+                <div style="border: 1px solid var(--xmr); background: rgba(255,102,0,0.05); padding: 20px; border-radius: 12px; text-align: center; margin-top: 10px;">
+                    <div style="font-size:0.6rem; color:var(--xmr); letter-spacing:3px;">13.37% Shadow Diversion</div>
+                    <div style="font-size: 1.5rem; color: #fff; font-weight: 900; margin-top: 5px;">XMR_LOCKED</div>
+                </div>
+
+                <div id="frostchat">
+                    <div>> Booting Grayson Interface...</div>
+                    <div>> Mounting Tangle Visualizer (Image 2)...</div>
+                    <div>> Alpha Protocol: 40Hz Alzheimer's Flush active.</div>
+                </div>
+            </div>
+
+            <div></div> <div class="panel">
+                <div style="font-size:0.6rem; color:#666; margin-bottom:15px; letter-spacing:2px;">Quantum Neural Sync</div>
+                <button class="p-btn active" data-t="ALPHA" onclick="setP('ALPHA')">ALPHA (11.11Hz) + 40Hz</button>
+                <button class="p-btn" data-t="THETA" onclick="setP('THETA')">THETA (8.8Hz)</button>
+                <button class="p-btn" data-t="DELTA" onclick="setP('DELTA')">DELTA (π Hz)</button>
+
+                <div style="margin-top:auto;">
+                    <div style="font-size:0.6rem; color:var(--ice); margin-bottom:5px;">Direct-to-DAT Wallet</div>
+                    <div style="font-size: 0.5rem; color:#444; word-break:break-all;" id="wallet-id">drfrost.frostchain // wallet.dat</div>
+                    <button style="width:100%; padding:10px; background:transparent; border:1px solid #333; color:#555; margin-top:10px; font-size:0.6rem; cursor:pointer;" onclick="requestPayment()">SETTLE DIRECT TO WALLET.DAT</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer" style="padding: 0 40px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display:flex; align-items:center; justify-content:space-between; font-size: 0.6rem; color: #444;">
+            <div>FROSTMINER // GRAYSON_WALLET_API // 13.37% DIVERSION</div>
+            <div style="color:var(--term)">STATUS: PHASE_LOCKED_IRREVERSIBLE</div>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx, solf, quant, alz, current = 'ALPHA';
+        const fr = { 'ALPHA': 11.11, 'THETA': 8.8, 'DELTA': Math.PI };
+
+        function initGrayson() {
+            const btn = document.getElementById('grayson-sync');
+            btn.innerText = "IDENTITY_SYNCED";
+            btn.classList.add('sync');
+            log("Grayson API: Handshake confirmed. Payment channel to wallet.dat OPEN.");
+        }
+
+        function requestPayment() {
+            log("Settle Request: Broadcasting pro-rata rewards to wallet.dat...");
+            setTimeout(() => log("Settlement Complete: Transaction finalized on Frost Settlement Layer."), 1200);
+        }
+
+        function setP(t) {
+            current = t;
+            document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-t="${t}"]`).classList.add('active');
+            log(`Neural Shift: ${t} (${fr[t]}Hz) active.`);
+        }
+
+        function log(m) {
+            const chat = document.getElementById('frostchat');
+            const d = document.createElement('div');
+            d.innerText = `> ${m}`;
+            if(m.includes('Complete')) d.style.color = 'var(--term)';
+            chat.prepend(d);
+        }
+
+        // IMAGE 2: NEURAL TANGLE VISUALS
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let pts = [];
+        function initT() { 
+            canvas.width = window.innerWidth; 
+            canvas.height = window.innerHeight; 
+            pts = [];
+            for(let i=0; i<95; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3 }); 
+        }
+        function drawT() { 
+            ctx.clearRect(0,0,canvas.width,canvas.height); 
+            pts.forEach((p, i) => { 
+                p.x += p.vx; p.y += p.vy; 
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; 
+                pts.slice(i+1).forEach(p2 => { 
+                    const d = Math.hypot(p.x-p2.x, p.y-p2.y); 
+                    if(d < 200) { 
+                        ctx.strokeStyle = `rgba(0,255,255,${0.2 * (1-d/200)})`; 
+                        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); 
+                    } 
+                }); 
+            }); 
+            requestAnimationFrame(drawT); 
+        }
+        initT(); drawT(); window.onresize = initT;
+    </script>
+</body>
+</html>

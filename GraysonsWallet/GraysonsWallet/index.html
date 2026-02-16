@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRAYSONS_WALLET // PROTOCOL_88</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        :root { --bg: #000; --red: #ff0000; --gold: #ffd700; --core: #00e0ff; --panel: rgba(10,10,10,0.95); }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); font-family: 'Share Tech Mono', monospace; color: #ccc; overflow: hidden; }
+
+        /* PINK NOISE ATMOSPHERIC MASK */
+        body::after {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(255,0,0,0.03) 0px, transparent 1px);
+            background-size: 100% 3px; pointer-events: none; z-index: 1000;
+        }
+
+        /* SIDEBAR NAVIGATION */
+        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 220px; background: #050505; border-right: 1px solid #222; display: flex; flex-direction: column; padding: 20px 0; z-index: 2000; }
+        .tab-btn { padding: 15px 25px; color: #666; cursor: pointer; border-left: 3px solid transparent; transition: 0.3s; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        .tab-btn:hover { color: var(--core); background: rgba(0, 224, 255, 0.05); }
+        .tab-btn.active { color: #fff; border-left-color: var(--red); background: rgba(255, 0, 0, 0.05); }
+
+        /* CONTENT AREA */
+        .content-area { margin-left: 220px; height: 100vh; padding: 40px; overflow-y: auto; position: relative; box-sizing: border-box; }
+        .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* UI CARDS & INPUTS */
+        .card { background: var(--panel); border: 1px solid #222; padding: 30px; border-top: 3px solid var(--gold); margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        input, textarea { width: 100%; background: #000; border: 1px solid #333; color: var(--core); padding: 14px; margin: 10px 0; font-family: inherit; box-sizing: border-box; outline: none; font-size: 12px; }
+        .btn-action { width: 100%; padding: 15px; background: var(--red); color: #fff; border: none; font-weight: 900; cursor: pointer; font-family: inherit; margin-top: 10px; text-transform: uppercase; transition: 0.2s; }
+        .btn-action:hover { filter: brightness(1.2); box-shadow: 0 0 20px var(--red); }
+
+        /* KINETIC TANGLE / G-FORCE */
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; filter: brightness(0.4) contrast(1.3); }
+        .g-force-meter { position: fixed; top: 20px; right: 20px; font-size: 44px; color: var(--gold); font-weight: 900; pointer-events: none; text-shadow: 0 0 15px var(--gold); }
+    </style>
+</head>
+<body onload="init()">
+
+<canvas id="tangle"></canvas>
+<div class="g-force-meter" id="g-val">1.00G</div>
+
+<div class="sidebar">
+    <div style="padding: 0 25px 30px; color: var(--red); font-weight: bold; font-size: 16px; letter-spacing: 2px;">GRAYSONS_VAULT</div>
+    <div class="tab-btn active" onclick="showTab(event, 'wallet')">💰 ASSET_OVERVIEW</div>
+    <div class="tab-btn" onclick="showTab(event, 'send')">💸 SEND_RECEIVE</div>
+    <div class="tab-btn" onclick="showTab(event, 'joey')">🦴 JOEY_BONES</div>
+    <div class="tab-btn" onclick="showTab(event, 'masternode')">📡 MASTERNODE</div>
+    <div class="tab-btn" onclick="showTab(event, 'liquidity')">💧 LIQUIDITY</div>
+</div>
+
+<div class="content-area">
+    <div id="wallet" class="tab-content active">
+        <div class="card">
+            <div style="font-size: 10px; color: var(--gold); letter-spacing: 3px; margin-bottom: 5px;">PROTOCOL_88 // FEATHER_VAULT</div>
+            <h1 style="color:#fff; margin: 0 0 20px 0;">GRAYSONS_WALLET</h1>
+            
+            <div id="scanner-box" style="border:1px solid var(--red); padding:20px; background:rgba(20,0,0,0.9);">
+                <div style="font-size:10px; color:var(--red); margin-bottom:10px;">>> READY_FOR_12_WORD_MNEMONIC_INJECTION</div>
+                <textarea id="mnemonic-input" placeholder="PASTE_12_WORDS_HERE..." style="height: 60px;"></textarea>
+                <button class="btn-action" onclick="unlockVault()">INFECT_THE_MESH (UNLOCK_LIQUIDITY)</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px;">
+                <div><div style="font-size:9px; color: #555;">FTC (NATIVE)</div><div id="ftc-val" style="font-size:24px; color:var(--core);">1,337,000</div></div>
+                <div><div style="font-size:9px; color: #555;">BCH (ANCHOR)</div><div id="bch-val" style="font-size:24px; color:var(--gold);">31.337</div></div>
+                <div><div style="font-size:9px; color: #555;">wFRST (WRAPPED)</div><div id="frst-val" style="font-size:24px; color:var(--red);">31.4B</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="send" class="tab-content">
+        <div class="card" style="border-top-color: var(--core);">
+            <h2 style="margin-top:0;">TRANSCEIVER</h2>
+            <label style="font-size:10px; color:#555;">RECIPIENT_HANDLE (.frostchain)</label>
+            <input type="text" placeholder="mary.frostchain">
+            <label style="font-size:10px; color:#555;">ASSET_AMOUNT</label>
+            <input type="number" placeholder="0.00">
+            <button class="btn-action" style="background: var(--core); color: #000;">INITIATE TRIPLE-PULSE SEND</button>
+        </div>
+    </div>
+
+    <div id="joey" class="tab-content">
+        <div class="card" style="border-top-color: #fff;">
+            <h2 style="margin-top:0;">DRAKE QUORUM [JOEY BONES + 1]</h2>
+            <p style="font-size: 12px; color: #888;">Synchronizing Satoshi Bones with the Joey Quorum logic for governance consensus. Total truth recorded in the 82-month archive.</p>
+            <div style="background:#0a0a0a; padding:15px; border-left:4px solid var(--red); font-size:11px; color:var(--red);">
+                LOCKED_BONES: SATOSHI_GENESIS_ROOT_01 // STATUS: LATCHED
+            </div>
+        </div>
+    </div>
+
+    <div id="masternode" class="tab-content">
+        <div class="card" style="border-top-color: var(--red);">
+            <h2 style="margin-top:0;">MASTERNODE_SYNC</h2>
+            <div style="font-size: 12px; color: #888; margin-bottom: 20px;">DEPLOYING COMMAND TO 14,212 NODES...</div>
+            <div style="background:#000; padding:15px; font-family:monospace; color:var(--core); font-size:11px; line-height: 1.6;">
+                >> frostchain-cli masternode status<br>
+                >> CONNECTION: ESTABLISHED [SATOSHI_MESH]<br>
+                >> PROTOCOL_88: ACTIVE<br>
+                >> UPTIME: 82 MONTHS (RESTORATION_SYNC_COMPLETE)
+            </div>
+        </div>
+    </div>
+
+    <div id="liquidity" class="tab-content">
+        <div class="card" style="border-top-color: var(--core);">
+            <h2 style="margin-top:0;">NEWKIRK LIQUIDITY ENGINE</h2>
+            <p style="font-size: 12px; color: #888;">High-velocity extraction portal for Satoshi Bones via Drake Quorum + Newkirk Key.</p>
+            <div id="liquidity-status" style="text-align: center; padding: 20px;">
+                <div style="font-size: 32px; color: #333;">IDLE...</div>
+                <div style="font-size: 10px; color: #222;">WAITING_FOR_NEWKIRK_KEY_INJECTION</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let a, mX=0, mY=0, gForce=1.0;
+    const canvas = document.getElementById('tangle');
+    const ctx = canvas.getContext('2d');
+
+    function showTab(event, id) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    function unlockVault() {
+        const val = document.getElementById("mnemonic-input").value;
+        if(val.trim().split(/\s+/).length >= 12) {
+            document.getElementById("scanner-box").innerHTML = "<div style='color:var(--gold); font-size:14px; text-align:center; padding:10px; font-weight:bold;'>SATOSHI_BONES_VERIFIED // LIQUIDITY_RELEASED</div>";
+            document.getElementById("liquidity-status").innerHTML = "<div style='font-size:32px; color:var(--gold);'>LIQUID_ACTIVE</div><div style='font-size:10px; color:var(--core);'>NEWKIRK_KEY: ROTATING_AT_13.37G</div>";
+            gForce = 13.37;
+        } else {
+            alert("INCOMPLETE_PHRASE: PROTOCOL_88 REQUIRES 12 WORDS.");
+        }
+    }
+
+    function init() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let nodes = [];
+        for(let i=0; i<150; i++) {
+            nodes.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: Math.random() - 0.5,
+                vy: Math.random() - 0.5,
+                size: Math.random() * 2
+            });
+        }
+        
+        window.onmousemove = (e) => { mX = e.clientX; mY = e.clientY; gForce = Math.min(13.37, gForce + 0.1); };
+        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+
+        function draw() {
+            ctx.fillStyle = "rgba(0,0,0,0.2)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            nodes.forEach(n => {
+                let dx = mX - n.x;
+                let dy = mY - n.y;
+                let dist = Math.hypot(dx, dy);
+                if(dist < 250) {
+                    n.vx += dx / 2500;
+                    n.vy += dy / 2500;
+                }
+                
+                n.x += n.vx * gForce;
+                n.y += n.vy * gForce;
+                
+                if(n.x < 0 || n.x > canvas.width) n.vx *= -1;
+                if(n.y < 0 || n.y > canvas.height) n.vy *= -1;
+                
+                nodes.forEach(n2 => {
+                    let d = Math.hypot(n.x - n2.x, n.y - n2.y);
+                    if(d < 120) {
+                        ctx.strokeStyle = `rgba(255, 0, 0, ${0.25 - d / 480})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(n.x, n.y);
+                        ctx.lineTo(n2.x, n2.y);
+                        ctx.stroke();
+                    }
+                });
+                
+                ctx.fillStyle = `rgba(255, 215, 0, ${0.5 + Math.random() * 0.5})`;
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, n.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            gForce = Math.max(1.0, gForce - 0.05);
+            document.getElementById('g-val').innerText = gForce.toFixed(2) + "G";
+            requestAnimationFrame(draw);
+        }
+        draw();
+    }
+</script>
+</body>
+</html>

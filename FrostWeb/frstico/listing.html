@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FTC | EXCHANGE LISTING SPECS</title>
+<style>
+  :root { --bg: #050505; --gold: #ffd700; --iota: #00ff41; --cyan: #00ffff; }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; padding: 30px; line-height: 1.5; font-size: 0.85em; }
+  .header { border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 30px; }
+  .section { background: #111; border: 1px solid #222; padding: 20px; margin-bottom: 20px; border-left: 4px solid var(--cyan); }
+  h2 { color: var(--gold); font-size: 1em; text-transform: uppercase; margin-top: 0; }
+  .code { background: #000; padding: 15px; border: 1px solid #333; color: var(--iota); font-size: 0.8em; overflow-x: scroll; }
+  .stat { color: var(--cyan); font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="font-size: 1.5em; font-weight: 900; color: var(--gold);">FTC LISTING MANIFEST</div>
+  <div style="font-size: 0.7em; color: var(--iota);">FAI ♍ ENGINE VERIFIED | drfrost.frostchain</div>
+</div>
+
+<div class="section">
+  <h2>1. The Vision (Finux Whitepaper)</h2>
+  <p>FTC is the liquid currency of the <b>Finux Mobile OS</b>. Unlike cloud-dependent operating systems, Finux is Unix-backed and local-first.</p>
+  <ul>
+    <li><b>Supply:</b> 13,370,000 Genesis Units.</li>
+    <li><b>Distribution:</b> 1,000,000 FTC Liquidity Round @ <span class="stat">$1.00 USD</span>.</li>
+    <li><b>Governance:</b> Authority-based Tangle settlements.</li>
+  </ul>
+</div>
+
+<div class="section" style="border-left-color: var(--gold);">
+  <h2>2. Proof of Thermal Work (PoTW)</h2>
+  <p>The network utilizes a <b>Thermal Work</b> protocol to secure the mesh. Nodes contribute computational entropy to maintain cluster stability, ensuring that asset movement is physical and verifiable.</p>
+</div>
+
+<div class="section">
+  <h2>3. MoveVM Smart Contract</h2>
+  <div class="code">
+module frost_authority::ftc_listing {
+    // 1,000,000 FTC ALLOCATION
+    // FIXED FLOOR: $1.00 USD
+    // FAI ♍ ENGINE GATEWAY
+    struct FTC has drop {}
+    fun init(...) { /* Mint 1M to Liquidity Pool */ }
+}
+  </div>
+</div>
+
+<div class="section" style="border-left-color: #ba9f33;">
+  <h2>4. The Dogecoin Tunnel</h2>
+  <p>Liquidity injection via DOGE at a fixed <span class="stat">1 DOGE = &pi; FRST</span> ratio. FRST stock is converted to liquid FTC for exchange listing stability.</p>
+</div>
+
+<div style="text-align: center; color: #444; font-size: 0.6em;">
+  SOURCE: github.com/FrosTether/Finux | DEPLOYED VIA SURGE
+</div>
+
+</body>
+</html>

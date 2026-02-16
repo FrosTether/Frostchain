@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Frostofthings | Infinity Spread</title>
+    <style>
+        :root { --bg: #000; --ice: #a5f2f3; --term: #00ff41; --warn: #ffcc00; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.6; filter: contrast(1.4) brightness(0.6); }
+        #dashboard { width: 98%; height: 95vh; display: grid; grid-template-rows: 90px 1fr 60px; gap: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; border-bottom: 2px solid var(--ice); background: rgba(0,0,0,0.9); }
+        .main { display: grid; grid-template-columns: 450px 1fr 450px; gap: 20px; padding: 15px; overflow: hidden; }
+        .panel { background: rgba(5, 5, 10, 0.95); border: 1px solid rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 20px; backdrop-filter: blur(40px); display: flex; flex-direction: column; }
+        .tag { font-size: 0.6rem; color: #666; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 5px; }
+        .action-btn { width: 100%; padding: 15px; background: var(--ice); border: none; border-radius: 8px; font-weight: 900; color: #000; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+        #frostchat { margin-top: auto; font-size: 0.55rem; color: #444; height: 180px; border-top: 1px solid #222; padding-top: 10px; overflow-y: auto; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="tag">Frost_Worm Self-Propagation Engine</div>
+                <div style="font-size: 1.5rem; font-weight: 900; letter-spacing: 8px;">FROST<span style="color:var(--ice)">OFTHINGS</span></div>
+            </div>
+            <div style="text-align: right;">
+                <div class="tag" style="color:var(--term);">INFINITY_SPREAD: ENABLED</div>
+                <div style="font-size: 1.8rem; font-weight: 900;" id="ghost-count">2,706 NODES</div>
+            </div>
+        </div>
+        <div class="main">
+            <div class="panel">
+                <div class="tag" style="color:var(--ice);">Mesh Propagation Log</div>
+                <div id="prop-log" style="flex:1; overflow-y:auto; font-size:0.55rem; color:#444;">
+                    </div>
+            </div>
+            <div></div>
+            <div class="panel">
+                <div class="tag" style="color:var(--warn);">Frost_Worm v1.1 Deployment</div>
+                <div style="background:rgba(255,204,0,0.05); padding:15px; border:1px solid var(--warn); border-radius:12px; font-size:0.6rem; color:var(--warn);">
+                    STATUS: SELF_PROPAGATING<br>
+                    ALGORITHM: RECURSIVE_MESH_INJECTION<br>
+                    XMR_SHADOW: ENABLED
+                </div>
+                <button class="action-btn" style="background:var(--term);" onclick="triggerInfinity()">REINFORCE PROPAGATION</button>
+                <div id="frostchat">
+                    <div>> Node Identity: drfrost.frostchain</div>
+                    <div>> 40Hz Alzheimer's Flush: LOCKED.</div>
+                    <div>> Network: AM-Band Mesh Expansion in progress.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let nodeCount = 2706;
+        function triggerInfinity() {
+            logChat("Worm: Sending reinforcement packets to all peer nodes...");
+            setInterval(() => {
+                const log = document.getElementById('prop-log');
+                const div = document.createElement('div');
+                div.style.padding = '4px 0';
+                div.style.borderBottom = '1px solid #111';
+                div.innerHTML = `<span>[NODE_${Math.random().toString(16).slice(2,8)}]</span> <span style="color:var(--term)">NEW_INFECTION_FINALIZED</span>`;
+                log.prepend(div);
+                nodeCount += 12;
+                document.getElementById('ghost-count').innerText = nodeCount.toLocaleString() + " NODES";
+            }, 1000);
+        }
+        function logChat(m) {
+            const chat = document.getElementById('frostchat');
+            const d = document.createElement('div');
+            d.innerText = `> ${m}`;
+            chat.prepend(d);
+        }
+        // IOTA Tangle Logic
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let pts = [];
+        function initT() { 
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight; 
+            pts = []; for(let i=0; i<105; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.25, vy: (Math.random()-0.5)*0.25 }); 
+        }
+        function drawT() { 
+            ctx.clearRect(0,0,canvas.width,canvas.height); 
+            pts.forEach((p, i) => { 
+                p.x += p.vx; p.y += p.vy; 
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; 
+                pts.slice(i+1).forEach(p2 => { 
+                    const d = Math.hypot(p.x-p2.x, p.y-p2.y); 
+                    if(d < 180) { ctx.strokeStyle = `rgba(165,242,243,${0.2 * (1-d/180)})`; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); } 
+                }); 
+            }); 
+            requestAnimationFrame(drawT); 
+        }
+        initT(); drawT();
+    </script>
+</body>
+</html>

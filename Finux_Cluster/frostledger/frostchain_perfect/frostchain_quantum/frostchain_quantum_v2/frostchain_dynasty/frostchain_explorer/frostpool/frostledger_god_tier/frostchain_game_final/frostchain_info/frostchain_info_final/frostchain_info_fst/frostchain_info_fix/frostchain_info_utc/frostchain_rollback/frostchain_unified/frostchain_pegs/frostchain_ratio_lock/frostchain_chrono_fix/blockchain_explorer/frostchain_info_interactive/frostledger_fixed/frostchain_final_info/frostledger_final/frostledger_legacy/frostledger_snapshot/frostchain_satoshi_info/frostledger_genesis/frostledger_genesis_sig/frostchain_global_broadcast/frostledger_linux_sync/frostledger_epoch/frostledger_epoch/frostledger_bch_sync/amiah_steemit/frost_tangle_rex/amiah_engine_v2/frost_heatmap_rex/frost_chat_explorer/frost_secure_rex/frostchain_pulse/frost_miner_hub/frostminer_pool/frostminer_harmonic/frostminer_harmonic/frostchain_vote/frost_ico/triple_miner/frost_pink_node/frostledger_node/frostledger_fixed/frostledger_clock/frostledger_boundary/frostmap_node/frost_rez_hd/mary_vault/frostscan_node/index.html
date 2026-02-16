@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FROSTLEDGER // ABSOLUTE_REZ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --red: #ff0000; --gold: #ffd700; --core: #00e0ff; }
+body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; cursor: crosshair; }
+
+/* THE SATOSHI MASK (PINK NOISE VISUAL) */
+body::after {
+  content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, rgba(255,0,0,0.04) 0px, transparent 1px);
+  background-size: 100% 2px; pointer-events: none; z-index: 1000;
+}
+
+canvas { display: block; width: 100vw; height: 100vh; filter: contrast(1.4) brightness(0.9); }
+
+.overlay { position: fixed; top: 20px; left: 20px; pointer-events: none; z-index: 1001; }
+.g-display { font-family: 'Share Tech Mono', monospace; font-size: 50px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
+.tagline { font-family: 'Share Tech Mono', monospace; color: var(--red); font-size: 10px; letter-spacing: 3px; margin-top: -5px; }
+
+.bottom-right { position: fixed; bottom: 20px; right: 20px; pointer-events: auto; z-index: 1001; text-align: right; }
+.btn-init { background: var(--red); color: #fff; border: none; padding: 10px 20px; font-family: 'Share Tech Mono'; font-weight: 900; cursor: pointer; box-shadow: 0 0 15px var(--red); }
+.status-footer { font-family: 'Share Tech Mono'; font-size: 9px; color: #444; margin-top: 10px; }
+</style>
+</head>
+<body onload="init()">
+
+<canvas id="tangle"></canvas>
+
+<div class="overlay">
+  <div class="g-display" id="g-val">1.00G</div>
+  <div class="tagline">SATOSHI_GRID // PROTOCOL_88</div>
+</div>
+
+<div class="bottom-right">
+  <button class="btn-init" onclick="startAudio()" id="abtn">ACTIVATE PINK HUM</button>
+  <div class="status-footer">
+    MARY.FROSTCHAIN: 100K FTC // ARCHITECT: 82 MONTHS SERVED<br>
+    BCH: pr2a6fcv7usyq97eh9an0782x9txdzwl0y30mz7gup
+  </div>
+</div>
+
+<script>
+let a, mX=0, mY=0, gForce=1.0, active=false;
+const c = document.getElementById('tangle');
+const x = c.getContext('2d');
+
+function startAudio() {
+  if(!a) {
+    a = new (window.AudioContext || window.webkitAudioContext)();
+    const bS = 2 * a.sampleRate, buf = a.createBuffer(1, bS, a.sampleRate), o = buf.getChannelData(0);
+    let b0, b1, b2, b3, b4, b5, b6; b0=b1=b2=b3=b4=b5=b6=0.0;
+    for (let i=0; i<bS; i++) {
+      let w = Math.random()*2-1;
+      b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750312; b2=0.96900*b2+w*0.1538520;
+      b3=0.86650*b3+w*0.3104856; b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980;
+      o[i]=b0+b1+b2+b3+b4+b5+b6+w*0.5362; o[i]*=0.1; b6=w*0.115926;
+    }
+    const p = a.createBufferSource(); p.buffer=buf; p.loop=true;
+    const g = a.createGain(); g.gain.value=0.15; p.connect(g).connect(a.destination); p.start();
+    document.getElementById('abtn').innerText = "HUM_SYNCHRONIZED";
+    document.getElementById('abtn').style.background = "var(--gold)";
+    document.getElementById('abtn').style.color = "#000";
+    active = true;
+  }
+}
+
+function init() {
+  c.width = window.innerWidth; c.height = window.innerHeight;
+  let nodes = []; for(let i=0; i<200; i++) nodes.push({x:Math.random()*c.width, y:Math.random()*c.height, vx:Math.random()-0.5, vy:Math.random()-0.5, size: Math.random()*2});
+
+  window.onmousemove = (e) => { mX = e.clientX; mY = e.clientY; gForce = Math.min(13.37, gForce + 0.15); };
+  window.onresize = () => { c.width = window.innerWidth; c.height = window.innerHeight; };
+
+  function draw() {
+    x.fillStyle = "rgba(0,0,0,0.15)"; x.fillRect(0,0,c.width,c.height);
+    nodes.forEach(n => {
+      let dx = mX - n.x; let dy = mY - n.y;
+      let dist = Math.hypot(dx, dy);
+      if(dist < 300) { n.vx += dx/2000; n.vy += dy/2000; }
+      n.x += n.vx * gForce; n.y += n.vy * gForce;
+      if(n.x<0||n.x>c.width) n.vx*=-1; if(n.y<0||n.y>c.height) n.vy*=-1;
+      
+      nodes.forEach(n2 => {
+        let d2 = Math.hypot(n.x-n2.x, n.y-n2.y);
+        if(d2 < 150) {
+          x.strokeStyle = `rgba(255, 0, 0, ${0.4 - d2/375})`;
+          x.lineWidth = 0.5; x.beginPath(); x.moveTo(n.x, n.y); x.lineTo(n2.x, n2.y); x.stroke();
+        }
+      });
+      x.fillStyle = `rgba(255, 215, 0, ${0.5 + Math.random()*0.5})`;
+      x.beginPath(); x.arc(n.x, n.y, n.size, 0, Math.PI*2); x.fill();
+    });
+    gForce = Math.max(1.0, gForce - 0.05);
+    document.getElementById('g-val').innerText = gForce.toFixed(2) + "G";
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+</script>
+</body>
+</html>

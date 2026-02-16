@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostMiner | API Linked</title>
+    <style>
+        :root { 
+            --bg: #000; --ice: #a5f2f3; --term: #00ff41; --warn: #ffcc00; 
+            --alpha: #ff00ff; --theta: #00ccff; --delta: #ffff00;
+        }
+        body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; overflow: hidden; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        
+        /* LAUNCHER */
+        #launcher { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .id-input { background: transparent; border: none; border-bottom: 2px solid #333; color: var(--term); font-size: 2rem; text-align: center; outline: none; margin-bottom: 20px; width: 80%; }
+        
+        /* DASHBOARD */
+        #dashboard { display: none; height: 100%; grid-template-rows: 60px 1fr 60px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 1px solid #333; }
+        .btn-ctrl { background: #111; border: 1px solid #333; color: #666; padding: 5px 10px; cursor: pointer; margin-left: 5px; }
+        .btn-active { border-color: var(--term); color: var(--term); box-shadow: 0 0 10px rgba(0,255,65,0.2); }
+        
+        /* MAIN */
+        .main { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
+        .panel { border: 1px solid #333; padding: 20px; border-radius: 10px; background: rgba(20,20,20,0.5); }
+        .token-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #222; }
+        .val { font-size: 1.2rem; font-weight: bold; }
+        
+        .sync-status { color: var(--warn); font-size: 0.7rem; animation: pulse 1s infinite; }
+        @keyframes pulse { 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+    <div id="launcher">
+        <div style="color:var(--ice); margin-bottom:20px; font-weight:900;">WHO IS MINING .FROSTCHAIN?</div>
+        <input type="text" id="miner-id" class="id-input" placeholder="identity..." autofocus>
+        <div style="font-size:0.6rem; color:#555;">PRESS ENTER TO HANDSHAKE LOCALHOST:3000</div>
+    </div>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>FROST<span style="color:var(--ice)">MINER</span> <span style="font-size:0.6rem;">v151</span></div>
+            <div>
+                <button class="btn-ctrl" id="btn-alpha" onclick="toggleAudio('alpha')">ALPHA</button>
+                <button class="btn-ctrl" id="btn-theta" onclick="toggleAudio('theta')">THETA</button>
+                <button class="btn-ctrl" id="btn-delta" onclick="toggleAudio('delta')">DELTA</button>
+                <button class="btn-ctrl" onclick="toggleFS()">FULL SCREEN</button>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div style="color:var(--term); margin-bottom:15px;">REAL-TIME API BALANCE</div>
+                <div class="token-row"><span>FRST</span><span id="bal-frst" class="val">0.00</span></div>
+                <div class="token-row"><span>FNR</span><span id="bal-fnr" class="val">0.00</span></div>
+                <div class="token-row"><span>FTC</span><span id="bal-ftc" class="val">0.00</span></div>
+                <div class="token-row"><span>FTR</span><span id="bal-ftr" class="val">0.00</span></div>
+                <div id="api-log" style="margin-top:20px; font-size:0.6rem; color:#444;">> Waiting for handshake...</div>
+            </div>
+
+            <div class="panel" style="display:flex; align-items:center; justify-content:center; text-align:center;">
+                <div>
+                    <div style="font-size:2rem; font-weight:900;" id="display-id">...</div>
+                    <div style="color:var(--ice);">ACTIVE NODE</div>
+                    <div class="sync-status" id="mining-status">MINING INACTIVE</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="padding:20px; border-top:1px solid #333; font-size:0.6rem; color:#555; display:flex; justify-content:space-between;">
+            <div>API: http://localhost:3000</div>
+            <div>CONTRACT: 4AEreX...48Ab</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:3000/api";
+        let identity = "";
+        let audioCtx;
+        const oscillators = {};
+
+        // --- HANDSHAKE ---
+        document.getElementById('miner-id').addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                identity = e.target.value.trim();
+                if (!identity) return;
+
+                log(`Handshaking with ${API_URL}...`);
+                try {
+                    const res = await fetch(`${API_URL}/connect`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identity })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.status === "CONNECTED") {
+                        document.getElementById('launcher').style.display = 'none';
+                        document.getElementById('dashboard').style.display = 'grid';
+                        document.getElementById('display-id').innerText = identity;
+                        log(`Connected. Ledger synced.`);
+                        startMiningLoop();
+                    }
+                } catch (err) {
+                    log("CONNECTION FAILED. IS SERVER.JS RUNNING?");
+                    alert("Ensure server.js is running on port 3000!");
+                }
+            }
+        });
+
+        // --- MINING LOOP (HITS API EVERY 3 SECONDS) ---
+        function startMiningLoop() {
+            document.getElementById('mining-status').innerText = "MINING L1... SYNCING LEDGER...";
+            setInterval(async () => {
+                try {
+                    const res = await fetch(`${API_URL}/mine`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identity, rate: 1.05 }) // Drake Quorum Rate
+                    });
+                    const bal = await res.json();
+                    
+                    document.getElementById('bal-frst').innerText = bal.frst.toFixed(4);
+                    document.getElementById('bal-fnr').innerText = bal.fnr.toFixed(4);
+                    document.getElementById('bal-ftc').innerText = bal.ftc.toFixed(2);
+                    document.getElementById('bal-ftr').innerText = bal.ftr.toFixed(2);
+                } catch (e) {
+                    log("Sync Error.");
+                }
+            }, 3000);
+        }
+
+        function log(msg) {
+            document.getElementById('api-log').innerHTML += `<br>> ${msg}`;
+        }
+
+        // --- AUDIO ENGINE ---
+        function toggleAudio(type) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const freqs = { 'alpha': 11.11, 'theta': 5.5, 'delta': 2.2 };
+            const btn = document.getElementById(`btn-${type}`);
+
+            if (oscillators[type]) {
+                oscillators[type].stop();
+                delete oscillators[type];
+                btn.classList.remove('btn-active');
+            } else {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                // Binaural Logic: Carrier (432Hz) + Beat Frequency
+                osc.frequency.value = 432; 
+                const beat = audioCtx.createOscillator();
+                beat.frequency.value = 432 + freqs[type];
+
+                gain.gain.value = 0.1;
+                osc.connect(gain);
+                beat.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                beat.start();
+                oscillators[type] = { stop: () => { osc.stop(); beat.stop(); } };
+                btn.classList.add('btn-active');
+            }
+        }
+
+        function toggleFS() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        }
+    </script>
+</body>
+</html>

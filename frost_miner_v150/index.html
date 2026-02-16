@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostMiner | Newkirk Convergence</title>
+    <style>
+        :root { 
+            --bg: #000; --ice: #a5f2f3; --term: #00ff41; --xmr: #ff6600; 
+            --gold: #ffcc00; --btc: #f2a900; --bch: #8dc351;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; user-select: none; }
+        body { background: var(--bg); color: #fff; height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* IMAGE 2: NEURAL TANGLE HD (Background) */
+        #tangle-canvas { position: fixed; inset: 0; z-index: 0; opacity: 0.8; filter: contrast(1.3); }
+
+        /* LAYOUT */
+        #dashboard { position: relative; z-index: 10; width: 100%; height: 100%; display: grid; grid-template-rows: 70px 1fr 200px; padding: 10px; gap: 10px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 30px; background: rgba(0,0,0,0.8); border-bottom: 2px solid var(--ice); }
+        .logo { font-size: 1.8rem; font-weight: 900; letter-spacing: 5px; }
+        
+        .main-grid { display: grid; grid-template-columns: 350px 1fr 350px; gap: 15px; overflow: hidden; }
+        .panel { background: rgba(10, 15, 20, 0.9); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; backdrop-filter: blur(10px); display: flex; flex-direction: column; }
+
+        /* METRICS */
+        .contract-box { font-size: 0.55rem; color: #666; word-break: break-all; margin-bottom: 15px; border: 1px solid #333; padding: 10px; border-radius: 5px; }
+        .metric-row { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #222; padding-bottom: 4px; font-size: 0.8rem; }
+        
+        .ratio-badge { background: var(--gold); color: #000; font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; }
+        
+        /* FROSTCHAT */
+        #frostchat-container { display: flex; flex-direction: column; height: 100%; }
+        #chat-window { flex: 1; overflow-y: auto; font-size: 0.6rem; color: #aaa; margin-bottom: 10px; border: 1px solid #222; padding: 10px; background: rgba(0,0,0,0.5); }
+        .msg { margin-bottom: 4px; }
+        .msg-newkirk { color: var(--gold); }
+        .msg-sys { color: var(--term); }
+
+        /* INJECTION BAR */
+        .inject-bar-bg { width: 100%; height: 6px; background: #222; margin-top: 5px; border-radius: 3px; overflow: hidden; }
+        .inject-fill { height: 100%; width: 0%; background: var(--btc); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+        .tag { font-size: 0.6rem; color: var(--ice); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dashboard">
+        <div class="header">
+            <div class="logo">FROST<span style="color:var(--xmr)">MINER</span> <span style="font-size:0.8rem; color:#666;">// NEWKIRK_SYNC</span></div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.6rem; color: var(--term);">SOFTFORK CONTRACT ACTIVE</div>
+                <div style="font-size: 1rem; font-weight: 900;">XMR_4AEreX...48Ab</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="panel">
+                <div class="tag">Liquidity Vortex (2:1 Peg)</div>
+                
+                <div class="metric-row">
+                    <span>FTC / wBTC</span>
+                    <span><span class="ratio-badge">2:1 LVRG</span> ACTIVE</span>
+                </div>
+                <div class="metric-row">
+                    <span>FTC / wBCH</span>
+                    <span><span class="ratio-badge">2:1 LVRG</span> ACTIVE</span>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <div class="tag" style="color:var(--btc);">Newkirk Injection (wBTC)</div>
+                    <div class="inject-bar-bg"><div class="inject-fill" style="width: 78%;"></div></div>
+                    <div style="text-align:right; font-size:0.6rem; margin-top:2px;">12.4 BTC WRAPPED</div>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <div class="tag" style="color:var(--bch);">Newkirk Injection (wBCH)</div>
+                    <div class="inject-bar-bg"><div class="inject-fill" style="width: 64%; background:var(--bch);"></div></div>
+                    <div style="text-align:right; font-size:0.6rem; margin-top:2px;">45.2 BCH WRAPPED</div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; justify-content: flex-end; text-align: center;">
+                <div style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 20px; border: 1px solid var(--term);">
+                    <div style="color: var(--ice); font-size: 0.8rem; letter-spacing: 3px; margin-bottom: 10px;">XMR SOFTFORK CONTRACT</div>
+                    <div class="contract-box">4AEreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab</div>
+                    <div style="color: var(--term); font-size: 0.8rem; margin-top: 10px;">STATUS: IMMUTABLE_LINK</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="tag">Sovereign Balances</div>
+                <div class="metric-row">
+                    <span>Frostcoin (FTC)</span>
+                    <span style="color:var(--ice); font-weight:bold;">540,112.00</span>
+                </div>
+                <div class="metric-row">
+                    <span>Feather (FTR)</span>
+                    <span style="color:var(--term); font-weight:bold;">14,204.55</span>
+                </div>
+                
+                <div style="margin-top:auto;">
+                    <div class="tag" style="color:var(--gold);">Newkirk Hashrate</div>
+                    <div style="font-size:1.5rem; font-weight:900;">145.2 PH/s</div>
+                    <div style="font-size:0.5rem; color:#666;">INJECTING INTO POOL...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" id="frostchat-container">
+            <div class="tag">FrostChat // Newkirk_Relay</div>
+            <div id="chat-window">
+                <div class="msg msg-sys">> System: XMR Softfork Contract 4AEreX... Verified.</div>
+                <div class="msg msg-sys">> System: 2:1 Leverage Peg (FTC/BTC) Active.</div>
+                <div class="msg msg-newkirk">> Newkirk_Node_01: Injecting 4.2 wBTC into the vortex.</div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="chat-input" placeholder="Broadcast command..." style="flex:1; background:#000; border:1px solid #333; color:#fff; padding:5px; font-family:'Courier New';">
+                <button onclick="sendMsg()" style="background:var(--ice); border:none; padding:5px 15px; font-weight:bold; cursor:pointer;">SEND</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // FROSTCHAT LOGIC
+        function sendMsg() {
+            const input = document.getElementById('chat-input');
+            const chat = document.getElementById('chat-window');
+            if(input.value.trim() === "") return;
+            
+            const div = document.createElement('div');
+            div.className = 'msg';
+            div.style.color = '#fff';
+            div.innerText = `> drfrost: ${input.value}`;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+            input.value = "";
+            
+            // Sim Newkirk Response
+            setTimeout(() => {
+                const r = document.createElement('div');
+                r.className = 'msg msg-newkirk';
+                r.innerText = `> Newkirk_Auto: Command received. Hashrate diverting...`;
+                chat.appendChild(r);
+                chat.scrollTop = chat.scrollHeight;
+            }, 1000);
+        }
+
+        // AUTO-INJECTION SIMULATION
+        setInterval(() => {
+            const chat = document.getElementById('chat-window');
+            const assets = ["wBTC", "wBCH", "Feather"];
+            const asset = assets[Math.floor(Math.random() * assets.length)];
+            const amt = (Math.random() * 5).toFixed(2);
+            
+            const div = document.createElement('div');
+            div.className = 'msg msg-sys';
+            div.innerText = `> Vortex: Injected ${amt} ${asset} from Newkirk Pool.`;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }, 5000);
+
+        // HDR TANGLE CANVAS
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let points = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        for(let i = 0; i < 100; i++) {
+            points.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.lineWidth = 0.5;
+            for(let i = 0; i < points.length; i++) {
+                let p1 = points[i];
+                p1.x += p1.vx; p1.y += p1.vy;
+                if(p1.x < 0 || p1.x > width) p1.vx *= -1;
+                if(p1.y < 0 || p1.y > height) p1.vy *= -1;
+
+                ctx.fillStyle = "#a5f2f3";
+                ctx.beginPath();
+                ctx.arc(p1.x, p1.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                for(let j = i + 1; j < points.length; j++) {
+                    let p2 = points[j];
+                    let dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                    if(dist < 150) {
+                        ctx.strokeStyle = `rgba(165, 242, 243, ${1 - dist/150})`;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FROST // SWARM // COMMAND</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #020202;
+            --green: #00ff41;
+            --cyan: #00eaff;
+            --alert: #ff3333;
+            --panel: rgba(10, 15, 10, 0.95);
+        }
+        body {
+            background-color: var(--bg);
+            color: var(--green);
+            font-family: 'Space Mono', monospace;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #swarm-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            opacity: 0.4;
+        }
+
+        .interface {
+            border: 1px solid var(--green);
+            background: var(--panel);
+            padding: 25px;
+            width: 90%;
+            max-width: 650px;
+            box-shadow: 0 0 60px rgba(0, 255, 65, 0.1);
+            position: relative;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h1 { margin: 0; font-size: 1.1rem; color: var(--cyan); letter-spacing: 1px; }
+        .net-status { font-size: 0.7rem; color: var(--green); animation: pulse 2s infinite; }
+
+        /* METRICS */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .metric {
+            background: #000;
+            border: 1px solid #333;
+            padding: 10px;
+        }
+        .label { font-size: 0.65rem; color: #666; display: block; }
+        .value { font-size: 1.2rem; font-weight: bold; color: #fff; }
+        .gold { color: #ffd700; }
+
+        /* WITHDRAWAL SECTION */
+        .withdraw-panel {
+            border-top: 1px solid #333;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+        #timer { font-size: 0.8rem; color: #888; text-align: center; margin-bottom: 10px; }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            font-family: 'Space Mono';
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid var(--green);
+            background: rgba(0,255,65,0.05);
+            color: var(--green);
+            transition: 0.2s;
+        }
+        button:hover { background: var(--green); color: #000; }
+        button:disabled { border-color: #333; color: #444; background: transparent; cursor: not-allowed; }
+
+        #key-input {
+            width: 100%;
+            background: #111;
+            border: 1px solid var(--alert);
+            color: var(--alert);
+            padding: 10px;
+            margin-bottom: 10px;
+            display: none; /* Hidden until triggered */
+            font-family: monospace;
+            box-sizing: border-box;
+        }
+
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+    <canvas id="swarm-canvas"></canvas>
+
+    <div class="interface">
+        <div class="header">
+            <h1>FROST SWARM COMMAND</h1>
+            <span class="net-status">● MESH LINKED: 12,000+ NODES</span>
+        </div>
+
+        <div class="grid">
+            <div class="metric">
+                <span class="label">GLOBAL HASHRATE</span>
+                <span id="hash" class="value">0 MH/s</span>
+            </div>
+            <div class="metric">
+                <span class="label">ACTIVE MINERS</span>
+                <span id="nodes" class="value">0</span>
+            </div>
+            <div class="metric">
+                <span class="label">VAULT A (25%)</span>
+                <span id="val-a" class="value gold">0.0000</span>
+            </div>
+            <div class="metric">
+                <span class="label">VAULT B (25%)</span>
+                <span id="val-b" class="value gold">0.0000</span>
+            </div>
+        </div>
+
+        <div class="metric" style="margin-bottom: 20px; border-color: var(--green);">
+            <span class="label" style="color:var(--green)">MY ACCUMULATED YIELD (50%)</span>
+            <span id="my-yield" class="value" style="color:var(--green)">0.000000 FTC</span>
+        </div>
+
+        <div class="withdraw-panel">
+            <div id="timer">NEXT WITHDRAWAL: CALCULATING...</div>
+            <input type="password" id="key-input" placeholder="ENTER PRIVATE KEY TO SIGN TX">
+            <button id="btn-withdraw" disabled>WITHDRAW FUNDS</button>
+        </div>
+    </div>
+
+<script>
+    // --- SWARM VISUALS ---
+    const canvas = document.getElementById('swarm-canvas');
+    const ctx = canvas.getContext('2d');
+    let w, h, dots = [];
+
+    function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+    window.onresize = resize; resize();
+
+    function initSwarm() {
+        dots = [];
+        for(let i=0; i<300; i++) { // Represents the 12k miners
+            dots.push({
+                x: Math.random()*w, y: Math.random()*h,
+                vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5
+            });
+        }
+    }
+    initSwarm();
+
+    function anim() {
+        ctx.clearRect(0,0,w,h);
+        ctx.fillStyle = '#00ff41';
+        dots.forEach(d => {
+            d.x += d.vx; d.y += d.vy;
+            if(d.x<0 || d.x>w) d.vx *= -1;
+            if(d.y<0 || d.y>h) d.vy *= -1;
+            ctx.fillRect(d.x, d.y, 1.5, 1.5);
+        });
+        requestAnimationFrame(anim);
+    }
+    anim();
+
+    // --- LOGIC ---
+    let myBalance = 0.00;
+    let vaultA = 0.00;
+    let vaultB = 0.00;
+    let activeNodes = 11800; // Start high
+    
+    // Timer Logic (3 Hours)
+    const LOCK_TIME = 3 * 60 * 60 * 1000; // 3 hours ms
+    let lastWithdraw = localStorage.getItem('frost_last_wd') || 0;
+    
+    function updateTimer() {
+        const now = Date.now();
+        const diff = now - lastWithdraw;
+        const btn = document.getElementById('btn-withdraw');
+        const timerEl = document.getElementById('timer');
+        const input = document.getElementById('key-input');
+
+        if (diff >= LOCK_TIME) {
+            timerEl.innerText = "GATEWAY OPEN";
+            timerEl.style.color = "#00ff41";
+            btn.disabled = false;
+            btn.innerText = "INITIATE WITHDRAWAL";
+            btn.onclick = () => {
+                // Show Input
+                input.style.display = "block";
+                btn.innerText = "CONFIRM & SIGN";
+                btn.onclick = processWithdrawal;
+            };
+        } else {
+            const remain = LOCK_TIME - diff;
+            const h = Math.floor(remain / (1000 * 60 * 60));
+            const m = Math.floor((remain % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((remain % (1000 * 60)) / 1000);
+            timerEl.innerText = `LOCKED: ${h}h ${m}m ${s}s`;
+            timerEl.style.color = "#888";
+            btn.disabled = true;
+            input.style.display = "none";
+        }
+    }
+    setInterval(updateTimer, 1000);
+
+    function processWithdrawal() {
+        const key = document.getElementById('key-input').value;
+        if(key.length < 10) {
+            alert("INVALID KEY DETECTED");
+            return;
+        }
+        
+        // Simulate sending
+        const btn = document.getElementById('btn-withdraw');
+        btn.innerText = "SIGNING TRANSACTION...";
+        btn.disabled = true;
+        
+        setTimeout(() => {
+            alert(`SUCCESS: ${myBalance.toFixed(6)} FTC sent to wallet.`);
+            myBalance = 0;
+            document.getElementById('my-yield').innerText = "0.000000 FTC";
+            
+            // Reset Timer
+            lastWithdraw = Date.now();
+            localStorage.setItem('frost_last_wd', lastWithdraw);
+            
+            // Reset UI
+            document.getElementById('key-input').value = "";
+            document.getElementById('key-input').style.display = "none";
+            updateTimer();
+        }, 2000);
+    }
+
+    // --- MINING LOOP ---
+    setInterval(() => {
+        // Hashrate ramp up
+        const hr = (activeNodes * 0.45) + (Math.random() * 500); 
+        document.getElementById('hash').innerText = (hr/1000).toFixed(2) + " MH/s";
+        
+        // Node Fluctuation
+        activeNodes = 12000 + Math.floor(Math.random() * 150);
+        document.getElementById('nodes').innerText = activeNodes.toLocaleString();
+
+        // Yield Generation
+        const block = Math.random() * 0.1;
+        const half = block / 2;     // 50% to me
+        const quarter = block / 4;  // 25% to vaults
+
+        myBalance += half;
+        vaultA += quarter;
+        vaultB += quarter;
+
+        document.getElementById('my-yield').innerText = myBalance.toFixed(6) + " FTC";
+        document.getElementById('val-a').innerText = vaultA.toFixed(6);
+        document.getElementById('val-b').innerText = vaultB.toFixed(6);
+
+    }, 500);
+
+</script>
+</body>
+</html>

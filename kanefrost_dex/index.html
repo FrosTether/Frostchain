@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KANE FROSTCHAIN | QUORUM DEX</title>
+    <style>
+        :root { --bg: #050505; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --neon: #ff00ff; --panel: rgba(10,10,10,0.9); }
+        * { box-sizing: border-box; font-family: 'Courier New', monospace; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--term); overflow: hidden; height: 100vh; display: grid; grid-template-rows: 60px 1fr 40px; }
+
+        /* HEADER */
+        header { border-bottom: 2px solid var(--term); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(0,0,0,0.8); z-index: 10; }
+        .logo { font-size: 1.5rem; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px var(--term); }
+        .price-ticker { color: var(--cyan); font-weight: bold; }
+
+        /* MAIN GRID */
+        main { display: grid; grid-template-columns: 1fr 400px; gap: 20px; padding: 20px; position: relative; z-index: 5; }
+        
+        /* LEFT: CHART & DRAKE */
+        .left-col { display: flex; flex-direction: column; gap: 20px; }
+        
+        .chart-box { flex-grow: 1; border: 1px solid #333; background: var(--panel); position: relative; padding: 10px; }
+        canvas#chart-canvas { width: 100%; height: 100%; }
+
+        .drake-box { height: 200px; border: 1px solid var(--neon); background: var(--panel); padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .equation { grid-column: span 2; font-size: 0.9rem; color: var(--neon); text-align: center; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .slider-group { display: flex; flex-direction: column; gap: 5px; }
+        input[type=range] { width: 100%; accent-color: var(--neon); }
+        .drake-val { color: #fff; float: right; }
+
+        /* RIGHT: DEX & DICE */
+        .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+        .dice-box { border: 2px solid var(--gold); background: var(--panel); padding: 20px; text-align: center; }
+        .dice-display { font-size: 3rem; margin: 10px 0; color: #fff; text-shadow: 0 0 15px var(--gold); }
+        .btn-roll { background: var(--gold); color: #000; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1rem; text-transform: uppercase; }
+        .btn-roll:hover { background: #fff; }
+
+        .swap-box { border: 1px solid var(--cyan); background: var(--panel); padding: 20px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; color: #888; font-size: 0.8rem; margin-bottom: 5px; }
+        .input-group input { width: 100%; background: #000; border: 1px solid #444; color: #fff; padding: 10px; font-size: 1.2rem; font-family: inherit; }
+        
+        .result-row { display: flex; justify-content: space-between; font-size: 0.8rem; color: #aaa; margin-bottom: 5px; }
+        .highlight { color: var(--term); font-weight: bold; }
+
+        .btn-pump { background: var(--cyan); color: #000; border: none; padding: 20px; font-size: 1.5rem; font-weight: bold; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 3px; box-shadow: 0 0 20px var(--cyan); transition: 0.2s; }
+        .btn-pump:active { transform: scale(0.98); box-shadow: 0 0 5px var(--cyan); }
+
+        /* FOOTER */
+        footer { border-top: 1px solid #333; background: #000; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 0.7rem; color: #555; z-index: 10; }
+
+        /* BG EFFECT */
+        #starfield { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.3; }
+    </style>
+</head>
+<body>
+
+    <canvas id="starfield"></canvas>
+
+    <header>
+        <div class="logo">KANE<span style="color:var(--cyan)">FROSTCHAIN</span> // DEX</div>
+        <div class="price-ticker">FTC PRICE: $<span id="price">18.23</span> <span style="font-size:0.8rem; color:#666;">(+4.20%)</span></div>
+    </header>
+
+    <main>
+        <div class="left-col">
+            <div class="chart-box">
+                <div style="position:absolute; top:10px; left:10px; color:var(--term); font-size:0.8rem;">FTC / USD LIQUIDITY DEPTH</div>
+                <canvas id="chart-canvas"></canvas>
+            </div>
+            
+            <div class="drake-box">
+                <div class="equation">DRAKE QUORUM EQ: N = R* · fp · ne · fl · fi · fc · L</div>
+                <div class="slider-group">
+                    <label>Inflow Rate (R*) <span id="val-r" class="drake-val">5</span></label>
+                    <input type="range" min="1" max="100" value="50" oninput="updateDrake()" id="in-r">
+                    <label>Active Peers (fp) <span id="val-fp" class="drake-val">0.5</span></label>
+                    <input type="range" min="0" max="100" value="50" oninput="updateDrake()" id="in-fp">
+                </div>
+                <div class="slider-group">
+                    <label>HODL Time (L) <span id="val-l" class="drake-val">10</span></label>
+                    <input type="range" min="1" max="100" value="10" oninput="updateDrake()" id="in-l">
+                    <div style="margin-top:auto; text-align:right; color:var(--neon); font-size:1.2rem;">
+                        MULT: x<span id="drake-mult">2.50</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-col">
+            <div class="dice-box">
+                <div style="font-size:0.8rem; letter-spacing:2px; color:var(--gold);">JOEY BONES ENGINE</div>
+                <div class="dice-display" id="dice-res">⚀ ⚁</div>
+                <div style="color:#fff; margin-bottom:10px;" id="dice-msg">ROLL THE BONES</div>
+                <button class="btn-roll" onclick="rollBones()">ROLL DICE</button>
+            </div>
+
+            <div class="swap-box">
+                <div>
+                    <div class="input-group">
+                        <label>INPUT LIQUIDITY (USD)</label>
+                        <input type="number" id="in-amt" value="1000" oninput="calcSwap()">
+                    </div>
+                    
+                    <div class="result-row"><span>BASE FTC:</span> <span id="base-ftc">54.85</span></div>
+                    <div class="result-row"><span>DRAKE MULT:</span> <span id="out-drake" class="highlight">x2.50</span></div>
+                    <div class="result-row"><span>BONES MULT:</span> <span id="out-bones" class="highlight">x1.00</span></div>
+                    <hr style="border:0; border-bottom:1px solid #333; margin:10px 0;">
+                    <div class="result-row" style="font-size:1.2rem; color:var(--cyan);">
+                        <span>TOTAL PUMP:</span> <span id="total-ftc">0.00 FTC</span>
+                    </div>
+                </div>
+                
+                <button class="btn-pump" onclick="pumpIt()">PUMP LIQUIDITY</button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div>SYSTEM STATUS: ONLINE // DRAKE_QUORUM_ACTIVE</div>
+        <div>JOEY_BONES_RNG: READY</div>
+    </footer>
+
+    <script>
+        // --- VARS ---
+        let drakeMult = 2.5;
+        let bonesMult = 1.0;
+        let ftcPrice = 18.23;
+        let chartData = [];
+        
+        // --- DRAKE EQUATION LOGIC ---
+        function updateDrake() {
+            const r = parseInt(document.getElementById('in-r').value);
+            const fp = parseInt(document.getElementById('in-fp').value) / 100;
+            const l = parseInt(document.getElementById('in-l').value);
+            
+            // Simplified Drake Algo for UI
+            drakeMult = (1 + (r * fp * l) / 200).toFixed(2);
+            
+            document.getElementById('val-r').innerText = r;
+            document.getElementById('val-fp').innerText = fp;
+            document.getElementById('val-l').innerText = l + "y";
+            document.getElementById('drake-mult').innerText = drakeMult;
+            document.getElementById('out-drake').innerText = "x" + drakeMult;
+            calcSwap();
+        }
+
+        // --- JOEY BONES LOGIC ---
+        function rollBones() {
+            const d1 = Math.floor(Math.random() * 6) + 1;
+            const d2 = Math.floor(Math.random() * 6) + 1;
+            const sum = d1 + d2;
+            
+            const faces = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+            document.getElementById('dice-res').innerText = `${faces[d1]} ${faces[d2]}`;
+            
+            let msg = "";
+            if (sum === 7 || sum === 11) {
+                bonesMult = 7.0;
+                msg = "NATURAL! x7 MULTIPLIER!";
+                document.getElementById('dice-msg').style.color = "var(--gold)";
+            } else if (sum === 2) {
+                bonesMult = 0.5;
+                msg = "SNAKE EYES! CRITICAL FAIL (x0.5)";
+                document.getElementById('dice-msg').style.color = "red";
+            } else {
+                bonesMult = (sum / 3).toFixed(2); // Moderate multiplier
+                msg = `POINT IS ${sum} (x${bonesMult})`;
+                document.getElementById('dice-msg').style.color = "#fff";
+            }
+            
+            document.getElementById('dice-msg').innerText = msg;
+            document.getElementById('out-bones').innerText = "x" + bonesMult;
+            calcSwap();
+        }
+
+        // --- SWAP CALC ---
+        function calcSwap() {
+            const usd = parseFloat(document.getElementById('in-amt').value) || 0;
+            const base = usd / ftcPrice;
+            const total = base * drakeMult * bonesMult;
+            
+            document.getElementById('base-ftc').innerText = base.toFixed(2);
+            document.getElementById('total-ftc').innerText = total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " FTC";
+        }
+
+        // --- PUMP ANIMATION (CHART) ---
+        const c = document.getElementById('chart-canvas');
+        const ctx = c.getContext('2d');
+        let liquidity = 50;
+
+        function resize() {
+            c.width = c.parentElement.offsetWidth;
+            c.height = c.parentElement.offsetHeight;
+        }
+        window.onresize = resize;
+        resize();
+
+        // Init Chart Data
+        for(let i=0; i<100; i++) chartData.push(50 + Math.random() * 10);
+
+        function drawChart() {
+            ctx.fillStyle = "#0a0a0a";
+            ctx.fillRect(0, 0, c.width, c.height);
+            
+            // Grid
+            ctx.strokeStyle = "#222";
+            ctx.beginPath();
+            for(let i=0; i<c.width; i+=50) { ctx.moveTo(i,0); ctx.lineTo(i,c.height); }
+            for(let i=0; i<c.height; i+=50) { ctx.moveTo(0,i); ctx.lineTo(c.width,i); }
+            ctx.stroke();
+
+            // Line
+            ctx.beginPath();
+            ctx.strokeStyle = "#00ff41";
+            ctx.lineWidth = 2;
+            const step = c.width / 100;
+            
+            for(let i=0; i<chartData.length; i++) {
+                const y = c.height - (chartData[i] / 200 * c.height); // Scaling
+                if(i===0) ctx.moveTo(0, y);
+                else ctx.lineTo(i * step, y);
+            }
+            ctx.stroke();
+            
+            // Fill
+            ctx.lineTo(c.width, c.height);
+            ctx.lineTo(0, c.height);
+            ctx.fillStyle = "rgba(0, 255, 65, 0.1)";
+            ctx.fill();
+
+            requestAnimationFrame(drawChart);
+        }
+        drawChart();
+
+        function pumpIt() {
+            const btn = document.querySelector('.btn-pump');
+            btn.innerText = "PUMPING...";
+            btn.style.background = "#fff";
+            
+            // Spike the chart
+            const pumpVal = parseFloat(document.getElementById('total-ftc').innerText.replace(/,/g, ''));
+            const spike = Math.min(pumpVal / 10, 100); // Cap visual spike
+            
+            let i = 0;
+            const interval = setInterval(() => {
+                chartData.shift();
+                chartData.push(chartData[chartData.length-1] + (Math.random() * spike) - (spike/3));
+                i++;
+                if(i > 20) {
+                    clearInterval(interval);
+                    btn.innerText = "PUMP LIQUIDITY";
+                    btn.style.background = "var(--cyan)";
+                }
+            }, 50);
+            
+            // Update Price Sim
+            ftcPrice += (pumpVal / 10000);
+            document.getElementById('price').innerText = ftcPrice.toFixed(2);
+        }
+
+        // --- STARFIELD ---
+        const sc = document.getElementById('starfield');
+        const sctx = sc.getContext('2d');
+        let stars = [];
+        
+        function initStars() {
+            sc.width = window.innerWidth; sc.height = window.innerHeight;
+            for(let i=0; i<200; i++) stars.push({x:Math.random()*sc.width, y:Math.random()*sc.height, z:Math.random()*2});
+        }
+        
+        function drawStars() {
+            sctx.clearRect(0,0,sc.width,sc.height);
+            sctx.fillStyle = "#fff";
+            stars.forEach(s => {
+                sctx.beginPath(); sctx.arc(s.x, s.y, s.z, 0, Math.PI*2); sctx.fill();
+            });
+            requestAnimationFrame(drawStars);
+        }
+        initStars(); drawStars();
+        
+        // Init Calc
+        updateDrake();
+        rollBones();
+
+    </script>
+</body>
+</html>

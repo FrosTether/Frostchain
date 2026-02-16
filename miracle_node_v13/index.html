@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | v13.0 Fixed</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --panel: rgba(10, 10, 10, 0.95); --cyan: #00ffff; --gold: #ffd700; --blue: #00d4ff; --pink: #ff00ff; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; user-select: none; }
+        
+        /* GATE */
+        #gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gate-box { border: 2px solid var(--term); padding: 30px; width: 300px; text-align: center; box-shadow: 0 0 20px var(--cyan); background: #050505; }
+        input { width: 90%; background: #111; border: 1px solid #333; color: #fff; padding: 12px; margin-bottom: 10px; font-family: inherit; text-align: center; outline: none; }
+        .btn-main { background: var(--term); color: #000; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+
+        /* DASHBOARD LAYOUT */
+        #dash { display: none; height: 100vh; grid-template-columns: 350px 1fr; grid-template-rows: 60px 1fr; position: relative; }
+        #tangle { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+
+        /* HEADER */
+        .header { grid-column: 1 / -1; background: var(--panel); border-bottom: 1px solid var(--term); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; }
+        .master-key { font-size: 0.6rem; color: #fff; font-family: monospace; border: 1px dashed var(--cyan); padding: 2px 8px; margin-right: 15px; }
+        .fs-btn { background: #000; border: 1px solid var(--term); color: var(--term); padding: 5px 10px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
+
+        /* LEFT PANEL */
+        .left-panel { background: rgba(0,0,0,0.8); border-right: 1px solid var(--term); display: flex; flex-direction: column; padding: 15px; z-index: 10; overflow-y: auto; }
+        
+        /* COUNTDOWN TIMER */
+        .timer-box { border: 2px solid var(--term); padding: 15px; margin-bottom: 20px; background: #001500; text-align: center; }
+        .timer-val { font-size: 2.5rem; font-weight: bold; color: #fff; text-shadow: 0 0 10px var(--term); }
+        .timer-lbl { font-size: 0.7rem; color: var(--term); letter-spacing: 2px; }
+
+        .stat-card { background: #0a0a0a; border: 1px solid #333; padding: 15px; margin-bottom: 10px; border-left: 4px solid #fff; }
+        .val { font-size: 1.2rem; font-weight: bold; }
+        .lbl { font-size: 0.7rem; color: #888; }
+        
+        /* RIGHT PANEL: CHAT */
+        .chat-panel { display: flex; flex-direction: column; position: relative; z-index: 10; background: rgba(0,0,0,0.5); }
+        .audio-bar { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; }
+        .audio-btn { background: #000; border: 1px solid #444; color: #666; padding: 5px 10px; font-size: 0.6rem; cursor: pointer; }
+        .audio-btn.active { border-color: var(--pink); color: var(--pink); box-shadow: 0 0 5px var(--pink); }
+        
+        .chat-log { flex: 1; overflow-y: auto; padding: 20px; }
+        .msg-bubble { background: rgba(10,10,10,0.8); border: 1px solid #333; padding: 8px 12px; display: inline-block; color: #ccc; margin-bottom: 5px; }
+        .chat-input-area { padding: 15px; background: #000; border-top: 1px solid var(--term); display: flex; gap: 10px; }
+        .chat-input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 10px; font-family: inherit; }
+
+        @media (max-width: 700px) {
+            #dash { grid-template-columns: 1fr; grid-template-rows: 50px 320px 1fr; }
+            .left-panel { border-right: none; border-bottom: 1px solid var(--term); }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle"></canvas>
+
+    <div id="gate">
+        <div class="gate-box">
+            <div style="font-size:1.2rem; font-weight:bold; margin-bottom:5px; color:#fff;">MIRACLE NODE v13.0</div>
+            <div style="font-size:0.7rem; color:var(--term); margin-bottom:20px;">CONSENSUS FIXED: 300s</div>
+            <input type="text" id="id-in" placeholder="identity.frostchain">
+            <input type="password" id="pin-in" placeholder="PIN (4-6 Digits)" maxlength="6">
+            <button class="btn-main" onclick="login()">SECURE LOGIN</button>
+            <div id="err" style="color:#ff0055; font-size:0.7rem; margin-top:10px;"></div>
+        </div>
+    </div>
+
+    <div id="dash">
+        <div class="header">
+            <div>
+                <span id="user-display" style="font-weight:bold;">GUEST</span>
+                <span style="font-size:0.7rem; color:var(--term); margin-left:10px;">● MINING ACTIVE</span>
+            </div>
+            <div style="display:flex; align-items:center;">
+                <div class="master-key">BRIDGE: 4AEreX...</div>
+                <button class="fs-btn" onclick="toggleFS()">[ FULLSCREEN ]</button>
+            </div>
+        </div>
+
+        <div class="left-panel">
+            <div class="timer-box">
+                <div class="timer-val" id="countdown">300</div>
+                <div class="timer-lbl">SECONDS TO NEXT BLOCK</div>
+            </div>
+            
+            <div class="stat-card" style="border-left-color: #ff00ff;">
+                <div class="val" id="frst-val">0.00</div>
+                <div class="lbl">FRST (31,415.90 / Block)</div>
+            </div>
+            <div class="stat-card" style="border-left-color: gold;">
+                <div class="val" id="ftc-val">0.00</div>
+                <div class="lbl">FTC (13.37 / Block)</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #00d4ff;">
+                <div class="val" id="fnr-val">0.00</div>
+                <div class="lbl">FNR (2.50 / Block)</div>
+            </div>
+
+            <div style="font-size:0.7rem; color:#888; margin:10px 0;">EXPLORER LOG</div>
+            <div style="flex:1; background:#000; border:1px solid #333; overflow-y:auto; padding:5px;" id="block-list"></div>
+        </div>
+
+        <div class="chat-panel">
+            <div class="audio-bar">
+                <button class="audio-btn" id="btn-pink" onclick="toggleAudio('pink')">PINK</button>
+                <button class="audio-btn" id="btn-alpha" onclick="toggleAudio('alpha')">ALPHA</button>
+                <button class="audio-btn" id="btn-delta" onclick="toggleAudio('delta')">DELTA</button>
+            </div>
+            <div class="chat-log" id="chat-box">
+                <div class="msg-bubble">> System: Consensus Protocol v13.0 Loaded.</div>
+                <div class="msg-bubble">> System: Timing locked to 300s.</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="msg-input" class="chat-input" placeholder="Type encrypted message...">
+                <button class="btn-main" style="width:auto; margin:0; padding:0 20px;" onclick="sendMsg()">SEND</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- AUTH ---
+        function login() {
+            const id = document.getElementById('id-in').value;
+            const pin = document.getElementById('pin-in').value;
+            if(id.includes('.frostchain') && pin.length >= 4 && pin.length <= 6) {
+                document.getElementById('gate').style.display = 'none';
+                document.getElementById('dash').style.display = 'grid';
+                document.getElementById('user-display').innerText = id;
+                startConsensus(); // START THE 300s TIMER
+                initRez(); // START VISUALS
+            } else {
+                document.getElementById('err').innerText = "INVALID CREDENTIALS";
+            }
+        }
+
+        function toggleFS() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else if (document.exitFullscreen) document.exitFullscreen();
+        }
+
+        // --- CONSENSUS LOGIC (300s STRICT) ---
+        let balances = { frst: 0, ftc: 0, fnr: 0 };
+        let timeLeft = 300;
+        let blockCount = 942000;
+
+        function startConsensus() {
+            // Update Countdown ONLY
+            setInterval(() => {
+                timeLeft--;
+                document.getElementById('countdown').innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    mintBlock();
+                    timeLeft = 300; // Reset Timer
+                }
+            }, 1000);
+        }
+
+        function mintBlock() {
+            // Update Balances ONCE per 300s
+            balances.frst += 31415.90;
+            balances.ftc += 13.37;
+            balances.fnr += 2.50;
+
+            document.getElementById('frst-val').innerText = balances.frst.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('ftc-val').innerText = balances.ftc.toFixed(2);
+            document.getElementById('fnr-val').innerText = balances.fnr.toFixed(2);
+
+            blockCount++;
+            const list = document.getElementById('block-list');
+            const div = document.createElement('div');
+            div.style.padding = "5px";
+            div.style.borderBottom = "1px solid #222";
+            div.style.fontSize = "0.7rem";
+            div.style.display = "flex";
+            div.style.justifyContent = "space-between";
+            div.innerHTML = `
+                <span style="color:var(--term);">#${blockCount}</span>
+                <span style="color:var(--pink);">+REWARD</span>
+            `;
+            list.prepend(div);
+        }
+
+        // --- VISUALS (REZ WIREFRAME) ---
+        function initRez() {
+            const c = document.getElementById('tangle');
+            const ctx = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            let nodes = Array.from({length:30}, () => ({
+                x:Math.random()*c.width, y:Math.random()*c.height,
+                vx:(Math.random()-.5), vy:(Math.random()-.5)
+            }));
+            
+            function draw() {
+                ctx.clearRect(0,0,c.width,c.height);
+                ctx.strokeStyle = "rgba(0,255,65,0.1)";
+                // Grid
+                for(let i=0; i<c.width; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,c.height); ctx.stroke(); }
+                for(let i=0; i<c.height; i+=100) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(c.width,i); ctx.stroke(); }
+                
+                // Nodes
+                nodes.forEach(n => {
+                    n.x += n.vx; n.y += n.vy;
+                    if(n.x<0||n.x>c.width) n.vx*=-1;
+                    if(n.y<0||n.y>c.height) n.vy*=-1;
+                    
+                    ctx.fillStyle = "#00ff41";
+                    ctx.beginPath(); ctx.arc(n.x,n.y,2,0,Math.PI*2); ctx.fill();
+                    
+                    nodes.forEach(n2 => {
+                        if(Math.hypot(n.x-n2.x, n.y-n2.y) < 150) {
+                            ctx.strokeStyle = `rgba(0,255,255,${1 - Math.hypot(n.x-n2.x, n.y-n2.y)/150})`;
+                            ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                        }
+                    });
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // --- AUDIO ENGINE ---
+        let actx, pinkNode, osc;
+        function toggleAudio(type) {
+            if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+            if(actx.state === 'suspended') actx.resume();
+
+            // Reset
+            if(pinkNode) { pinkNode.stop(); pinkNode = null; }
+            if(osc) { osc.stop(); osc = null; }
+            document.querySelectorAll('.audio-btn').forEach(b => b.classList.remove('active'));
+
+            if(type === 'pink') {
+                const bufferSize = 4096;
+                const node = actx.createScriptProcessor(bufferSize, 1, 1);
+                node.onaudioprocess = function(e) {
+                    const output = e.outputBuffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        const white = Math.random() * 2 - 1;
+                        output[i] = (lastOut + (0.02 * white)) / 1.02;
+                        lastOut = output[i];
+                        output[i] *= 3.5; 
+                    }
+                };
+                // Simplified for stability
+                const oscP = actx.createOscillator();
+                oscP.type = 'triangle'; // Approx
+                oscP.frequency.value = 50; 
+                oscP.connect(actx.destination);
+                oscP.start();
+                pinkNode = oscP; 
+                document.getElementById('btn-pink').classList.add('active');
+            } else {
+                const freq = type === 'alpha' ? 11.11 : 3.14;
+                osc = actx.createOscillator();
+                const g = actx.createGain();
+                g.gain.value = 0.1;
+                osc.connect(g).connect(actx.destination);
+                osc.frequency.value = 432;
+                osc.start();
+                osc.stop = () => { osc.disconnect(); };
+                document.getElementById('btn-'+type).classList.add('active');
+            }
+        }
+        let lastOut = 0;
+
+        // --- CHAT ---
+        function sendMsg() {
+            const i = document.getElementById('msg-input');
+            const box = document.getElementById('chat-box');
+            if(i.value) {
+                const bubble = document.createElement('div');
+                bubble.className = "msg-bubble";
+                bubble.style.borderColor = "var(--term)";
+                bubble.innerText = "> " + i.value;
+                box.appendChild(bubble);
+                i.value = "";
+            }
+        }
+    </script>
+</body>
+</html>

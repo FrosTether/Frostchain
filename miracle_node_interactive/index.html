@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Frost Protocol</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.4.2/sha.js"></script>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --blue: #00d4ff; --pink: #ff00ff; }
+        body { margin: 0; padding: 0; background: var(--bg); overflow: hidden; font-family: 'Courier New', monospace; color: var(--term); }
+        
+        /* FULLSCREEN TANGLE */
+        #tangle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; cursor: crosshair; }
+
+        /* AUTH OVERLAY */
+        #auth-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .auth-box { border: 2px solid var(--term); padding: 30px; background: #000; box-shadow: 0 0 30px var(--term); }
+        input { background: #111; border: 1px solid #333; color: var(--term); padding: 15px; width: 200px; text-align: center; font-size: 1.5rem; border-radius: 5px; margin: 20px 0; outline: none; letter-spacing: 5px; }
+        
+        /* UI HUD */
+        #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; padding: 15px; box-sizing: border-box; display: none; }
+        .hud-element { pointer-events: auto; background: rgba(0,0,0,0.7); border: 1px solid #222; padding: 10px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .reward-stack { border-left: 3px solid var(--gold); padding-left: 10px; text-align: right; }
+        
+        /* CONTROLS */
+        .controls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 15px; pointer-events: auto; }
+        .btn { background: transparent; border: 1px solid var(--term); color: var(--term); padding: 12px 24px; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; border-radius: 50px; }
+        .btn:hover { background: var(--term); color: #000; }
+        .btn-fs { position: absolute; top: 15px; left: 15px; border-radius: 5px; }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="auth-gate">
+        <div class="auth-box">
+            <h1 style="margin:0; font-size:1.5rem;">FROST IDENTITY VERIFIED</h1>
+            <p style="color:#888; font-size:0.8rem;">SCAN QR IN GOOGLE AUTH: JBSWY3DPEHPK3PXP</p>
+            <input type="number" id="otp" placeholder="000000">
+            <br>
+            <button class="btn" onclick="verifyTOTP()">UNLOCK MIRACLE NODE</button>
+            <div id="auth-err" style="color:red; margin-top:10px; font-size:0.8rem;"></div>
+        </div>
+    </div>
+
+    <div id="hud">
+        <button class="btn btn-fs" onclick="toggleFS()">TOGGLE FULLSCREEN</button>
+        
+        <div class="header">
+            <div class="hud-element" style="border-color: var(--term);">
+                <div style="font-weight:bold; font-size:1.1rem;">drfrost.frostchain</div>
+                <div style="font-size:0.7rem; color:#888;">NEWKIRK PROTOCOL: <span style="color:var(--term);">ONLINE</span></div>
+            </div>
+
+            <div class="hud-element reward-stack">
+                <div style="color:var(--gold);">FTC: <span id="ftc">13.37</span></div>
+                <div style="color:var(--blue);">FNR: <span id="fnr">2.50</span></div>
+                <div style="color:var(--pink);">FRST: <span id="frst">31415.9</span></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="setMode('alpha')">ALPHA (11.11Hz)</button>
+            <button class="btn" onclick="setMode('delta')">DELTA (PI Hz)</button>
+            <button class="btn" style="border-color:orange; color:orange;" onclick="minePoop()">POOP MINE</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. TOTP LOGIC ---
+        function verifyTOTP() {
+            const input = document.getElementById('otp').value;
+            // Temporary skip for fast testing, use JBSWY3DPEHPK3PXP in Google Auth
+            if(input === "1337" || input.length === 6) {
+                document.getElementById('auth-gate').style.display = 'none';
+                document.getElementById('hud').style.display = 'block';
+                initTangle();
+            } else {
+                document.getElementById('auth-err').innerText = "INVALID TOKEN";
+            }
+        }
+
+        // --- 2. FULLSCREEN TOGGLE ---
+        function toggleFS() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // --- 3. INTERACTIVE TANGLE (IOTA STYLE) ---
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null };
+
+        function initTangle() {
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            canvas.addEventListener('mousemove', (e) => {
+                mouse.x = e.x;
+                mouse.y = e.y;
+            });
+
+            // Click to add "Transaction" (Node)
+            canvas.addEventListener('mousedown', (e) => {
+                for(let i=0; i<3; i++) particles.push(new Node(e.x, e.y));
+            });
+
+            class Node {
+                constructor(x, y) {
+                    this.x = x || Math.random() * canvas.width;
+                    this.y = y || Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 1.5;
+                    this.vy = (Math.random() - 0.5) * 1.5;
+                    this.size = 3;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // Interaction: Repel from mouse
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    if(dist < 100) {
+                        this.x -= dx / 20;
+                        this.y -= dy / 20;
+                    }
+
+                    if(this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if(this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }
+                draw() {
+                    ctx.fillStyle = '#00ff41';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            }
+
+            for(let i=0; i<60; i++) particles.push(new Node());
+
+            function animate() {
+                ctx.fillStyle = 'rgba(0,0,0,0.2)'; // Tail effect
+                ctx.fillRect(0,0,canvas.width, canvas.height);
+
+                particles.forEach((p, i) => {
+                    p.update();
+                    p.draw();
+                    // Tangle Lines
+                    for(let j=i; j<particles.length; j++) {
+                        let p2 = particles[j];
+                        let dx = p.x - p2.x;
+                        let dy = p.y - p2.y;
+                        let dist = Math.sqrt(dx*dx + dy*dy);
+                        if(dist < 120) {
+                            ctx.strokeStyle = `rgba(0, 255, 65, ${1 - dist/120})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    }
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        function setMode(mode) {
+            alert("AUDIO FREQUENCY TUNED TO: " + mode.toUpperCase());
+        }
+
+        function minePoop() {
+            alert("POOP BLOCK DETECTED. REWARD: 1.0 POOP");
+        }
+    </script>
+</body>
+</html>

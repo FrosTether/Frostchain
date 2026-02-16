@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frostchain | v45 Hard-Lock</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --fnr: #00d2ff; --cyan: #00ffff; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #dash { display: grid; grid-template-columns: 340px 1fr 340px; height: 100vh; position: relative; }
+        #tangle-canvas { position: fixed; inset: 0; z-index: 5; cursor: crosshair; filter: contrast(1.8) brightness(1.2); }
+
+        .panel { background: rgba(5,5,5,0.96); border: 1px solid #222; z-index: 50; padding: 15px; overflow-y: auto; backdrop-filter: blur(12px); }
+        .header { grid-column: 1 / -1; height: 60px; background: #000; border-bottom: 2px solid var(--term); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 100; }
+        
+        .vault-card { background: #0a0a0a; border: 1px solid #333; padding: 20px; border-left: 4px solid var(--gold); margin-bottom: 20px; position: relative; }
+        .badge { background: var(--gold); color: #000; font-size: 0.6rem; padding: 2px 6px; font-weight: bold; margin-bottom: 10px; display: inline-block; }
+        .val-text { font-size: 1.6rem; font-weight: bold; color: #fff; margin: 5px 0; }
+        .lbl { font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dash">
+        <div class="header">
+            <div>IDENTITY: <span style="color:var(--cyan)">drfrost.frostchain</span></div>
+            <div style="font-size:0.7rem; color:var(--gold);">13.37% GENESIS MINT VERIFIED</div>
+        </div>
+
+        <div class="panel">
+            <div class="lbl">HARD-LOCKED CAPS</div>
+            <div style="background:#000; border:1px solid #222; padding:10px; margin:10px 0; border-left:3px solid var(--fnr);">
+                <div style="font-size:1.1rem; color:#fff;">33,000,000 FNR</div>
+            </div>
+            <div style="background:#000; border:1px solid #222; padding:10px; margin:10px 0; border-left:3px solid var(--gold);">
+                <div style="font-size:1.1rem; color:#fff;">100,000,000 FTC</div>
+            </div>
+
+            <div class="lbl" style="margin-top:20px;">STRATUM STATUS</div>
+            <div style="font-size:1.3rem; color:var(--term);" id="h-val">65.8 EH/s</div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; height:100%; z-index:60; padding:20px; overflow-y:auto;">
+            
+            <div class="vault-card" style="border-left-color: var(--gold);">
+                <div class="badge">13.37% GENESIS MINT</div>
+                <div class="lbl" style="color:var(--gold)">FTC BALANCE</div>
+                <div class="val-text">11,870,000.00 FTC</div>
+                <div style="font-size:0.55rem; color:#666;">Original: 13,370,000 | -1M ICO | -500k Airdrops</div>
+            </div>
+
+            <div class="vault-card" style="border-left-color: var(--fnr);">
+                <div class="badge" style="background:var(--fnr)">13.37% ALLOCATION</div>
+                <div class="lbl" style="color:var(--fnr)">FNR BALANCE</div>
+                <div class="val-text">4,412,100.00 FNR</div>
+                <div style="font-size:0.55rem; color:#666;">Verified on Frostoise Kernel Lattice</div>
+            </div>
+
+        </div>
+
+        <div class="panel">
+            <div class="lbl">NETWORK_FEED</div>
+            <div id="log" style="height:400px; background:rgba(0,0,0,0.8); border:1px solid #222; padding:10px; font-size:0.7rem; margin-top:10px;">
+                <div style="color:var(--term)">[SYSTEM] drfrost.frostchain supply corrected.</div>
+                <div style="color:var(--gold)">[SYSTEM] 13.37% stake hard-locked to genesis block.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        setInterval(() => {
+            document.getElementById('h-val').innerText = (65 + Math.random()).toFixed(1) + " EH/s";
+        }, 1000);
+
+        function initTangle() {
+            const canvas = document.getElementById('tangle-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let p = Array(60).fill().map(()=>({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-.5)*1.2, vy:(Math.random()-.5)*1.2, clr: ["#00ff41", "#00ffff", "#ff00ff"][Math.floor(Math.random()*3)]}));
+            function loop() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                p.forEach(n => {
+                    n.x+=n.vx; n.y+=n.vy;
+                    if(n.x<0||n.x>canvas.width)n.vx*=-1; if(n.y<0||n.y>canvas.height)n.vy*=-1;
+                    p.forEach(n2 => {
+                        let d = Math.hypot(n.x-n2.x, n.y-n2.y);
+                        if(d < 150) {
+                            ctx.strokeStyle = n.clr; ctx.globalAlpha = 1 - d/150;
+                            ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                        }
+                    });
+                });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+        initTangle();
+    </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FROSTCHAIN // DUAL_PULSE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --core: #00fbff; --gold: #ffd700; --bch: #8dc351; --bg: #050505; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; font-size: 12px; margin: 0; }
+.nav { background: #000; border-bottom: 2px solid var(--core); padding: 15px; display: flex; justify-content: space-between; }
+.container { max-width: 1200px; margin: 20px auto; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.card { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 20px; }
+.split-box { display: flex; height: 40px; border: 1px solid #333; margin-top: 15px; }
+.hardware { background: var(--core); color: #000; width: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.creative { background: var(--gold); color: #000; width: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.val-big { font-size: 2.2em; color: #fff; font-weight: bold; display: block; }
+</style>
+</head>
+<body>
+<div class="nav">
+  <div style="font-weight:bold; color:var(--core);">FROSTCHAIN // REWARD_BIFURCATION</div>
+  <div style="color:var(--gold); font-size:10px;">SATOSHI_GENESIS: 683050920</div>
+</div>
+<div class="container">
+  <div class="card">
+    <div style="font-size:9px; color:#555;">TOTAL BLOCK REWARD</div>
+    <div class="val-big">13.37 FTC</div>
+    <div class="split-box">
+      <div class="hardware">6.685 (HW)</div>
+      <div class="creative">6.685 (CR)</div>
+    </div>
+    <p style="font-size:10px; color:#666; margin-top:10px;">50% for SHA-256 Hardware | 50% for AmiahDoodles/Games</p>
+  </div>
+  <div class="card">
+    <div style="font-size:9px; color:#555;">NETWORK STATUS</div>
+    <div class="val-big" style="color:var(--bch);">PARITY_SYNC_OK</div>
+    <div style="margin-top:15px; font-size:11px;">
+      BCH HEIGHT: 937,783<br>
+      ACTIVE RIGS: 14,212
+    </div>
+  </div>
+</div>
+</body>
+</html>

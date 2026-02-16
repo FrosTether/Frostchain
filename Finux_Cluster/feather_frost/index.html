@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FEATHER_FROST // ATOMIC_DOGE</title>
+<style>
+  :root { --bg: #000; --purple: #b026ff; --cyan: #00fbff; --xmr: #ff6600; --bch: #8dc351; --gold: #ffd700; --doge: #ba9f33; }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+  
+  header { background: #111; border-bottom: 2px solid var(--purple); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-weight: 900; color: var(--purple); letter-spacing: 2px; }
+
+  .wallet-body { display: grid; grid-template-columns: 320px 1fr; flex: 1; overflow: hidden; }
+  
+  /* SIDEBAR: ASSETS & SWAP */
+  .sidebar { background: #080808; border-right: 1px solid #222; padding: 20px; overflow-y: auto; }
+  .asset-card { background: #111; padding: 12px; border-radius: 4px; border-left: 4px solid var(--purple); margin-bottom: 12px; }
+  
+  .swap-module { background: #111; border: 1px solid #222; padding: 15px; border-radius: 4px; margin-top: 20px; }
+  .btn-swap { width: 100%; background: var(--doge); color: #000; border: none; padding: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; border-radius: 4px; }
+  .btn-swap:hover { background: #e1b303; }
+
+  /* MAIN: TERMINAL */
+  .terminal { background: #000; padding: 30px; display: flex; flex-direction: column; }
+  .log-view { flex: 1; border: 1px solid #333; background: #050505; padding: 20px; color: #00ff41; font-size: 11px; overflow-y: auto; line-height: 1.4; }
+</style>
+</head>
+<body onload="initFeather()">
+
+<header>
+  <div class="logo">FEATHER_FROST // v6.5</div>
+  <div style="font-size: 10px; color: var(--gold);">BTC_COLLATERAL: VERIFIED</div>
+</header>
+
+<div class="wallet-body">
+  <aside class="sidebar">
+    <div class="asset-card" style="border-left-color: var(--bch);">
+      <div style="font-size: 9px; color: var(--bch);">FNR_BALANCE</div>
+      <div style="font-size: 18px; font-weight: bold;" id="fnr-bal">1,337.00 FNR</div>
+    </div>
+
+    <div class="swap-module">
+      <div style="font-size: 10px; color: var(--doge); font-weight: bold;">GENESIS_DOGE_WARP</div>
+      <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:12px;">
+        <span>AVAIL:</span><span style="color:var(--doge)">10.34 DOGE</span>
+      </div>
+      <button class="btn-swap" onclick="executeAtomicSwap()">WARP TO FNR</button>
+    </div>
+
+    <div style="margin-top: 40px;">
+      <div style="font-size: 9px; color: #666;">SATOSHI_F-ORIGIN_AUTH</div>
+      <div style="font-size: 7px; color: #444; word-break: break-all;">FAreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab</div>
+    </div>
+  </aside>
+
+  <main class="terminal">
+    <div class="log-view" id="log">
+      > FEATHER_FROST_BOOT_v6.5...<br>
+      > SYNCHRONIZING_XMR_STEALTH_HANDSHAKE...<br>
+      > 1:1_BCH_PARITY_ACTIVE...<br>
+      > DOGE_TUNNEL_DETECTED: BLOCK_3_ENTROPY_VERIFIED.<br>
+      > READY.
+    </div>
+    <div style="margin-top: 20px; display: flex; gap: 10px;">
+      <button onclick="logAction('INITIATING_STEALTH_TX')" style="flex:1; background:var(--purple); color:#fff; border:none; padding:12px; cursor:pointer; font-weight:bold;">SEND_FNR</button>
+      <button onclick="logAction('GENERATING_NEW_STEALTH_MARK')" style="flex:1; background: #222; color:#fff; border:none; padding:12px; cursor:pointer; font-weight:bold;">RECEIVE</button>
+    </div>
+  </main>
+</div>
+
+<script>
+  function logAction(msg) {
+    const l = document.getElementById('log');
+    l.innerHTML += `<br>> ${msg}...`;
+    l.scrollTop = l.scrollHeight;
+  }
+
+  function executeAtomicSwap() {
+    logAction("INITIATING_ATOMIC_DOGE_WARP");
+    logAction("COLLAPSING_BLOCK_3_ENTROPY_STATE");
+    logAction("CALCULATING_BCH_PARITY_CONVERSION");
+    setTimeout(() => {
+      logAction("SWAP_SUCCESS: +FNR_MINTED_FROM_DOGE_TUNNEL");
+      document.getElementById('fnr-bal').innerText = "1,347.34 FNR";
+    }, 1500);
+  }
+
+  function initFeather() { console.log("TERMINAL_v6.5_UP"); }
+</script>
+</body>
+</html>

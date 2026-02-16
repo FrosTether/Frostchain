@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostSwap | Full Newkirk Index</title>
+    <style>
+        :root { 
+            --bg: #030308; --term: #00ff41; --ice: #a5f2f3; --doge: #ba9f33; 
+            --ftc: #00ffff; --fnr: #9d00ff; --btc: #f7931a; --bch: #8dc351;
+            --plat: #e5e4e2;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #tangle-canvas { position: fixed; inset: 0; z-index: 0; opacity: 0.15; }
+        #ui { position: relative; z-index: 10; display: grid; grid-template-rows: 80px 1fr 60px; height: 100vh; pointer-events: none; }
+        #ui * { pointer-events: auto; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 30px; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--bch); backdrop-filter: blur(10px); }
+        .logo { font-size: 1.5rem; font-weight: bold; color: var(--bch); text-shadow: 0 0 10px var(--bch); }
+        
+        .main { display: grid; grid-template-columns: 400px 1fr 400px; gap: 20px; padding: 20px; overflow: hidden; }
+        .panel { background: rgba(10, 15, 25, 0.95); border: 1px solid #333; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+
+        /* RESERVOIR VATS */
+        .vat-container { display: flex; justify-content: space-between; height: 120px; margin-bottom: 20px; }
+        .vat { width: 18%; background: #111; border: 1px solid #333; position: relative; overflow: hidden; }
+        .liquid { position: absolute; bottom: 0; width: 100%; transition: height 1s; opacity: 0.8; }
+
+        /* SWAP */
+        .input-group { background: #000; border: 1px solid #444; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+        .btn-swap { background: var(--term); color: #000; font-weight: bold; padding: 18px; border: none; width: 100%; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+
+        .token-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #222; font-size: 0.75rem; }
+        .footer { background: #000; border-top: 1px solid #333; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; font-size: 0.65rem; color: #444; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+    <div id="ui">
+        <div class="header">
+            <div class="logo">FROST<span style="color:#fff">SWAP</span> // <span style="font-size:0.8rem;">wBCH_INJECTED</span></div>
+            <div style="text-align:right;">
+                <div style="font-size:0.6rem; color:#888;">TOTAL ECOSYSTEM LIQUIDITY</div>
+                <div style="font-size:1.2rem; font-weight:bold; color:var(--term);">$142,809,111</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div style="font-size:0.7rem; color:var(--bch); letter-spacing:2px; margin-bottom:15px;">NEWKIRK OMNI-RESERVES</div>
+                
+                <div class="vat-container">
+                    <div class="vat"><div class="liquid" style="height:85%; background:var(--btc)"></div></div>
+                    <div class="vat"><div class="liquid" style="height:65%; background:var(--bch)"></div></div>
+                    <div class="vat"><div class="liquid" style="height:45%; background:var(--ftc)"></div></div>
+                    <div class="vat"><div class="liquid" style="height:35%; background:var(--fnr)"></div></div>
+                    <div class="vat"><div class="liquid" style="height:55%; background:var(--ice)"></div></div>
+                </div>
+
+                <div class="token-row" style="color:var(--btc)"><span>wBTC (Wrapped)</span><span>450.00</span></div>
+                <div class="token-row" style="color:var(--bch)"><span>wBCH (Wrapped)</span><span>2,100.00</span></div>
+                <div class="token-row"><span>FTC (Frostcoin)</span><span>13,370,000</span></div>
+                <div class="token-row"><span>fszUSD (Sub Zero)</span><span>5,000,000</span></div>
+                
+                <div style="margin-top:auto; background:rgba(0,255,65,0.05); border:1px solid var(--term); padding:10px; font-size:0.7rem; text-align:center;">
+                    DOGE_PI PEG: <span id="peg-val" style="color:#fff">$0.2921</span>
+                </div>
+            </div>
+
+            <div></div>
+
+            <div class="panel">
+                <div style="font-size:0.7rem; color:var(--cyan); letter-spacing:2px; margin-bottom:15px;">OMNI-SWAP TERMINAL</div>
+                <div class="input-group">
+                    <div style="font-size:0.6rem; color:#666; margin-bottom:5px;">SELL</div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <input type="number" id="in-val" value="10" style="background:none; border:none; color:#fff; font-size:1.2rem;" oninput="update()">
+                        <select id="in-tok" style="background:#222; color:#fff; border:none;" onchange="update()">
+                            <option value="wBCH">wBCH</option>
+                            <option value="wBTC">wBTC</option>
+                            <option value="FTC">FTC</option>
+                            <option value="FRST">FRST</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="text-align:center; color:#333; margin:5px 0;">↓</div>
+                <div class="input-group">
+                    <div style="font-size:0.6rem; color:#666; margin-bottom:5px;">BUY (ESTIMATED)</div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <input type="text" id="out-val" readonly style="background:none; border:none; color:#fff; font-size:1.2rem;">
+                        <select id="out-tok" style="background:#222; color:#fff; border:none;" onchange="update()">
+                            <option value="FTC">FTC</option>
+                            <option value="fPLAT">fPLAT</option>
+                            <option value="fszUSD">fszUSD</option>
+                            <option value="wBCH">wBCH</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-swap">EXECUTE OMNI-SWAP</button>
+                
+                <div style="margin-top:20px; font-size:0.6rem; color:#444;">
+                    * 0.3% LP FEE DISTRIBUTED TO NEWKIRK ETF HOLDERS
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div>FROSTCHAIN v93.0 // wBCH WRAPPER ACTIVE // 432Hz PINK NOISE SYNC</div>
+            <div id="status" style="color:var(--term)">CARRIER: 741.frostchain</div>
+        </div>
+    </div>
+
+    <script>
+        const pi = Math.PI;
+        let doge = 0.09312;
+
+        function update() {
+            doge += (Math.random() - 0.5) * 0.0001;
+            const frst = doge * pi;
+            document.getElementById('peg-val').innerText = "$" + frst.toFixed(4);
+
+            const prices = { 
+                'wBCH': 450, 
+                'wBTC': 95000, 
+                'FTC': 31.97, 
+                'FRST': frst, 
+                'fszUSD': 1.0, 
+                'fPLAT': 1842.1 
+            };
+
+            const inv = parseFloat(document.getElementById('in-val').value) || 0;
+            const outv = (inv * prices[document.getElementById('in-tok').value]) / prices[document.getElementById('out-tok').value];
+            document.getElementById('out-val').value = outv.toFixed(4);
+        }
+        setInterval(update, 2000); update();
+
+        // Canvas Visuals
+        const c = document.getElementById('tangle-canvas');
+        const x = c.getContext('2d');
+        function resize() { c.width = window.innerWidth; c.height = window.innerHeight; }
+        window.onresize = resize; resize();
+        function draw() {
+            x.clearRect(0,0,c.width,c.height);
+            x.strokeStyle = '#8dc351'; x.globalAlpha = 0.2;
+            x.beginPath(); x.moveTo(0, c.height/2);
+            for(let i=0; i<c.width; i+=20) x.lineTo(i, c.height/2 + Math.sin(i*0.01 + Date.now()*0.001)*50);
+            x.stroke(); requestAnimationFrame(draw);
+        } draw();
+    </script>
+</body>
+</html>

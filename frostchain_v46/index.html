@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frostchain | v46 Telemetry</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --priv: #7d00ff; --cyan: #00ffff; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #dash { display: grid; grid-template-columns: 340px 1fr 340px; height: 100vh; position: relative; }
+        #tangle-canvas { position: fixed; inset: 0; z-index: 5; filter: contrast(1.8) brightness(1.2); opacity: 0.4; }
+
+        .panel { background: rgba(5,5,5,0.96); border: 1px solid #222; z-index: 50; padding: 15px; overflow-y: auto; backdrop-filter: blur(12px); }
+        .header { grid-column: 1 / -1; height: 60px; background: #000; border-bottom: 2px solid var(--term); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 100; }
+        
+        /* PRIVACY TELEMETRY BOXES */
+        .telemetry-box { background: #080808; border: 1px solid #222; padding: 15px; margin-bottom: 15px; border-left: 4px solid var(--priv); }
+        .stat-val { font-size: 1.5rem; font-weight: bold; color: #fff; }
+        .stat-lbl { font-size: 0.6rem; color: #666; text-transform: uppercase; letter-spacing: 2px; }
+
+        .active-pulse { color: var(--term); font-size: 0.6rem; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dash">
+        <div class="header">
+            <div>NETWORK: <span style="color:var(--cyan)">FROSTOISE_v46</span></div>
+            <div style="font-size:0.7rem; color:var(--priv);">PRIVACY_ENGINE: <span class="active-pulse">ACTIVE_TUNNELING</span></div>
+        </div>
+
+        <div class="panel">
+            <div class="telemetry-box">
+                <div class="stat-lbl">DASH PRIVATE MIXES (24H)</div>
+                <div class="stat-val" id="dash-mix">1,241</div>
+                <div style="font-size:0.5rem; color:var(--priv);">ASSETS: FTC, FRST</div>
+            </div>
+
+            <div class="telemetry-box" style="border-left-color: var(--gold);">
+                <div class="stat-lbl">XMR STEALTH VOLUME</div>
+                <div class="stat-val" id="xmr-vol">84.2 FNR</div>
+                <div style="font-size:0.5rem; color:var(--gold);">RING_SIGNATURE_STRENGTH: 11</div>
+            </div>
+
+            <div style="margin-top:20px; border:1px solid #222; padding:10px;">
+                <div class="stat-lbl">MASTER NODES ONLINE</div>
+                <div style="font-size:1.2rem; color:#fff;">314</div>
+                <div style="font-size:0.5rem; color:#444;">MIN_STAKE: 3,1337 FETG</div>
+            </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; height:100%; z-index:60; padding:20px;">
+            <div style="background:#0a0a0a; border:1px solid #333; padding:20px; margin-bottom:20px; border-left:4px solid var(--gold);">
+                <div class="stat-lbl" style="color:var(--gold)">VAULT_DAT: drfrost.frostchain</div>
+                <div style="font-size:2rem; font-weight:bold; color:#fff;">11,870,000.00 FTC</div>
+                <div style="font-size:0.6rem; color:#666;">PRE-MINE ADJUSTED | STEALTH_SYNCED</div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button onclick="toggleAudio('alpha')" style="background:#000; border:1px solid var(--cyan); color:var(--cyan); padding:15px; font-weight:bold; cursor:pointer;">ALPHA 40Hz</button>
+                <button onclick="toggleAudio('theta')" style="background:#000; border:1px solid var(--priv); color:var(--priv); padding:15px; font-weight:bold; cursor:pointer;">THETA 6.39Hz</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="stat-lbl">ASSET_MINTING</div>
+            <div style="border-left:4px solid var(--pink); background:#111; padding:10px; margin-bottom:10px;">
+                <div style="font-size:1.3rem; font-weight:bold;" id="frst-v">3,141,592</div>
+                <div style="font-size:0.6rem; color:#888;">FRST (GOVERNANCE)</div>
+            </div>
+            <div style="border-left:4px solid var(--cyan); background:#111; padding:10px;">
+                <div style="font-size:1.3rem; font-weight:bold;" id="fnr-v">4,412,100</div>
+                <div style="font-size:0.6rem; color:#888;">FNR (RESERVE)</div>
+            </div>
+            
+            <div style="margin-top:40px; text-align:center;">
+                <div class="stat-lbl">NEXT_BLOCK_MINT</div>
+                <div style="font-size:2.5rem; color:#fff;" id="timer">300</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let t = 300;
+        setInterval(() => {
+            t--;
+            document.getElementById('timer').innerText = t;
+            if(t <= 0) t = 300;
+            // Sim telemetry flux
+            if(Math.random() > 0.8) document.getElementById('dash-mix').innerText = (1240 + Math.floor(Math.random()*10)).toLocaleString();
+        }, 1000);
+
+        function toggleAudio(type) {
+            // Audio logic remains same
+            alert("Frequency Calibrated: " + type.toUpperCase());
+        }
+    </script>
+</body>
+</html>

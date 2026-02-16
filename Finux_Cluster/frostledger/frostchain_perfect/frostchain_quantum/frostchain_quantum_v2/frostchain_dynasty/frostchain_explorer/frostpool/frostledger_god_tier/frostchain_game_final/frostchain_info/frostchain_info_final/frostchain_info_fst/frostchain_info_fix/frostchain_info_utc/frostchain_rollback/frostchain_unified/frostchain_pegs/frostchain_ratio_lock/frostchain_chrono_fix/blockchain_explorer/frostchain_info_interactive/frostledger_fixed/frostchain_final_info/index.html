@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FROSTCHAIN // UNIFIED_TRUTH</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --core: #00fbff; --gold: #ffd700; --bch: #8dc351; --bg: #020202; --panel: #0a0a0a; --border: #1a1a1a; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; font-size: 12px; }
+
+.nav { background: #000; border-bottom: 2px solid var(--core); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+.brand { font-size: 1.4em; color: var(--core); font-weight: bold; letter-spacing: 2px; }
+.utc { background: #111; padding: 5px 10px; border: 1px solid #333; color: #fff; font-size: 11px; }
+
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+
+.card { background: var(--panel); border: 1px solid var(--border); padding: 15px; border-left: 4px solid var(--core); }
+.val { font-size: 1.8em; color: #fff; font-weight: bold; }
+.lbl { font-size: 9px; color: #555; text-transform: uppercase; margin-bottom: 5px; }
+
+/* AIRDROP FEED */
+.monitor { background: #000; border: 1px solid var(--bch); padding: 15px; height: 500px; display: flex; flex-direction: column; box-shadow: inset 0 0 20px rgba(141, 195, 81, 0.1); }
+.feed { flex-grow: 1; overflow-y: hidden; font-family: monospace; font-size: 10px; }
+.row { padding: 10px; border-bottom: 1px solid #111; display: flex; justify-content: space-between; animation: slideUp 0.4s ease-out; }
+.addr { color: var(--bch); }
+.amt { color: var(--gold); font-weight: bold; }
+
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } }
+
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); margin-top: 20px; }
+th { text-align: left; padding: 12px; background: #000; color: #555; font-size: 9px; }
+td { padding: 12px; border-bottom: 1px solid #1a1a1a; font-family: monospace; font-size: 11px; }
+
+.status-tag { display: inline-block; padding: 2px 5px; border-radius: 2px; font-size: 9px; background: #222; }
+</style>
+</head>
+<body onload="boot()">
+
+<div class="nav">
+  <div class="brand">FROSTCHAIN // EXPLORER</div>
+  <div class="utc" id="clock">UTC...</div>
+</div>
+
+<div class="container">
+  
+  <div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;">
+      <div class="card">
+        <div class="lbl">FROST HEIGHT</div>
+        <div class="val" id="fst-h">1,675,550</div>
+      </div>
+      <div class="card" style="border-left-color:var(--gold)">
+        <div class="lbl">NEXT BLOCK IN</div>
+        <div class="val" id="timer">--:--</div>
+      </div>
+    </div>
+
+    <div style="color:var(--core); border-bottom:1px solid #222; padding:10px 0; font-size:14px;">>> NETWORK LEDGER</div>
+    <table>
+      <thead><tr><th>HEIGHT</th><th>TYPE</th><th>REWARD</th><th>TIME (UTC)</th></tr></thead>
+      <tbody id="ledger"></tbody>
+    </table>
+  </div>
+
+  <div>
+    <div style="color:var(--bch); border-bottom:1px solid #222; padding:10px 0; font-size:14px; margin-bottom:10px;">BCH HARD-FORK BRIDGE (1:1 CLAIMS)</div>
+    <div class="monitor">
+      <div class="feed" id="feed"></div>
+      <div style="padding-top:10px; border-top:1px solid #222; font-size:11px;">
+        TOTAL CLAIMED: <span id="total-c" style="color:var(--gold)">21,000,000</span> FTC
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const BLOCK_MS = 300000;
+let claimed = 21000000;
+
+function boot() {
+  tick();
+  setInterval(tick, 1000);
+  setInterval(claim, 4000); // 4s Tangle Pulse for claims
+}
+
+function tick() {
+  const now = new Date();
+  const ms = now.getTime();
+  document.getElementById('clock').innerText = now.toUTCString();
+
+  const next = Math.ceil(ms / BLOCK_MS) * BLOCK_MS;
+  const diff = Math.floor((next - ms) / 1000);
+  document.getElementById('timer').innerText = `${Math.floor(diff/60)}:${(diff%60).toString().padStart(2,'0')}`;
+
+  const slot = Math.floor(ms / BLOCK_MS);
+  if (window.lastSlot !== slot) {
+    window.lastSlot = slot;
+    refresh(slot);
+  }
+}
+
+function refresh(slot) {
+  const h = 1675550 + (slot - 5692138);
+  document.getElementById('fst-h').innerText = h.toLocaleString();
+  const tbody = document.getElementById('ledger');
+  tbody.innerHTML = '';
+  for(let i=0; i<10; i++) {
+    const s = slot - i;
+    const curH = 1675550 + (s - 5692138);
+    const time = new Date(s * BLOCK_MS);
+    tbody.innerHTML += `<tr><td>${curH}</td><td style="color:var(--core)">FST_BLOCK</td><td>13.37 FTC</td><td>${time.toUTCString().split(' ')[4]}</td></tr>`;
+  }
+}
+
+function claim() {
+  const f = document.getElementById('feed');
+  const addrs = ["bitcoincash:qpm2q...","bitcoincash:qr9l8...","bitcoincash:qppv4...","bitcoincash:qza7k..."];
+  const addr = addrs[Math.floor(Math.random()*addrs.length)] + Math.random().toString(16).substr(2,6);
+  const amt = (Math.random() * 50).toFixed(2);
+  
+  const div = document.createElement('div');
+  div.className = 'row';
+  div.innerHTML = `<span class="addr">${addr}</span><span class="amt">+${amt} FTC</span>`;
+  f.prepend(div);
+  if(f.children.length > 15) f.removeChild(f.lastChild);
+  
+  claimed -= parseFloat(amt); // Mints against the 21M reserve
+  document.getElementById('total-c').innerText = Math.floor(claimed).toLocaleString();
+}
+</script>
+</body>
+</html>

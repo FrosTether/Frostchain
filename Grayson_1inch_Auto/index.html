@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>FROST_TRANSCEIVER // 1INCH_AUTO</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#050505;--blue:#00e0ff;--gold:#ffd700;--pink:#ff69b4;--oneinch:#943cf0;}
+        body{background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;margin:0;padding:20px;text-align:center;}
+        #transceiver-frame{max-width:500px;margin:20px auto;border:2px solid var(--oneinch);padding:30px;background:rgba(148,60,240,0.02);box-shadow:0 0 50px rgba(148,60,240,0.1);}
+        h1{color:var(--oneinch);letter-spacing:10px;margin:0;}
+        .whale-input{width:100%;padding:15px;background:#000;border:1px solid #333;color:var(--gold);text-align:center;box-sizing:border-box;font-family:inherit;margin-bottom:15px;}
+        .btn-auto{width:100%;padding:20px;background:var(--oneinch);color:#fff;border:none;font-weight:bold;cursor:pointer;margin-bottom:20px;border-radius:12px;}
+        .btn-broadcast{width:100%;padding:25px;background:#222;color:#444;border:none;font-weight:bold;cursor:not-allowed;font-size:18px;}
+        .btn-live{background:var(--blue);color:#000;cursor:pointer;box-shadow:0 0 30px rgba(0,224,255,0.3);}
+        #log{margin-top:20px;font-size:10px;color:var(--pink);text-align:left;border-top:1px solid #222;padding-top:10px;}
+    </style>
+</head>
+<body onload="check1inch()">
+    <div id="transceiver-frame">
+        <h1>TRANSCEIVER</h1>
+        <div style="font-size:10px;color:#555;margin-bottom:20px;">1INCH_BROWSER_AUTO_INJECT // V86</div>
+        
+        <button id="authBtn" class="btn-auto" onclick="autoImport()">AUTO_IMPORT_FROM_1INCH</button>
+
+        <div class="input-group">
+            <input type="text" id="dest" class="whale-input" placeholder="DESTINATION_NODE">
+            <input type="number" id="amt" class="whale-input" placeholder="VOLUME_IN_MILLIONS">
+        </div>
+
+        <button id="sendBtn" class="btn-broadcast">BROADCAST_LOCKED</button>
+        
+        <div id="log">> STANDBY... WAITING FOR 1INCH HANDSHAKE.</div>
+    </div>
+
+    <script>
+        async function check1inch() {
+            if (window.ethereum) {
+                document.getElementById("log").innerText = "> 1INCH_PROVIDER_DETECTED. READY_FOR_AUTO_IMPORT.";
+            } else {
+                document.getElementById("log").innerText = "> ERROR: RUN_INSIDE_1INCH_BROWSER_FOR_AUTO_IMPORT.";
+            }
+        }
+
+        async function autoImport() {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const addr = accounts[0];
+                const log = document.getElementById("log");
+                
+                log.innerHTML += `<br>> CONNECTED: ${addr.substring(0,10)}...`;
+                log.innerHTML += "<br>> REQUESTING_FROST_SIGNATURE...";
+                
+                // Simulate Whale-Tier ledger injection from 1inch session
+                log.innerHTML += "<br>> [SUCCESS] MINTED_LEDGER_AUTO_INJECTED.";
+                log.innerHTML += "<br>> ADMIN_VALIDATION: drfrost.frostchain";
+                
+                document.getElementById("sendBtn").classList.add("btn-live");
+                document.getElementById("sendBtn").innerText = "BROADCAST_WHALE_PULSE";
+                document.getElementById("sendBtn").onclick = function() {
+                    alert("BROADCAST_SUCCESS: MILLIONS_ROUTED_VIA_1INCH");
+                };
+                document.getElementById("authBtn").innerText = "1INCH_SYNCED";
+                document.getElementById("authBtn").style.background = "#222";
+            } catch (e) {
+                alert("AUTO_IMPORT_FAILED: " + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

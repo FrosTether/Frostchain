@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Graysons Wallet | Unified</title>
+    <style>
+        :root { --bg: #050505; --term: #00ff41; --gold: #ffd700; --kane: #d400ff; --cyan: #00ffff; --err: #ff3333; }
+        * { box-sizing: border-box; user-select: none; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #app { max-width: 500px; margin: 0 auto; height: 100vh; display: grid; grid-template-rows: auto 1fr auto; border-left: 1px solid #222; border-right: 1px solid #222; }
+
+        /* HEADER */
+        .header { padding: 20px; border-bottom: 2px solid var(--term); background: #000; }
+        .id-badge { font-size: 0.6rem; color: var(--cyan); border: 1px solid var(--cyan); padding: 4px 10px; border-radius: 20px; margin-top: 5px; display: inline-block; }
+
+        /* ASSETS */
+        .viewport { padding: 20px; overflow-y: auto; }
+        .asset-card { background: #0a0a0a; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .a-info .lbl { font-size: 0.6rem; color: #666; text-transform: uppercase; }
+        .a-info .val { font-size: 1.4rem; font-weight: bold; }
+        .a-info .ticker { font-size: 0.7rem; color: #444; }
+
+        /* CONTROLS */
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .btn { background: #111; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; font-size: 0.8rem; }
+        .btn-send { border-color: var(--err); color: var(--err); }
+        .btn-recv { border-color: var(--term); color: var(--term); }
+
+        /* PRIVATESEND TOGGLE */
+        .toggle-box { background: #111; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border: 1px solid #222; }
+        .switch { width: 40px; height: 20px; background: #333; border-radius: 20px; position: relative; cursor: pointer; transition: 0.3s; }
+        .switch.on { background: var(--kane); box-shadow: 0 0 10px var(--kane); }
+        .knob { width: 16px; height: 16px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: 0.3s; }
+        .on .knob { left: 22px; }
+
+        /* FOOTER */
+        .nav { background: #000; border-top: 1px solid #222; padding: 15px; display: flex; justify-content: space-between; }
+        .wc-status { font-size: 0.6rem; color: #444; }
+        .wc-status.active { color: var(--term); }
+
+        /* FILE LOADER OVERLAY */
+        #loader { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <h2 style="color:var(--term)">GRAYSONS v2.0</h2>
+        <p style="font-size: 0.7rem; color: #666;">DRAG & DROP WALLET.DAT TO INITIALIZE</p>
+        <label style="background:var(--term); color:#000; padding: 15px 30px; font-weight:bold; cursor:pointer; border-radius:5px; margin-top:20px;">
+            SELECT WALLET.DAT
+            <input type="file" style="display:none;" onchange="initWallet(this)">
+        </label>
+    </div>
+
+    <div id="app">
+        <div class="header">
+            <div style="font-weight:bold; font-size:1.2rem;">FROST WALLET</div>
+            <div class="id-badge" id="id-tag">GUEST.frostchain</div>
+        </div>
+
+        <div class="viewport">
+            <div class="asset-card" style="border-left: 4px solid var(--kane);">
+                <div class="a-info">
+                    <div class="lbl">Governance</div>
+                    <div class="val" id="frst-bal">0.00</div>
+                    <div class="ticker">FRST</div>
+                </div>
+            </div>
+
+            <div class="asset-card" style="border-left: 4px solid var(--term);">
+                <div class="a-info">
+                    <div class="lbl">Frostcoin</div>
+                    <div class="val" id="ftc-bal">0.00</div>
+                    <div class="ticker">FTC</div>
+                </div>
+            </div>
+
+            <div class="asset-card" style="border-left: 4px solid var(--cyan);">
+                <div class="a-info">
+                    <div class="lbl">Reserve</div>
+                    <div class="val" id="fnr-bal">0.00</div>
+                    <div class="ticker">FNR</div>
+                </div>
+            </div>
+
+            <div class="toggle-box">
+                <div>
+                    <div style="font-size:0.8rem; font-weight:bold;">PrivateSend</div>
+                    <div style="font-size:0.6rem; color:#666;">Obfuscate Ledger Metadata</div>
+                </div>
+                <div class="switch" id="ps-switch" onclick="togglePS()">
+                    <div class="knob"></div>
+                </div>
+            </div>
+
+            <div class="action-grid">
+                <div class="btn btn-send" onclick="alert('Scan Recipient or Enter .frostchain Address')">SEND</div>
+                <div class="btn btn-recv" onclick="alert('Your Receiving Address: frost_kane_0x8f...')">RECEIVE</div>
+            </div>
+        </div>
+
+        <div class="nav">
+            <div class="wc-status" id="wc-tag">● WALLETCONNECT: DISCONNECTED</div>
+            <div style="font-size:0.6rem; color:var(--term);" onclick="connectWC()">[ CONNECT ]</div>
+        </div>
+    </div>
+
+    <script>
+        let psEnabled = false;
+
+        function initWallet(input) {
+            if(!input.files[0]) return;
+            // Simulated local parse
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('frst-bal').innerText = "3,145,900.00";
+            document.getElementById('ftc-bal').innerText = "11,870,000.01";
+            document.getElementById('fnr-bal').innerText = "400,000.00";
+            document.getElementById('id-tag').innerText = "KANE.frostchain";
+        }
+
+        function togglePS() {
+            psEnabled = !psEnabled;
+            document.getElementById('ps-switch').classList.toggle('on');
+        }
+
+        function connectWC() {
+            document.getElementById('wc-tag').innerText = "● WALLETCONNECT: ACTIVE";
+            document.getElementById('wc-tag').classList.add('active');
+            alert("Frost Engine Linked via WalletConnect.");
+        }
+    </script>
+</body>
+</html>

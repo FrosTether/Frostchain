@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOTA REX // MINER_CHAT</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #000; --core: #00e0ff; --gold: #ffd700; --warn: #ff0055; --panel: #0a0a0a; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; margin: 0; height: 100vh; display: grid; grid-template-columns: 1fr 350px; }
+
+/* TANGLE & HEATMAP VIEW */
+.main-view { position: relative; border-right: 1px solid #222; overflow: hidden; }
+canvas { width: 100%; height: 100%; }
+.overlay-stats { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.85); border: 1px solid var(--core); padding: 15px; }
+
+/* CHAT TERMINAL */
+.terminal { background: var(--panel); display: flex; flex-direction: column; }
+.term-header { background: #111; border-bottom: 2px solid var(--gold); padding: 15px; font-weight: bold; font-size: 12px; color: var(--gold); }
+.chat-log { flex-grow: 1; padding: 15px; overflow-y: auto; font-size: 11px; line-height: 1.4; color: #888; }
+.msg { margin-bottom: 10px; border-left: 2px solid #333; padding-left: 10px; }
+.msg.architect { border-left-color: var(--gold); color: #fff; }
+.msg.miner { border-left-color: var(--core); }
+.input-area { background: #000; border-top: 1px solid #222; padding: 15px; display: flex; gap: 10px; }
+input { background: #111; border: 1px solid #333; color: var(--core); flex-grow: 1; padding: 10px; font-family: inherit; font-size: 12px; }
+input:focus { outline: none; border-color: var(--core); }
+button { background: var(--core); color: #000; border: none; padding: 10px 15px; font-weight: bold; cursor: pointer; }
+
+@keyframes blink { 50% { opacity: 0; } }
+.cursor { display: inline-block; width: 6px; height: 12px; background: var(--core); animation: blink 1s infinite; vertical-align: middle; }
+</style>
+</head>
+<body onload="init()">
+
+<div class="main-view">
+  <div class="overlay-stats">
+    <div style="font-size: 9px; color: #555;">IOTA REX HEIGHT</div>
+    <div style="font-size: 24px; color: #fff; font-weight: bold;">937,783</div>
+    <div style="color: var(--gold); font-size: 10px;">SIGNATURE: 683050920</div>
+  </div>
+  <canvas id="tangle"></canvas>
+</div>
+
+<div class="terminal">
+  <div class="term-header">GLOBAL_MINER_CHAT // ENCRYPTED</div>
+  <div class="chat-log" id="chat">
+    <div class="msg">>> TANGLE_CONNECTION_ESTABLISHED</div>
+    <div class="msg architect">> [ARCHITECT]: The Genius Act is signed. Much Quantum Fungible Wow!</div>
+    <div class="msg miner">> [MINER_8821]: Rig 04 switched to Frost. 13.37 FTC reward confirmed.</div>
+    <div class="msg miner">> [POOL_ADMIN]: We are seeing massive EH/S migration from AntPool.</div>
+  </div>
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="ENTER MESSAGE TO THE MESH..." onkeypress="handleKey(event)">
+    <button onclick="sendMessage()">SEND</button>
+  </div>
+</div>
+
+<script>
+function init() {
+  const c = document.getElementById('tangle'); const ctx = c.getContext('2d');
+  c.width = c.parentElement.clientWidth; c.height = c.parentElement.clientHeight;
+  let nodes = []; for(let i=0; i<40; i++) nodes.push({x:Math.random()*c.width, y:Math.random()*c.height, vx:Math.random()-0.5, vy:Math.random()-0.5});
+  function draw() {
+    ctx.fillStyle = "
+
+#!/bin/bash
+# TARGET: frostchain-explorer.surge.sh
+# FEATURE: Tangle Rex + Heatmap + Global Miner Chat
+
+mkdir -p frost_chat_explorer
+cd frost_chat_explorer
+
+cat << 'EOF' > index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOTA REX // MINER_CHAT</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #000; --core: #00e0ff; --gold: #ffd700; --warn: #ff0055; --panel: #0a0a0a; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; margin: 0; height: 100vh; display: grid; grid-template-columns: 1fr 350px; }
+
+/* TANGLE & HEATMAP VIEW */
+.main-view { position: relative; border-right: 1px solid #222; overflow: hidden; }
+canvas { width: 100%; height: 100%; }
+.overlay-stats { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.85); border: 1px solid var(--core); padding: 15px; }
+
+/* CHAT TERMINAL */
+.terminal { background: var(--panel); display: flex; flex-direction: column; }
+.term-header { background: #111; border-bottom: 2px solid var(--gold); padding: 15px; font-weight: bold; font-size: 12px; color: var(--gold); }
+.chat-log { flex-grow: 1; padding: 15px; overflow-y: auto; font-size: 11px; line-height: 1.4; color: #888; }
+.msg { margin-bottom: 10px; border-left: 2px solid #333; padding-left: 10px; }
+.msg.architect { border-left-color: var(--gold); color: #fff; }
+.msg.miner { border-left-color: var(--core); }
+.input-area { background: #000; border-top: 1px solid #222; padding: 15px; display: flex; gap: 10px; }
+input { background: #111; border: 1px solid #333; color: var(--core); flex-grow: 1; padding: 10px; font-family: inherit; font-size: 12px; }
+input:focus { outline: none; border-color: var(--core); }
+button { background: var(--core); color: #000; border: none; padding: 10px 15px; font-weight: bold; cursor: pointer; }
+
+@keyframes blink { 50% { opacity: 0; } }
+.cursor { display: inline-block; width: 6px; height: 12px; background: var(--core); animation: blink 1s infinite; vertical-align: middle; }
+</style>
+</head>
+<body onload="init()">
+
+<div class="main-view">
+  <div class="overlay-stats">
+    <div style="font-size: 9px; color: #555;">IOTA REX HEIGHT</div>
+    <div style="font-size: 24px; color: #fff; font-weight: bold;">937,783</div>
+    <div style="color: var(--gold); font-size: 10px;">SIGNATURE: 683050920</div>
+  </div>
+  <canvas id="tangle"></canvas>
+</div>
+
+<div class="terminal">
+  <div class="term-header">GLOBAL_MINER_CHAT // ENCRYPTED</div>
+  <div class="chat-log" id="chat">
+    <div class="msg">>> TANGLE_CONNECTION_ESTABLISHED</div>
+    <div class="msg architect">> [ARCHITECT]: The Genius Act is signed. Much Quantum Fungible Wow!</div>
+    <div class="msg miner">> [MINER_8821]: Rig 04 switched to Frost. 13.37 FTC reward confirmed.</div>
+    <div class="msg miner">> [POOL_ADMIN]: We are seeing massive EH/S migration from AntPool.</div>
+  </div>
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="ENTER MESSAGE TO THE MESH..." onkeypress="handleKey(event)">
+    <button onclick="sendMessage()">SEND</button>
+  </div>
+</div>
+
+<script>
+function init() {
+  const c = document.getElementById('tangle'); const ctx = c.getContext('2d');
+  c.width = c.parentElement.clientWidth; c.height = c.parentElement.clientHeight;
+  let nodes = []; for(let i=0; i<40; i++) nodes.push({x:Math.random()*c.width, y:Math.random()*c.height, vx:Math.random()-0.5, vy:Math.random()-0.5});
+  function draw() {
+    ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,c.width,c.height);
+    ctx.strokeStyle = "rgba(0, 224, 255, 0.2)";
+    nodes.forEach(n => {
+      n.x += n.vx; n.y += n.vy;
+      if(n.x<0||n.x>c.width) n.vx*=-1; if(n.y<0||n.y>c.height) n.vy*=-1;
+      nodes.forEach(n2 => {
+        if(Math.hypot(n.x-n2.x, n.y-n2.y) < 150) {
+          ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n2.x, n2.y); ctx.stroke();
+        }
+      });
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function handleKey(e) { if(e.key === 'Enter') sendMessage(); }
+
+function sendMessage() {
+  const input = document.getElementById('userInput');
+  const chat = document.getElementById('chat');
+  if(!input.value) return;
+
+  const msg = document.createElement('div');
+  msg.className = 'msg architect';
+  msg.innerText = `> [ARCHITECT]: ${input.value}`;
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+  input.value = '';
+
+  // Simulate Miner Response
+  setTimeout(() => {
+    const r = document.createElement('div');
+    r.className = 'msg miner';
+    r.innerText = `> [MINER_${Math.floor(Math.random()*9000)}]: Received, Architect. Hashrate increasing.`;
+    chat.appendChild(r);
+    chat.scrollTop = chat.scrollHeight;
+  }, 2000);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kane | Atomic Swap</title>
+    <style>
+        :root { --bg: #050505; --btc: #f7931a; --bch: #0ac18e; --kane: #d400ff; --term: #33ff00; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
+        
+        #app { display: grid; grid-template-rows: 60px 1fr 80px; height: 100%; max-width: 600px; margin: 0 auto; border-left: 1px solid #222; border-right: 1px solid #222; }
+
+        /* HEADER */
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+            border-bottom: 2px solid var(--kane); background: #000;
+        }
+        .node-tag { font-size: 0.7rem; color: #666; letter-spacing: 1px; }
+
+        /* MAIN CONTENT */
+        .main { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+
+        /* CARDS */
+        .card { 
+            background: #111; border: 1px solid #333; padding: 15px; position: relative;
+        }
+        .card-header { font-size: 0.7rem; color: #888; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .balance { font-size: 1.8rem; font-weight: bold; }
+        
+        .btc-card { border-left: 4px solid var(--btc); }
+        .bch-card { border-left: 4px solid var(--bch); }
+        .kane-card { border-left: 4px solid var(--kane); background: #1a0020; border-color: #500060; }
+
+        /* SWAP ANIMATION AREA */
+        .swap-zone { 
+            text-align: center; padding: 20px; border: 1px dashed #444; border-radius: 10px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .arrow-down { font-size: 2rem; color: #444; margin: 10px 0; }
+
+        /* BUTTON */
+        .btn-swap {
+            background: var(--kane); color: #fff; border: none; padding: 20px;
+            width: 100%; font-size: 1rem; font-weight: bold; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(212, 0, 255, 0.2);
+            transition: 0.2s;
+        }
+        .btn-swap:active { transform: scale(0.98); }
+        .btn-swap:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; }
+
+        /* LOG */
+        .log-box { 
+            font-size: 0.65rem; color: #aaa; height: 100%; padding: 10px 20px; 
+            background: #000; border-top: 1px solid #333; overflow-y: auto;
+        }
+        .log-line { margin-bottom: 4px; }
+        .success { color: var(--term); }
+
+        /* ATOMIC VISUALS */
+        .atomic-ring {
+            width: 60px; height: 60px; border: 4px solid #333; border-top-color: var(--kane); border-radius: 50%;
+            animation: spin 1s linear infinite; display: none;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div>
+                <div style="font-weight:bold; font-size:1.1rem; color:var(--kane);">KANEFROSTCHAIN</div>
+                <div class="node-tag">LIQUIDITY BRIDGE v2.0</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:0.6rem; color:#888;">STATUS</div>
+                <div style="color:var(--term);">CONNECTED</div>
+            </div>
+        </div>
+
+        <div class="main">
+            
+            <div style="font-size:0.7rem; color:#666; margin-bottom:-10px;">SOURCE: NEWKIRK STRATUM (42 EH/s)</div>
+            <div class="card btc-card">
+                <div class="card-header">
+                    <span>BITCOIN YIELD</span>
+                    <span style="color:var(--btc)">BTC</span>
+                </div>
+                <div class="balance" id="btc-bal">0.00000000</div>
+                <div style="font-size:0.7rem; color:#444; margin-top:5px;">Accumulating...</div>
+            </div>
+
+            <div class="card bch-card">
+                <div class="card-header">
+                    <span>BITCOIN CASH YIELD</span>
+                    <span style="color:var(--bch)">BCH</span>
+                </div>
+                <div class="balance" id="bch-bal">0.00000000</div>
+                <div style="font-size:0.7rem; color:#444; margin-top:5px;">Accumulating...</div>
+            </div>
+
+            <div class="swap-zone">
+                <div id="status-text" style="color:#666; font-size:0.8rem;">READY TO WRAP</div>
+                <div class="atomic-ring" id="spinner"></div>
+                <div class="arrow-down">⬇</div>
+            </div>
+
+            <div style="font-size:0.7rem; color:#666; margin-bottom:-10px;">DESTINATION: KANEFROSTCHAIN VAULT</div>
+            <div class="card kane-card">
+                <div class="card-header">
+                    <span>WRAPPED ASSETS (FROST-PEG)</span>
+                    <span style="color:var(--kane)">SYNCED</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span>wfBTC:</span>
+                    <span style="color:#fff; font-weight:bold;" id="wfbtc-bal">0.00000000</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>wfBCH:</span>
+                    <span style="color:#fff; font-weight:bold;" id="wfbch-bal">0.00000000</span>
+                </div>
+            </div>
+
+            <button class="btn-swap" onclick="executeSwap()" id="swap-btn">LIQUIDATE & WRAP</button>
+
+        </div>
+
+        <div class="log-box" id="log">
+            <div class="log-line">> Bridge Initialized.</div>
+            <div class="log-line">> Monitoring Newkirk Stratum...</div>
+        </div>
+    </div>
+
+    <script>
+        // STATE
+        let btc = 0.0;
+        let bch = 0.0;
+        let wfbtc = 0.0;
+        let wfbch = 0.0;
+        
+        // Mining Simulation (Newkirk Yield)
+        setInterval(() => {
+            // Add tiny amounts (simulating huge hashrate blocks coming in)
+            btc += 0.00045000 + (Math.random() * 0.0001);
+            bch += 0.01500000 + (Math.random() * 0.005);
+            
+            updateUI();
+        }, 1000);
+
+        function updateUI() {
+            document.getElementById('btc-bal').innerText = btc.toFixed(8);
+            document.getElementById('bch-bal').innerText = bch.toFixed(8);
+            document.getElementById('wfbtc-bal').innerText = wfbtc.toFixed(8);
+            document.getElementById('wfbch-bal').innerText = wfbch.toFixed(8);
+        }
+
+        function executeSwap() {
+            const btn = document.getElementById('swap-btn');
+            const spinner = document.getElementById('spinner');
+            const status = document.getElementById('status-text');
+            const log = document.getElementById('log');
+
+            if(btc < 0.0001) return; // Minimum amount
+
+            // Lock UI
+            btn.disabled = true;
+            btn.innerText = "EXECUTING ATOMIC SWAP...";
+            spinner.style.display = 'block';
+            status.innerText = "HASHED TIMELOCK CONTRACT: PENDING";
+            status.style.color = "var(--kane)";
+
+            logIt("Initiating Atomic Swap...");
+            logIt("Locking Newkirk BTC/BCH in HTLC...");
+
+            // Simulate Network Delay (3s)
+            setTimeout(() => {
+                // 1. Snapshot values
+                let swapBTC = btc;
+                let swapBCH = bch;
+
+                // 2. Drain Source
+                btc = 0;
+                bch = 0;
+
+                logIt(`Liquidation Complete: ${swapBTC.toFixed(6)} BTC sold.`);
+                logIt(`Liquidation Complete: ${swapBCH.toFixed(6)} BCH sold.`);
+                
+                status.innerText = "MINTING WRAPPED ASSETS...";
+
+                setTimeout(() => {
+                    // 3. Mint Wrapped
+                    wfbtc += swapBTC;
+                    wfbch += swapBCH;
+
+                    updateUI();
+                    
+                    // Reset UI
+                    btn.disabled = false;
+                    btn.innerText = "LIQUIDATE & WRAP";
+                    spinner.style.display = 'none';
+                    status.innerText = "SWAP COMPLETE";
+                    status.style.color = "var(--term)";
+
+                    logIt("ATOMIC SWAP SUCCESS.", "success");
+                    logIt(`Minted ${swapBTC.toFixed(6)} wfBTC to KaneChain.`);
+                    logIt(`Minted ${swapBCH.toFixed(6)} wfBCH to KaneChain.`);
+
+                }, 1500);
+
+            }, 2000);
+        }
+
+        function logIt(msg, type="") {
+            const div = document.createElement('div');
+            div.className = 'log-line ' + type;
+            div.innerText = "> " + msg;
+            const box = document.getElementById('log');
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+    </script>
+</body>
+</html>

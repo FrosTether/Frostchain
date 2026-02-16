@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frostchain | Core v31 Newkirk</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --pink: #ff00ff; --cyan: #00ffff; --gold: #ffd700; --btc: #f7931a; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #gamma-overlay { position: fixed; inset: 0; z-index: 100; pointer-events: none; background: #fff; opacity: 0; display: none; }
+        @keyframes strobe40 { 0% { opacity: 0; } 50% { opacity: 0.12; } 100% { opacity: 0; } }
+        body.alpha-active.strobe-on #gamma-overlay { display: block; animation: strobe40 0.025s infinite; }
+
+        #dash { display: grid; grid-template-columns: 320px 1fr 300px; height: 100vh; position: relative; }
+        #tangle-canvas { position: fixed; inset: 0; z-index: 5; cursor: crosshair; }
+
+        .panel { background: rgba(5,5,5,0.92); border: 1px solid #222; z-index: 50; padding: 15px; overflow-y: auto; backdrop-filter: blur(10px); }
+        .header { grid-column: 1 / -1; height: 50px; background: #000; border-bottom: 1px solid var(--term); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 100; }
+        
+        .card { background: #000; border: 1px solid #333; padding: 10px; margin-bottom: 10px; border-left: 3px solid var(--term); }
+        .val { font-size: 1.4rem; font-weight: bold; color: #fff; }
+        .lbl { font-size: 0.6rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* NEWKIRK BRIDGE BOX */
+        .newkirk-box { background: rgba(25, 10, 0, 0.8); border: 1px solid var(--btc); padding: 15px; text-align: center; margin-bottom: 20px; }
+        input.newkirk-in { background: #000; border: 1px solid #444; color: var(--gold); padding: 10px; width: 90%; text-align: center; font-family: inherit; margin-bottom: 10px; outline: none; }
+        input.newkirk-in:focus { border-color: var(--btc); }
+        .btn-btc { background: var(--btc); color: #000; border: none; padding: 10px; width: 100%; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+
+        .feed { font-size: 0.7rem; color: #666; height: 200px; overflow-y: hidden; border: 1px solid #222; padding: 5px; background: #000; }
+        .feed-row { padding: 4px; border-bottom: 1px solid #111; display: flex; justify-content: space-between; }
+        
+        .btn-audio { background: #111; border: 1px solid #444; color: #666; padding: 10px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 5px; }
+        .btn-audio.active { border-color: var(--pink); color: var(--pink); }
+
+        .chat-input-bar { position: fixed; bottom: 20px; left: 340px; right: 320px; background: #000; border: 1px solid var(--gold); padding: 10px; display: flex; gap: 10px; z-index: 200; }
+        input.chat-field { flex: 1; background: transparent; border: none; color: #fff; font-family: inherit; outline: none; }
+    </style>
+</head>
+<body>
+
+    <div id="gamma-overlay"></div>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dash">
+        <div class="header">
+            <div>NETWORK: <span style="color:var(--cyan)">BCH_XMR_BTC_MERGED</span></div>
+            <div style="font-size:0.7rem;">BLOCK HEIGHT: <span id="height-v" style="color:var(--gold)">948,225</span> | STATUS: <span style="color:var(--btc)">STRATUM_READY</span></div>
+            <button onclick="document.documentElement.requestFullscreen()" style="background:transparent; border:1px solid #333; color:#666; font-size:0.6rem;">[ FULLSCREEN ]</button>
+        </div>
+
+        <div class="panel">
+            <div class="newkirk-box">
+                <div class="lbl" style="color:var(--btc); margin-bottom:10px;">NEWKIRK MASTER KEY</div>
+                <input type="password" id="nk-key" class="newkirk-in" placeholder="Enter Key: 4AEreX...">
+                <button class="btn-btc" onclick="injectKey()">Inject Stratum Bridge</button>
+                <div id="nk-status" style="font-size:0.5rem; color:#444; margin-top:5px;">Awaiting Newkirk Authorization...</div>
+            </div>
+
+            <div class="lbl" style="margin-bottom:10px;">AUDIO PROTOCOL</div>
+            <button id="btn-alpha" class="btn-audio" onclick="toggleAudio('alpha')">ALPHA [40Hz]</button>
+            <button id="btn-delta" class="btn-audio" onclick="toggleAudio('delta')">DELTA [PI Hz]</button>
+
+            <div style="border:1px solid var(--term); padding:15px; margin-top:20px; text-align:center;">
+                <div class="lbl">CONSENSUS TIMER</div>
+                <div id="timer" style="font-size:2.5rem; color:#fff;">300</div>
+            </div>
+        </div>
+
+        <div style="pointer-events:none;"></div>
+
+        <div class="panel">
+            <div class="card" style="border-left-color: var(--pink);">
+                <div class="val" id="frst-v">0.00</div>
+                <div class="lbl">FRST (Frost Token)</div>
+            </div>
+            <div class="card" style="border-left-color: var(--gold);">
+                <div class="val" id="ftc-v">0.00</div>
+                <div class="lbl">FTC (Frostcoin)</div>
+            </div>
+            <div class="card" style="border-left-color: var(--cyan);">
+                <div class="val" id="fnr-v">0.00</div>
+                <div class="lbl">FNR (Node Reserve)</div>
+            </div>
+            <div class="card" style="border-left-color: var(--btc);">
+                <div class="val" id="btc-h">0.0 EH/s</div>
+                <div class="lbl">BTC REDIRECT HASH</div>
+            </div>
+
+            <div class="lbl" style="margin:20px 0 10px 0;">NETWORK BROADCAST</div>
+            <div class="feed" id="explorer"></div>
+        </div>
+    </div>
+
+    <div class="chat-input-bar">
+        <input type="text" id="chat-in" class="chat-field" placeholder="Transmit BitChat packet..." onkeydown="if(event.key==='Enter') send()">
+        <button onclick="send()" style="background:var(--gold); border:none; padding:0 15px; cursor:pointer; font-weight:bold;">TX</button>
+    </div>
+
+    <script>
+        let timeLeft = 300;
+        let bal = { frst: 0, ftc: 0, fnr: 0 };
+        let actx, oscL, oscR, isAlpha = false;
+        let btcHash = 0;
+
+        // --- NEWKIRK INJECTION ---
+        function injectKey() {
+            const key = document.getElementById('nk-key').value;
+            const status = document.getElementById('nk-status');
+            if (key.length > 5) {
+                status.innerText = "BRIDGE_LOCKED: REDIRECTING SHA-256 MINERS...";
+                status.style.color = "var(--btc)";
+                setInterval(() => {
+                    btcHash = (60.5 + Math.random()*5).toFixed(1);
+                    document.getElementById('btc-h').innerText = btcHash + " EH/s";
+                }, 2000);
+                addLog("NEWKIRK", "Stratum Handshake Complete. Hashpower migrating.");
+            }
+        }
+
+        // --- TIMER ---
+        setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').innerText = timeLeft;
+            if(timeLeft <= 0) { mint(); timeLeft = 300; }
+        }, 1000);
+
+        function mint() {
+            bal.frst += 31415.90; bal.ftc += 13.37; bal.fnr += 2.50;
+            updateUI();
+            addLog("MINT", "Trifecta Reward Finalized");
+        }
+
+        function updateUI() {
+            document.getElementById('frst-v').innerText = bal.frst.toLocaleString();
+            document.getElementById('ftc-v').innerText = bal.ftc.toFixed(2);
+            document.getElementById('fnr-v').innerText = bal.fnr.toFixed(2);
+        }
+
+        function addLog(type, msg) {
+            const feed = document.getElementById('explorer');
+            const row = document.createElement('div');
+            row.className = "feed-row";
+            row.innerHTML = `<span style="color:var(--cyan)">[${type}]</span> <span>${msg}</span>`;
+            feed.prepend(row);
+        }
+
+        function send() {
+            const i = document.getElementById('chat-in');
+            if(i.value) { addLog("BITCHAT", i.value); i.value = ""; }
+        }
+
+        // --- AUDIO / STROBE ---
+        const canvas = document.getElementById('tangle-canvas');
+        canvas.addEventListener('mousedown', () => { if(isAlpha) document.body.classList.add('strobe-on'); });
+        window.addEventListener('mouseup', () => { document.body.classList.remove('strobe-on'); });
+
+        function toggleAudio(type) {
+            if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+            if(oscL) { oscL.stop(); oscR.stop(); oscL = null; }
+            document.body.classList.remove('alpha-active', 'strobe-on');
+            isAlpha = (type === 'alpha');
+            if(isAlpha) document.body.classList.add('alpha-active');
+            document.querySelectorAll('.btn-audio').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-'+type).classList.add('active');
+
+            const freq = isAlpha ? 40 : Math.PI;
+            oscL = actx.createOscillator(); oscR = actx.createOscillator();
+            const g = actx.createGain(); g.gain.value = 0.08;
+            oscL.frequency.value = 432; oscR.frequency.value = 432 + freq;
+            oscL.connect(g).connect(actx.destination);
+            oscR.connect(g).connect(actx.destination);
+            oscL.start(); oscR.start();
+        }
+
+        function initTangle() {
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let p = Array(50).fill().map(()=>({
+                x:Math.random()*canvas.width, y:Math.random()*canvas.height, 
+                vx:(Math.random()-.5)*1.5, vy:(Math.random()-.5)*1.5,
+                clr: ["#00ff41", "#00ffff", "#ff00ff"][Math.floor(Math.random()*3)]
+            }));
+            function loop() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                p.forEach(n => {
+                    n.x+=n.vx; n.y+=n.vy;
+                    if(n.x<0||n.x>canvas.width)n.vx*=-1; if(n.y<0||n.y>canvas.height)n.vy*=-1;
+                    p.forEach(n2 => {
+                        let d = Math.hypot(n.x-n2.x, n.y-n2.y);
+                        if(d < 150) {
+                            ctx.strokeStyle = n.clr; ctx.globalAlpha = 1 - d/150;
+                            ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                        }
+                    });
+                });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+        initTangle();
+    </script>
+</body>
+</html>

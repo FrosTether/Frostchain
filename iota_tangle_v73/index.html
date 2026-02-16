@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Iota Tangle HD</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --xmr: #ff6600; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        /* FULL-SCREEN TANGLE CANVAS */
+        #tangle-canvas { position: fixed; inset: 0; z-index: 1; }
+        
+        /* UI OVERLAY */
+        #ui-layer { position: relative; z-index: 10; display: grid; grid-template-rows: 70px 1fr 100px; height: 100vh; pointer-events: none; }
+        #ui-layer * { pointer-events: auto; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 30px; border-bottom: 1px solid rgba(0,255,65,0.2); background: rgba(0,0,0,0.8); }
+        .main-content { display: grid; grid-template-columns: 380px 1fr 320px; gap: 20px; padding: 20px; }
+        
+        .glass-panel { background: rgba(0,0,0,0.85); border: 1px solid #222; padding: 15px; border-radius: 4px; }
+        .xmr-tag { color: var(--xmr); font-size: 0.55rem; word-break: break-all; margin-top: 5px; font-weight: bold; border: 1px solid var(--xmr); padding: 5px; display: block; }
+
+        /* RESERVOIRS */
+        .freq-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
+        .freq-card { border: 1px solid #111; padding: 10px; text-align: center; background: #080808; font-size: 0.6rem; transition: 0.3s; }
+        .freq-card.active { border-color: var(--cyan); box-shadow: 0 0 15px rgba(0,255,255,0.2); }
+
+        /* MINER POOLS */
+        .pool-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #111; font-size: 0.65rem; color: #888; }
+        .pool-id { color: var(--gold); font-weight: bold; }
+
+        .footer { background: rgba(0,0,0,0.9); border-top: 1px solid #222; padding: 0 30px; display: flex; justify-content: space-between; align-items: center; }
+        .lbl { font-size: 0.55rem; color: #444; text-transform: uppercase; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="header">
+            <div style="font-weight:bold; letter-spacing:3px; font-size:1.2rem;">IOTA_TANGLE // <span style="color:var(--cyan)">HD_RESONANCE</span></div>
+            <div style="text-align:right;">
+                <div class="lbl">CARRIER_BLOCK</div>
+                <div style="color:var(--gold); font-size:1rem; font-weight:bold;">741.frostchain</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="glass-panel">
+                <div class="lbl">XMR_LIQUIDITY_SMART_CONTRACT</div>
+                <span class="xmr-tag">4AEreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab</span>
+                
+                <div style="margin-top:20px;" class="lbl">SOLFEGGIO_1/9TH_RESERVOIRS</div>
+                <div class="freq-grid" id="grid"></div>
+            </div>
+
+            <div></div>
+
+            <div class="glass-panel">
+                <div class="lbl">MINER_POOL_INPUTS</div>
+                <div style="background:#0a0a0a; border:1px solid #222; padding:10px; margin: 10px 0; border-radius:4px;">
+                    <div class="pool-row"><span class="pool-id">BTC_POOL_01</span><span>Pointed: 741.frostchain</span></div>
+                    <div class="pool-row"><span class="pool-id">BCH_POOL_02</span><span>Pointed: 741.frostchain</span></div>
+                </div>
+
+                <div class="lbl" style="margin-top:20px;">NETWORK_MINT_FEED</div>
+                <div id="m-list" style="margin-top:10px;"></div>
+                
+                <button style="width:100%; padding:15px; background:var(--term); color:#000; font-weight:bold; border:none; margin-top:20px; cursor:pointer;" onclick="toggleTangle()">Engage Iota Rez HD</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div style="font-size:0.6rem; color:#444;">FULL_SCREEN_DAG_VISUALIZER // NO_WITHDRAW // NO_SIGN_IN</div>
+            <div style="text-align:right;">
+                <div class="lbl">BLOCK_TIMER</div>
+                <div style="font-size:3rem; color:#fff; font-weight:bold;" id="timer">155</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const freqs = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        const grid = document.getElementById('grid');
+        const supplyFTC = (100000000 / 9).toLocaleString();
+
+        freqs.forEach(f => {
+            const card = document.createElement('div');
+            card.className = 'freq-card'; card.id = `f-${f}`;
+            card.innerHTML = `<div style="color:#444;">${f}Hz</div><div style="color:#fff; font-size:0.5rem;">${supplyFTC}</div>`;
+            grid.appendChild(card);
+        });
+
+        // TANGLE ANIMATION
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let isRunning = false;
+
+        function initTangle() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<80; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5
+                });
+            }
+        }
+
+        function drawTangle() {
+            if(!isRunning) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(0, 255, 65, 0.15)';
+            ctx.lineWidth = 1;
+
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                particles.slice(i + 1).forEach(p2 => {
+                    let dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if(dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                });
+                ctx.fillStyle = 'rgba(0, 255, 65, 0.5)';
+                ctx.fillRect(p.x-1, p.y-1, 2, 2);
+            });
+            requestAnimationFrame(drawTangle);
+        }
+
+        function toggleTangle() {
+            isRunning = !isRunning;
+            if(isRunning) {
+                initTangle();
+                drawTangle();
+                shiftResonance();
+            }
+        }
+
+        function shiftResonance() {
+            if(!isRunning) return;
+            const f = freqs[Math.floor(Math.random()*freqs.length)];
+            document.querySelectorAll('.freq-card').forEach(c => c.classList.remove('active'));
+            document.getElementById(`f-${f}`).classList.add('active');
+            
+            const log = document.getElementById('m-list');
+            const row = document.createElement('div');
+            row.className = 'pool-row';
+            row.innerHTML = `<span style="color:var(--cyan)">0x${Math.random().toString(16).substring(2,8)}</span><span>MINT: 741.0</span>`;
+            log.prepend(row);
+            if(log.childNodes.length > 10) log.removeChild(log.lastChild);
+            
+            setTimeout(shiftResonance, 4000);
+        }
+
+        let t = 155;
+        setInterval(() => { if(isRunning) { t--; if(t<0) t=155; document.getElementById('timer').innerText = t; }}, 1000);
+        
+        window.onresize = initTangle;
+    </script>
+</body>
+</html>

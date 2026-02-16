@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FROSTCHAIN // LIVE_EXPLORER</title>
+<style>
+  :root { --bg: #050505; --gold: #ffd700; --cyan: #00fbff; --green: #00ff41; }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; padding: 40px; }
+  
+  .halving-box { border: 2px solid var(--cyan); background: #001111; padding: 30px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+  .block-counter { font-size: 3em; font-weight: 900; color: var(--cyan); text-shadow: 0 0 15px var(--cyan); }
+  .countdown-label { color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; }
+  
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .stat-card { background: #111; border: 1px solid #222; padding: 20px; border-radius: 6px; }
+  .stat-val { font-size: 1.4em; color: var(--green); font-weight: bold; }
+  
+  .manifesto { margin-top: 40px; border-top: 1px solid #222; padding-top: 20px; font-size: 11px; color: #555; }
+  .highlight { color: var(--gold); }
+</style>
+</head>
+<body>
+
+  <div class="halving-box">
+    <div>
+      <div class="countdown-label">Current Block Height</div>
+      <div class="block-counter" id="height">937,466</div>
+    </div>
+    <div style="text-align: right;">
+      <div class="countdown-label">Blocks Until Halving</div>
+      <div class="block-counter" style="color:var(--gold); text-shadow:0 0 15px var(--gold);" id="remaining">--</div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="countdown-label">Current Reward</div>
+      <div class="stat-val">13.37 FTC</div>
+    </div>
+    <div class="stat-card">
+      <div class="countdown-label">Post-Halving Reward</div>
+      <div class="stat-val">6.685 FTC</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label" style="font-size:10px; color:#888;">NETWORK_STATUS</div>
+      <div class="stat-val" style="color:var(--cyan);">● MAINNET_LOCKED</div>
+    </div>
+  </div>
+
+  <div class="manifesto">
+    <span class="highlight">[AUTHORITY]</span> JACOB FROST // <span class="highlight">[TIMELINE]</span> MINING UNTIL 2155 // <span class="highlight">[STATUS]</span> THE ONLY ICO
+  </div>
+
+<script>
+  const HALVING_INTERVAL = 595640;
+  let currentHeight = 937466; // Current Mainnet Sync
+
+  function updateChain() {
+    currentHeight += 1;
+    let remaining = HALVING_INTERVAL - (currentHeight % HALVING_INTERVAL);
+    
+    document.getElementById('height').innerText = currentHeight.toLocaleString();
+    document.getElementById('remaining').innerText = remaining.toLocaleString();
+  }
+
+  // Sync with the 5-minute block clock (accelerated for visual validation)
+  setInterval(updateChain, 3000); 
+  updateChain();
+</script>
+</body>
+</html>

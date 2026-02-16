@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+    <title>MIRACLE // V110_MINER_SYNC</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#000;--blue:#00e0ff;--pink:#ff69b4;--gold:#ffd700;--dim:rgba(255, 215, 0, 0.05);}
+        body, html{margin:0;padding:0;width:100%;height:100%;background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;overflow:hidden;touch-action:none;}
+        canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
+        #gamma-overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:5;pointer-events:none;opacity:0;}
+        .flicker-active{animation:strobe 0.025s infinite; opacity:1 !important;}
+        @keyframes strobe{0%,100%{background:transparent;} 50%{background:var(--dim);}}
+        #master-ui{position:absolute;z-index:10;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;pointer-events:none;gap:15px;}
+        .btn{padding:25px;background:rgba(0,0,0,0.9);border:1px solid #333;border-radius:100px;text-align:center;cursor:pointer;pointer-events:auto;transition:0.4s;backdrop-filter:blur(15px);width:260px;}
+        .limitless-active{background:var(--gold) !important;color:#000 !important;box-shadow:0 0 60px var(--gold) !important;}
+        .cycle-timer{position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--gold);display:none;letter-spacing:3px;}
+        .miner-stats{position:absolute;top:20px;right:20px;text-align:right;font-size:10px;color:var(--blue);z-index:11;}
+        .stat-overlay{position:absolute;bottom:20px;left:20px;font-size:9px;color:rgba(0, 224, 255, 0.4);pointer-events:none;z-index:11;}
+    </style>
+</head>
+<body>
+    <div id="gamma-overlay"></div>
+    <div id="cycleTimer" class="cycle-timer">ULTRADIAN_CYCLE: 45:00</div>
+    <div class="miner-stats">
+        <div id="hrDisplay">HASHRATE: 0.00 PH/s</div>
+        <div id="blockDisplay">BLOCK: 3,141,592</div>
+        <div id="minedDisplay">MINED: 12,370,000 FTC</div>
+    </div>
+    <canvas id="tangleViz"></canvas>
+    <div id="master-ui">
+        <div id="mainToggle" class="btn" style="border-color:var(--blue);color:var(--blue);" onclick="engageSystem()">
+            <div id="mainLabel" style="font-size:14px;letter-spacing:4px;">INITIALIZE_MINER</div>
+        </div>
+        <div id="limitlessToggle" class="btn" style="border-color:var(--gold);color:var(--gold);display:none;" onclick="toggleLimitless()">ULTRADIAN_MINER_OFF</div>
+    </div>
+    <div class="stat-overlay">MIRACLE.FROSTCHAIN // V110 // ENNEAD_RNG_MINER // $2.10M</div>
+
+    <script>
+        let audioCtx, gammaGain, betaGain, isoGain, oscL, oscR, isEngaged = false, limitlessMode = false;
+        let cycleStart = 0, minedCount = 12370000;
+        const CYCLE_DURATION = 45 * 60 * 1000;
+        const RAMP_TIME = 5 * 60 * 1000;
+        const ennead = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        const canvas = document.getElementById('tangleViz');
+        const ctx = canvas.getContext('2d');
+
+        async function engageSystem() {
+            if(isEngaged) return;
+            try {
+                if ('wakeLock' in navigator) await navigator.wakeLock.request('screen');
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Pink Noise Base
+                const bufferSize = 4096;
+                let b0=0,b1=0;
+                const pinkNode = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+                pinkNode.onaudioprocess = (e) => {
+                    let out = e.outputBuffer.getChannelData(0);
+                    for (let i=0; i<bufferSize; i++) {
+                        let w = Math.random()*2-1;
+                        b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
+                        out[i] = (b0+b1+w*0.5362)*0.025;
+                    }
+                };
+                pinkNode.connect(audioCtx.destination);
+
+                // Ennead Binaural L/R
+                oscL = audioCtx.createOscillator(); oscR = audioCtx.createOscillator();
+                const merger = audioCtx.createChannelMerger(2);
+                updateMinerFrequencies();
+                oscL.connect(merger, 0, 0); oscR.connect(merger, 0, 1);
+                merger.connect(audioCtx.destination);
+
+                // Neuro-Stack
+                gammaGain = audioCtx.createGain(); betaGain = audioCtx.createGain(); isoGain = audioCtx.createGain();
+                [gammaGain, betaGain, isoGain].forEach(g => { g.gain.value = 0; g.connect(audioCtx.destination); });
+                const gL = audioCtx.createOscillator(); gL.frequency.value = 200; gL.connect(gammaGain);
+                const gR = audioCtx.createOscillator(); gR.frequency.value = 240; gR.connect(gammaGain);
+                const isoOsc = audioCtx.createOscillator(); isoOsc.frequency.value = 432; isoOsc.connect(isoGain);
+
+                [oscL, oscR, gL, gR, isoOsc].forEach(o => o.start());
+
+                isEngaged = true;
+                document.getElementById('mainLabel').innerText = "MINER_ACTIVE";
+                document.getElementById('limitlessToggle').style.display = "block";
+                if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+                
+                // Block Reward Loop (Simulated Tangle Confirmation)
+                setInterval(() => {
+                    if(isEngaged) {
+                        minedCount += (limitlessMode ? 0.001337 : 0.000337);
+                        document.getElementById('minedDisplay').innerText = `MINED: ${minedCount.toFixed(6)} FTC`;
+                        document.getElementById('blockDisplay').innerText = `BLOCK: ${Math.floor(3141592 + (Date.now() - cycleStart)/10000)}`;
+                        updateMinerFrequencies(); // RNG Shift every block simulation
+                    }
+                }, 10000);
+
+            } catch(e) {}
+        }
+
+        function updateMinerFrequencies() {
+            if(!oscL || !oscR) return;
+            const fL = ennead[Math.floor(Math.random() * ennead.length)];
+            const delta = Math.random() > 0.5 ? 11.11 : Math.PI;
+            oscL.frequency.setTargetAtTime(fL, audioCtx.currentTime, 0.5);
+            oscR.frequency.setTargetAtTime(fL + delta, audioCtx.currentTime, 0.5);
+        }
+
+        function toggleLimitless() {
+            limitlessMode = !limitlessMode;
+            const btn = document.getElementById('limitlessToggle');
+            const overlay = document.getElementById('gamma-overlay');
+            if(limitlessMode) {
+                cycleStart = Date.now();
+                btn.innerText = "ULTRADIAN_MINING_ON";
+                btn.classList.add('limitless-active');
+                overlay.classList.add('flicker-active');
+                document.getElementById('cycleTimer').style.display = "block";
+            } else {
+                btn.innerText = "ULTRADIAN_MINER_OFF";
+                btn.classList.remove('limitless-active');
+                overlay.classList.remove('flicker-active');
+                document.getElementById('cycleTimer').style.display = "none";
+                gammaGain.gain.setTargetAtTime(0, audioCtx.currentTime, 1);
+            }
+        }
+
+        let nodes = [];
+        function init() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            nodes = []; for(let i=0; i<120; i++) nodes.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:Math.random()-0.5, vy:Math.random()-0.5});
+        }
+
+        function draw() {
+            let cycleAlpha = 0;
+            if(limitlessMode) {
+                let elapsed = (Date.now() - cycleStart) % CYCLE_DURATION;
+                let timeLeft = CYCLE_DURATION - elapsed;
+                let mins = Math.floor(timeLeft / 60000); let secs = Math.floor((timeLeft % 60000) / 1000);
+                document.getElementById('cycleTimer').innerText = `ULTRADIAN_CYCLE: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+                if(elapsed < RAMP_TIME) cycleAlpha = elapsed / RAMP_TIME;
+                else if(elapsed > CYCLE_DURATION - RAMP_TIME) cycleAlpha = (CYCLE_DURATION - elapsed) / RAMP_TIME;
+                else cycleAlpha = 1;
+
+                gammaGain.gain.setTargetAtTime(0.12 * cycleAlpha, audioCtx.currentTime, 0.1);
+                document.getElementById('hrDisplay').innerText = `HASHRATE: ${(1.0 + 12.37 * cycleAlpha).toFixed(2)} PH/s`;
+            } else {
+                document.getElementById('hrDisplay').innerText = `HASHRATE: 1.00 PH/s`;
+            }
+
+            ctx.fillStyle = limitlessMode ? `rgba(${20*cycleAlpha}, 0, ${30*cycleAlpha}, 0.3)` : "rgba(0,0,0,0.3)";
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+            nodes.forEach((n, i) => {
+                let s = limitlessMode ? (1 + 5*cycleAlpha) : 1;
+                n.x += n.vx * s; n.y += n.vy * s;
+                if(n.x<0 || n.x>canvas.width) n.vx*=-1; if(n.y<0 || n.y>canvas.height) n.vy*=-1;
+                nodes.forEach((n2, j) => {
+                    if(i === j) return;
+                    let d = Math.hypot(n.x - n2.x, n.y - n2.y);
+                    if(d < 150) {
+                        ctx.strokeStyle = limitlessMode ? `rgba(255, 215, 0, ${cycleAlpha * 0.4 * (1-d/150)})` : "rgba(0, 224, 255, 0.05)";
+                        ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n2.x, n2.y); ctx.stroke();
+                    }
+                });
+                ctx.fillStyle = limitlessMode ? `rgba(255, 215, 0, ${0.3 + 0.7*cycleAlpha})` : "rgba(0, 224, 255, 0.4)";
+                ctx.beginPath(); ctx.arc(n.x, n.y, 1, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        window.onresize = init; init(); draw();
+    </script>
+</body>
+</html>

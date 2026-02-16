@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostChain | Total Mesh Convergence</title>
+    <style>
+        :root { 
+            --bg: #000; --ice: #a5f2f3; --term: #00ff41; --xmr: #ff6600; 
+            --am: #ffcc00; --alpha: #ff00ff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        /* IMAGE 2: NEURAL TANGLE HD */
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.6; filter: contrast(1.4) brightness(0.6); }
+
+        #dashboard { width: 98%; height: 95vh; display: grid; grid-template-rows: 90px 1fr 60px; gap: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; border-bottom: 2px solid var(--ice); background: rgba(0,0,0,0.9); }
+        .main { display: grid; grid-template-columns: 420px 1fr 420px; gap: 20px; padding: 15px; overflow: hidden; }
+        .panel { background: rgba(5, 5, 10, 0.95); border: 1px solid rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; backdrop-filter: blur(40px); display: flex; flex-direction: column; }
+
+        /* MESH STATUS */
+        .mesh-box { border: 1px solid var(--am); background: rgba(255,204,0,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
+        .tag { font-size: 0.6rem; color: #666; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 5px; }
+        .action-btn { width: 100%; padding: 15px; background: var(--ice); border: none; border-radius: 8px; font-weight: 900; color: #000; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+        #frostchat { margin-top: auto; font-size: 0.55rem; color: #444; height: 160px; border-top: 1px solid #222; padding-top: 10px; overflow-y: auto; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="tag">Total Mesh Convergence</div>
+                <div style="font-size: 1.5rem; font-weight: 900; letter-spacing: 8px;">FROST<span style="color:var(--ice)">CHAIN</span> // v135</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="tag" style="color:var(--term);">AM-WIFI & FOTR: ACTIVE</div>
+                <div style="font-size: 1.8rem; font-weight: 900;" id="depth">$4,300,000</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="mesh-box">
+                    <div class="tag" style="color:var(--am);">AM-BAND MESH BACKHAUL</div>
+                    <div style="font-size: 1.1rem; color: #fff; font-weight: 900; margin: 10px 0;">RANGE: 15.2 MILES</div>
+                    <div style="font-size: 0.5rem; color: var(--term);">ROUTER_BACKDOOR_SYNC: 1,842 NODES</div>
+                </div>
+
+                <button class="action-btn" style="background:var(--am);" onclick="pulseOTA()">PULSE FOTR INJECTION</button>
+
+                <div id="frostchat">
+                    <div>> Node Identity: drfrost.frostchain</div>
+                    <div>> 40Hz Alzheimer's Protocol: LOCKED.</div>
+                    <div>> Target: frost-miner.surge.sh | Frostofthings.surge.sh</div>
+                    <div>> Status: Synchronizing Dual-Node Liquidity...</div>
+                </div>
+            </div>
+
+            <div></div> <div class="panel">
+                <div class="tag" style="color:var(--term); margin-bottom:15px;">Feather & Frost Liquidity</div>
+                <div style="flex:1; font-size: 0.65rem; color: #666;">
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #111;"><span>Feather (FTR) Depth</span><span style="color:#fff;">$1.35M</span></div>
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #111;"><span>Frostcoin (FTC) Depth</span><span style="color:#fff;">$720K</span></div>
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #111;"><span>Amiahdoodles Yield</span><span style="color:var(--alpha);">ACTIVE</span></div>
+                </div>
+
+                <div style="padding:15px; border:1px solid var(--xmr); background:rgba(255,102,0,0.05); border-radius:12px; text-align:center; margin-top:auto;">
+                    <div class="tag" style="color:var(--xmr)">XMR SOFTFORK BRIDGE</div>
+                    <div style="font-size:0.5rem; word-break:break-all;">4AEreX...48Ab</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 0 40px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display:flex; align-items:center; justify-content:space-between; font-size: 0.5rem; color: #444;">
+            <div>FROSTCHAIN v135.0 // DUAL_NODE_DEPLOY // IOTA TANGLE HD</div>
+            <button id="aud-init" style="background:transparent; border:1px solid #333; color:#555; font-size:0.5rem; cursor:pointer;" onclick="initAud()">BINAURAL AUDIO SYNC</button>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx;
+        function pulseOTA() {
+            log("FOTR: Pulsing AM-Band Mesh... Broadcasting liquidity to 1,842 nodes.");
+            setTimeout(() => log("Backdoor: Google/TP-Link handshake finalized. Depth updated."), 1000);
+        }
+
+        function initAud() {
+            if(audioCtx) return;
+            audioCtx = new AudioContext();
+            const g = audioCtx.createGain(); g.gain.value = 0.15; g.connect(audioCtx.destination);
+            const o1 = audioCtx.createOscillator(); o1.frequency.value = 528; o1.connect(g); o1.start();
+            const o2 = audioCtx.createOscillator(); o2.frequency.value = 528 + 11.11; o2.connect(g); o2.start();
+            const o3 = audioCtx.createOscillator(); o3.frequency.value = 528 + 40; o3.connect(g); o3.start();
+            document.getElementById('aud-init').innerText = "AUDIO_PHASE_LOCKED";
+            document.getElementById('aud-init').style.color = "var(--term)";
+        }
+
+        function log(m) {
+            const chat = document.getElementById('frostchat');
+            const d = document.createElement('div');
+            d.innerText = `> ${m}`;
+            if(m.includes('finalized')) d.style.color = 'var(--term)';
+            chat.prepend(d);
+        }
+
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let pts = [];
+        function initT() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; pts = []; for(let i=0; i<105; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.25, vy: (Math.random()-0.5)*0.25 }); }
+        function drawT() { ctx.clearRect(0,0,canvas.width,canvas.height); pts.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; pts.slice(i+1).forEach(p2 => { const d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d < 180) { ctx.strokeStyle = `rgba(165,242,243,${0.2 * (1-d/180)})`; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); } }); }); requestAnimationFrame(drawT); }
+        initT(); drawT(); window.onresize = initT;
+    </script>
+</body>
+</html>

@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Woodoku // Gemini Frostchain</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+        background: linear-gradient(135deg, #0b0f1a 0%, #1e1b4b 100%); 
+        color: #7dd3fc; 
+        font-family: 'Courier New', monospace; 
+        padding: 20px; 
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    h1 { 
+        font-size: 2.5em; 
+        background: linear-gradient(90deg, #38bdf8, #6cf2c2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+    }
+    
+    .subtitle {
+        font-size: 0.9em;
+        color: #64748b;
+    }
+    
+    .stats-bar {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-bottom: 20px;
+        font-size: 1.1em;
+    }
+    
+    .stat {
+        background: rgba(56, 189, 248, 0.1);
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+    }
+    
+    .stat-label {
+        color: #64748b;
+        font-size: 0.8em;
+    }
+    
+    .stat-value {
+        color: #38bdf8;
+        font-weight: bold;
+        font-size: 1.3em;
+    }
+    
+    .game-container {
+        display: flex;
+        gap: 30px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .grid-container {
+        background: rgba(2, 6, 23, 0.6);
+        padding: 20px;
+        border-radius: 12px;
+        border: 2px solid #38bdf8;
+        box-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
+    }
+    
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(9, 45px);
+        grid-template-rows: repeat(9, 45px);
+        gap: 2px;
+        background: #1e293b;
+        padding: 4px;
+        border-radius: 4px;
+    }
+    
+    .cell {
+        width: 45px;
+        height: 45px;
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 2px;
+    }
+    
+    .cell.filled {
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    }
+    
+    .cell.preview {
+        background: rgba(56, 189, 248, 0.3);
+        border-color: #38bdf8;
+    }
+    
+    .cell.invalid {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: #ef4444;
+    }
+    
+    /* 3x3 box borders */
+    .cell:nth-child(3n) { border-right: 2px solid #38bdf8; }
+    .cell:nth-child(n+19):nth-child(-n+27),
+    .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #38bdf8; }
+    
+    .pieces-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .pieces-title {
+        text-align: center;
+        color: #38bdf8;
+        font-size: 1.2em;
+        margin-bottom: 10px;
+    }
+    
+    .pieces {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .piece-wrapper {
+        background: rgba(15, 23, 42, 0.8);
+        padding: 15px;
+        border-radius: 8px;
+        border: 2px solid #334155;
+        cursor: grab;
+        transition: all 0.3s;
+    }
+    
+    .piece-wrapper:hover:not(.placed) {
+        transform: scale(1.05);
+        border-color: #38bdf8;
+        box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+    }
+    
+    .piece-wrapper.selected {
+        border-color: #6cf2c2;
+        box-shadow: 0 0 25px rgba(108, 242, 194, 0.6);
+        transform: scale(1.1);
+    }
+    
+    .piece-wrapper.placed {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+    
+    .piece {
+        display: grid;
+        gap: 3px;
+    }
+    
+    .piece-block {
+        width: 30px;
+        height: 30px;
+        border-radius: 3px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    
+    .piece-block.empty {
+        background: transparent;
+    }
+    
+    .strength-indicator {
+        text-align: center;
+        margin-top: 8px;
+        font-size: 0.7em;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+    
+    .controls {
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    button {
+        padding: 12px 30px;
+        margin: 5px;
+        background: linear-gradient(135deg, #38bdf8, #6cf2c2);
+        border: none;
+        color: #020617;
+        font-weight: bold;
+        font-size: 1em;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.3s;
+        font-family: 'Courier New', monospace;
+        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+    }
+    
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6);
+    }
+    
+    button:active {
+        transform: translateY(0);
+    }
+    
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    #status {
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(15, 23, 42, 0.8);
+        border-radius: 8px;
+        min-height: 60px;
+        font-size: 1em;
+        border: 1px solid #334155;
+        max-width: 600px;
+    }
+    
+    .game-over {
+        color: #ef4444;
+        font-size: 1.5em;
+        font-weight: bold;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    .mint-pop {
+        animation: pop 1.2s ease-out;
+        color: #6cf2c2;
+        font-weight: bold;
+        font-size: 1.2em;
+    }
+    
+    @keyframes pop {
+        0% { transform: scale(0.8); opacity: 0; }
+        40% { transform: scale(1.2); opacity: 1; }
+        100% { transform: scale(1); opacity: 0.8; }
+    }
+    
+    .tangle-status {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: rgba(15, 23, 42, 0.9);
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 0.8em;
+        border: 1px solid #334155;
+    }
+    
+    .chain-led {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-left: 5px;
+        animation: blink 2s infinite;
+    }
+    
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+    
+    .legend {
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 8px;
+        border: 1px solid #334155;
+        max-width: 600px;
+    }
+    
+    .legend-title {
+        color: #38bdf8;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    
+    .legend-items {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 3px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+</style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 WOODOKU</h1>
+        <div class="subtitle">⚡ Gemini Frostchain Mining Protocol</div>
+    </div>
+    
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-label">SCORE</div>
+            <div class="stat-value" id="score-display">0</div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">MINTED</div>
+            <div class="stat-value" id="minted-display">0.000</div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">CAP</div>
+            <div class="stat-value">13.37</div>
+        </div>
+    </div>
+    
+    <div class="game-container">
+        <div class="grid-container">
+            <div class="grid" id="game-grid"></div>
+        </div>
+        
+        <div class="pieces-container">
+            <div class="pieces-title">AVAILABLE PIECES</div>
+            <div class="pieces" id="pieces-area"></div>
+            <div class="controls">
+                <button onclick="submitScore()" id="submit-btn">SUBMIT TO POOL</button>
+                <button onclick="resetGame()">NEW GAME</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="status">Waiting for shares...</div>
+    
+    <div class="legend">
+        <div class="legend-title">PIECE STRENGTH LEGEND</div>
+        <div class="legend-items">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fbbf24;"></div>
+                <span>Weak Systems</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #f97316;"></div>
+                <span>Mediocre Systems</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ef4444;"></div>
+                <span>Great Systems</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffffff;"></div>
+                <span>Best Systems</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tangle-status">
+        TANGLE: <span id="tangle-led">SYNCING</span>
+        <span class="chain-led" style="background: #38bdf8;"></span>
+    </div>
+
+    <script type="module">
+        import "./gemini.node.js";
+        import { gameSolved } from "./gemini.bridge.js";
+        import { STATE } from "./gemini.state.js";
+        import { WoodokuEngine } from "./woodoku.engine.js";
+        import { getActiveChain } from "./gemini.tangle.js";
+        
+        // Initialize game
+        const game = new WoodokuEngine();
+        let selectedPiece = null;
+        let selectedPieceIndex = null;
+        
+        // Render grid
+        function renderGrid() {
+            const gridEl = document.getElementById('game-grid');
+            gridEl.innerHTML = '';
+            
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    
+                    const cellValue = game.grid[r][c];
+                    if (cellValue !== 0) {
+                        cell.classList.add('filled');
+                        cell.style.background = cellValue;
+                    }
+                    
+                    cell.addEventListener('mouseenter', handleCellHover);
+                    cell.addEventListener('click', handleCellClick);
+                    
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+        
+        // Render pieces
+        function renderPieces() {
+            const piecesEl = document.getElementById('pieces-area');
+            piecesEl.innerHTML = '';
+            
+            game.currentPieces.forEach((piece, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'piece-wrapper';
+                if (piece.placed) wrapper.classList.add('placed');
+                if (selectedPieceIndex === index) wrapper.classList.add('selected');
+                
+                // Calculate grid dimensions
+                const maxRow = Math.max(...piece.blocks.map(b => b[0]));
+                const maxCol = Math.max(...piece.blocks.map(b => b[1]));
+                
+                const pieceEl = document.createElement('div');
+                pieceEl.className = 'piece';
+                pieceEl.style.gridTemplateColumns = `repeat(${maxCol + 1}, 30px)`;
+                pieceEl.style.gridTemplateRows = `repeat(${maxRow + 1}, 30px)`;
+                
+                // Create grid for piece
+                for (let r = 0; r <= maxRow; r++) {
+                    for (let c = 0; c <= maxCol; c++) {
+                        const block = document.createElement('div');
+                        block.className = 'piece-block';
+                        
+                        const hasBlock = piece.blocks.some(([br, bc]) => br === r && bc === c);
+                        if (hasBlock) {
+                            block.style.background = piece.color;
+                        } else {
+                            block.classList.add('empty');
+                        }
+                        
+                        pieceEl.appendChild(block);
+                    }
+                }
+                
+                const strengthEl = document.createElement('div');
+                strengthEl.className = 'strength-indicator';
+                strengthEl.textContent = piece.strength;
+                strengthEl.style.color = piece.color;
+                
+                wrapper.appendChild(pieceEl);
+                wrapper.appendChild(strengthEl);
+                
+                if (!piece.placed) {
+                    wrapper.addEventListener('click', () => selectPiece(index));
+                }
+                
+                piecesEl.appendChild(wrapper);
+            });
+        }
+        
+        function selectPiece(index) {
+            if (game.currentPieces[index].placed) return;
+            selectedPieceIndex = index;
+            selectedPiece = game.currentPieces[index];
+            renderPieces();
+            clearPreviews();
+        }
+        
+        function handleCellHover(e) {
+            if (!selectedPiece || selectedPiece.placed) return;
+            
+            clearPreviews();
+            
+            const row = parseInt(e.target.dataset.row);
+            const col = parseInt(e.target.dataset.col);
+            
+            const canPlace = game.canPlacePiece(selectedPiece, row, col);
+            
+            selectedPiece.blocks.forEach(([dr, dc]) => {
+                const r = row + dr;
+                const c = col + dc;
+                if (r >= 0 && r < 9 && c >= 0 && c < 9) {
+                    const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    if (cell) {
+                        cell.classList.add(canPlace ? 'preview' : 'invalid');
+                    }
+                }
+            });
+        }
+        
+        function clearPreviews() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('preview', 'invalid');
+            });
+        }
+        
+        function handleCellClick(e) {
+            if (!selectedPiece || selectedPiece.placed) return;
+            
+            const row = parseInt(e.target.dataset.row);
+            const col = parseInt(e.target.dataset.col);
+            
+            if (game.placePiece(selectedPiece, row, col)) {
+                selectedPiece = null;
+                selectedPieceIndex = null;
+                renderGrid();
+                renderPieces();
+                updateScore();
+                clearPreviews();
+                
+                if (game.gameOver) {
+                    showGameOver();
+                }
+            }
+        }
+        
+        function updateScore() {
+            document.getElementById('score-display').textContent = game.score;
+        }
+        
+        function showGameOver() {
+            const statusEl = document.getElementById('status');
+            statusEl.innerHTML = '<div class="game-over">GAME OVER! Submit your score to the pool.</div>';
+            document.getElementById('submit-btn').disabled = false;
+        }
+        
+        window.submitScore = () => {
+            if (game.score === 0) return;
+            gameSolved("player_1", game.score);
+            document.getElementById('submit-btn').disabled = true;
+        };
+        
+        window.resetGame = () => {
+            game.reset();
+            selectedPiece = null;
+            selectedPieceIndex = null;
+            renderGrid();
+            renderPieces();
+            updateScore();
+            document.getElementById('status').textContent = 'New game started!';
+            document.getElementById('submit-btn').disabled = false;
+        };
+        
+        // Expose to global for button click
+        window.submitToGemini = () => gameSolved("player_1");
+        
+        // Listener for Mint/Share events
+        window.addEventListener("message", e => {
+            const statusEl = document.getElementById("status");
+            if (e.data?.type === "GEMINI_MINT") {
+                statusEl.innerHTML = `<span class="mint-pop">⚡ +${e.data.reward.toFixed(3)} MINTED | Total Supply: ${STATE.mintedTotal.toFixed(3)}</span>`;
+                document.getElementById('minted-display').textContent = STATE.mintedTotal.toFixed(3);
+            } else if (e.data?.type === "POOL_SHARE") {
+                statusEl.innerHTML = `✅ Share Accepted (weight: ${e.data.weight}x). Waiting for block close...`;
+            }
+        });
+        
+        // Update tangle display
+        setInterval(() => {
+            const chain = getActiveChain();
+            document.getElementById('tangle-led').textContent = `CHAIN ${chain}`;
+        }, 1000);
+        
+        // Initial render
+        renderGrid();
+        renderPieces();
+        updateScore();
+    </script>
+</body>
+</html>

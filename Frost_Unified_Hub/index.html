@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>FROST_HUB // REZ_HD_TANGLE</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#050505;--blue:#00e0ff;--gold:#ffd700;--pink:#ff69b4;--green:#0f0;}
+        body{background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;margin:0;padding:20px;text-align:center;}
+        #hub-frame{max-width:800px;margin:20px auto;border:2px solid var(--blue);border-radius:25px;background:rgba(0,224,255,0.01);box-shadow:0 0 100px rgba(0,224,255,0.1);overflow:hidden;}
+        .tangle-viz{height:200px;background:#000;position:relative;border-bottom:1px solid #222;}
+        .node{position:absolute;width:4px;height:4px;background:var(--blue);border-radius:50%;box-shadow:0 0 10px var(--blue);animation:float 3s infinite ease-in-out;}
+        @keyframes float{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-20px) scale(1.5);}}
+        .control-panel{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:30px;}
+        .stat-card{background:#111;padding:20px;border-radius:15px;border:1px solid #222;text-align:left;}
+        .val{font-size:24px;color:#fff;font-weight:bold;}
+        .btn-mine{grid-column: span 2;padding:25px;background:linear-gradient(90deg, var(--blue), var(--pink));color:#000;border:none;border-radius:15px;font-weight:bold;cursor:pointer;font-size:18px;letter-spacing:5px;}
+        .sound-lock{font-size:10px;color:var(--gold);margin-top:10px;}
+    </style>
+</head>
+<body>
+    <div id="hub-frame">
+        <div class="tangle-viz" id="viz">
+            <div style="position:absolute;top:10px;left:10px;font-size:10px;color:var(--pink);">REZ_HD_TANGLE_ACTIVE</div>
+        </div>
+
+        <div class="control-panel">
+            <div class="stat-card">
+                <div style="font-size:10px;color:var(--blue);">FROST_MINER_HASHRATE</div>
+                <div class="val" id="hash">0.00 TH/s</div>
+            </div>
+            <div class="stat-card">
+                <div style="font-size:10px;color:var(--blue);">TANGLE_CONFIRMATIONS</div>
+                <div class="val" id="conf">9,999+</div>
+            </div>
+            
+            <button class="btn-mine" onclick="startOps()">START_SOUND_CRYPTO_MINING</button>
+            <div class="sound-lock">7.83Hz_ACOUSTIC_ENGINE: MANDATORY_ON</div>
+        </div>
+
+        <div style="padding:20px;font-size:9px;color:#444;">
+            ADMIN: drfrost.frostchain // LIQUIDITY: 2.1M_LOCKED
+        </div>
+    </div>
+
+    <script>
+        // Generate Tangle Visualization
+        const viz = document.getElementById('viz');
+        for(let i=0; i<30; i++) {
+            let n = document.createElement('div');
+            n.className = 'node';
+            n.style.left = Math.random() * 95 + '%';
+            n.style.top = Math.random() * 80 + '%';
+            n.style.animationDelay = Math.random() * 2 + 's';
+            viz.appendChild(n);
+        }
+
+        function startOps() {
+            document.querySelector('.btn-mine').innerText = "MINING_&_SYNCING...";
+            document.getElementById('hash').innerText = "13.37 PH/s";
+            alert("SOUND_ENGINE_ENGAGED: REZ_HD_TANGLE_SYNCHRONIZED_AT_7.83Hz");
+        }
+    </script>
+</body>
+</html>

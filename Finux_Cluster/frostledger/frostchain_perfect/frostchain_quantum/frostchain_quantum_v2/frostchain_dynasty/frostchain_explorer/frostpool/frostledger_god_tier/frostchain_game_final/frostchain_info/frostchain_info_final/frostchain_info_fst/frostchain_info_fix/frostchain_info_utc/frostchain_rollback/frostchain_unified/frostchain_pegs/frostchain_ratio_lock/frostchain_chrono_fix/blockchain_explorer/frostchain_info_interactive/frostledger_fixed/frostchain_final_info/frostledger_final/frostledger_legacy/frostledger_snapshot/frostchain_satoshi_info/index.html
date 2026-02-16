@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FROSTCHAIN // SATOSHI_IDENTITY</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --core: #00fbff; --gold: #ffd700; --bch: #8dc351; --bg: #020202; --panel: #0a0a0a; --border: #1a1a1a; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; font-size: 12px; }
+
+.nav { background: #000; border-bottom: 2px solid var(--gold); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+.brand { font-size: 1.4em; color: var(--gold); font-weight: bold; letter-spacing: 3px; }
+.utc { background: #111; padding: 5px 10px; border: 1px solid #333; color: #fff; font-size: 11px; }
+
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+
+.card { background: var(--panel); border: 1px solid var(--border); padding: 15px; border-left: 4px solid var(--core); position: relative; overflow: hidden; }
+.card.satoshi { border-left-color: var(--gold); background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(0,0,0,0) 100%); }
+.val { font-size: 1.8em; color: #fff; font-weight: bold; }
+.lbl { font-size: 9px; color: #555; text-transform: uppercase; margin-bottom: 5px; }
+
+.tangle-box { border: 1px dashed var(--core); padding: 15px; display: flex; align-items: center; gap: 10px; font-size: 10px; }
+.pulse { width: 10px; height: 10px; background: var(--gold); border-radius: 50%; animation: p 4s infinite; }
+@keyframes p { 0%, 100% { opacity: 0; transform: scale(1.5); } 50% { opacity: 1; transform: scale(1); } }
+
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); margin-top: 20px; }
+th { text-align: left; padding: 12px; background: #000; color: #555; font-size: 9px; }
+td { padding: 12px; border-bottom: 1px solid #1a1a1a; font-family: monospace; font-size: 11px; }
+</style>
+</head>
+<body onload="boot()">
+
+<div class="nav">
+  <div class="brand">FROSTCHAIN // GENESIS_NODE</div>
+  <div class="utc" id="clock">UTC...</div>
+</div>
+
+<div class="container">
+  
+  <div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;">
+      <div class="card satoshi">
+        <div class="lbl" style="color:var(--gold)">SATOSHI NAKAMOTO RESERVE</div>
+        <div class="val">12,370,000 FTC</div>
+        <div style="font-size:9px; color:var(--core); margin-top:5px;">drfrost.frostchain (VERIFIED_OWNER)</div>
+      </div>
+      <div class="card">
+        <div class="lbl">PUBLIC MINABLE SUPPLY</div>
+        <div class="val" id="mine-p">65,630,000</div>
+        <div style="font-size:9px; color:#555; margin-top:5px;">MINT RATE: 13.37 / 300s</div>
+      </div>
+    </div>
+
+    <div class="tangle-box">
+      <div class="pulse"></div>
+      <span style="color:var(--gold)">SATOSHI_SIG_BRIDGE: ACTIVE</span>
+      <span style="color:#444; margin-left:auto;">BCH_FORK_PARITY: 1:1 SECURED</span>
+    </div>
+
+    <table>
+      <thead><tr><th>HEIGHT</th><th>TYPE</th><th>HASH</th><th>TIME (UTC)</th></tr></thead>
+      <tbody id="ledger"></tbody>
+    </table>
+  </div>
+
+  <div>
+    <div style="color:var(--gold); border-bottom:1px solid #222; padding:10px 0; font-size:14px; margin-bottom:10px;">GLOBAL LEDGER INFO</div>
+    <div class="card" style="border-left-color:var(--bch); margin-bottom:15px;">
+      <div class="lbl">BCH FORK RESERVE</div>
+      <div class="val">21,000,000</div>
+      <div style="font-size:9px; color:#555; margin-top:5px;">CLAIMABLE BY LEGACY (2017) & MODERN</div>
+    </div>
+    <div class="card" style="border-left-color:var(--gold);">
+      <div class="lbl">TOTAL MAX SUPPLY</div>
+      <div class="val">100,000,000</div>
+      <div style="font-size:9px; color:#555; margin-top:5px;">HARD CAP ENFORCED BY SATOSHI</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const BLOCK_MS = 300000;
+function boot() {
+  tick();
+  setInterval(tick, 1000);
+}
+
+function tick() {
+  const now = new Date();
+  const ms = now.getTime();
+  document.getElementById('clock').innerText = now.toUTCString();
+
+  const slot = Math.floor(ms / BLOCK_MS);
+  if (window.lastSlot !== slot) {
+    window.lastSlot = slot;
+    refresh(slot);
+  }
+}
+
+function refresh(slot) {
+  const h = 1675700 + (slot - 5692147);
+  const tbody = document.getElementById('ledger');
+  tbody.innerHTML = '';
+  for(let i=0; i<12; i++) {
+    const s = slot - i;
+    const curH = 1675700 + (s - 5692147);
+    const time = new Date(s * BLOCK_MS);
+    const hash = '0000' + Math.abs(Math.sin(curH)).toString(16).substr(2,10);
+    tbody.innerHTML += `<tr><td>${curH}</td><td style="color:var(--gold)">SATOSHI_BLOCK</td><td>${hash}...</td><td>${time.toUTCString().split(' ')[4]}</td></tr>`;
+  }
+}
+</script>
+</body>
+</html>

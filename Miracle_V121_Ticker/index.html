@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>MIRACLE // V121_GLOBAL_TICKER</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#000;--blue:#00e0ff;--gold:#ffd700;--pink:#ff69b4;}
+        body, html{margin:0;padding:0;width:100%;height:100%;background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;overflow:hidden;}
+        canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
+        #gamma-overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:5;pointer-events:none;opacity:0;}
+        .flicker-active{animation:strobe 0.025s infinite; opacity:1 !important;}
+        @keyframes strobe{0%,100%{background:transparent;} 50%{background:rgba(255, 105, 180, 0.08);}}
+        .hud{position:absolute;top:20px;right:20px;text-align:right;font-size:10px;color:var(--blue);z-index:11;}
+        .ticker-box{background:rgba(0,0,0,0.85);border:1px solid #222;padding:15px;border-radius:15px;margin-top:10px;text-align:left;border-left:4px solid var(--gold);}
+        #master-ui{position:absolute;z-index:10;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;pointer-events:none;gap:15px;}
+        .btn{padding:25px;background:rgba(0,0,0,0.95);border:2px solid var(--blue);border-radius:100px;text-align:center;cursor:pointer;pointer-events:auto;transition:0.4s;width:260px;}
+        .limitless-active{background:var(--pink) !important;color:#000 !important;box-shadow:0 0 80px var(--pink) !important;}
+    </style>
+</head>
+<body>
+    <div id="gamma-overlay"></div>
+    <div class="hud">
+        <div style="color:var(--gold);letter-spacing:3px;">GLOBAL_HASHRATE_TICKER</div>
+        <div class="ticker-box">
+            BCH_GLOBAL: <span id="bchHash">8.50</span> EH/s<br>
+            LTC_GLOBAL: <span id="ltcHash">1.10</span> PH/s<br>
+            <span style="color:var(--pink);">YOUR_DOMINANCE: 13.37%</span>
+        </div>
+        <div style="margin-top:10px;">FTC_MINED: 12,370,000</div>
+    </div>
+    <canvas id="tangleViz"></canvas>
+    <div id="master-ui">
+        <div class="btn" onclick="engage()">ENGAGE_MIRACLE_V121</div>
+        <div id="limitBtn" class="btn" style="border-color:var(--gold);color:var(--gold);display:none;" onclick="toggleLimitless()">LIMITLESS_OFF</div>
+    </div>
+
+    <script>
+        let audioCtx, gammaGain, isEngaged = false, limitless = false;
+        const canvas = document.getElementById('tangleViz');
+        const ctx = canvas.getContext('2d');
+
+        async function engage() {
+            if(isEngaged) return;
+            if ('wakeLock' in navigator) await navigator.wakeLock.request('screen');
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const gOsc = audioCtx.createOscillator(); gOsc.frequency.value = 40;
+            gammaGain = audioCtx.createGain(); gammaGain.gain.value = 0;
+            gOsc.connect(gammaGain); gammaGain.connect(audioCtx.destination);
+            gOsc.start();
+            isEngaged = true;
+            document.getElementById('limitBtn').style.display = "block";
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+            
+            // Randomize global ticker slightly for "live" feel
+            setInterval(() => {
+                document.getElementById('bchHash').innerText = (8.5 + (Math.random() - 0.5) * 0.1).toFixed(2);
+                document.getElementById('ltcHash').innerText = (1.1 + (Math.random() - 0.5) * 0.05).toFixed(2);
+            }, 5000);
+        }
+
+        function toggleLimitless() {
+            limitless = !limitless;
+            const btn = document.getElementById('limitBtn');
+            const overlay = document.getElementById('gamma-overlay');
+            if(limitless) {
+                btn.innerText = "LIMITLESS_ON";
+                btn.classList.add('limitless-active');
+                overlay.classList.add('flicker-active');
+                gammaGain.gain.setTargetAtTime(0.15, audioCtx.currentTime, 0.1);
+            } else {
+                btn.innerText = "LIMITLESS_OFF";
+                btn.classList.remove('limitless-active');
+                overlay.classList.remove('flicker-active');
+                gammaGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+            }
+        }
+
+        let nodes = [];
+        function init() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            nodes = []; for(let i=0; i<100; i++) nodes.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:Math.random()-0.5, vy:Math.random()-0.5});
+        }
+        function draw() {
+            let s = limitless ? 5.5 : 1;
+            ctx.fillStyle = limitless ? "rgba(30, 0, 40, 0.4)" : "rgba(0,0,0,0.3)";
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+            nodes.forEach((n, i) => {
+                n.x += n.vx * s; n.y += n.vy * s;
+                if(n.x<0 || n.x>canvas.width) n.vx*=-1; if(n.y<0 || n.y>canvas.height) n.vy*=-1;
+                nodes.forEach((n2, j) => {
+                    if(i === j) return;
+                    let d = Math.hypot(n.x - n2.x, n.y - n2.y);
+                    if(d < 140) {
+                        ctx.strokeStyle = limitless ? `rgba(255, 105, 180, ${0.5 * (1-d/140)})` : "rgba(0, 224, 255, 0.1)";
+                        ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n2.x, n2.y); ctx.stroke();
+                    }
+                });
+                ctx.fillStyle = limitless ? "var(--pink)" : "var(--blue)";
+                ctx.beginPath(); ctx.arc(n.x, n.y, 1.2, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        window.onresize = init; init(); draw();
+    </script>
+</body>
+</html>

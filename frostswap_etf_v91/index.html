@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FrostSwap | Full ETF Dashboard</title>
+    <style>
+        :root { 
+            --bg: #030308; 
+            --term: #00ff41; 
+            --liq: #9d00ff; 
+            --ice: #a5f2f3;  /* fszUSD */
+            --plat: #e5e4e2; /* fPLAT */
+            --btc: #f7931a; 
+            --cyan: #00ffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #chart-canvas { position: fixed; inset: 0; z-index: 0; opacity: 0.15; }
+        #ui-layer { position: relative; z-index: 10; display: grid; grid-template-rows: 80px 1fr 60px; height: 100vh; pointer-events: none; }
+        #ui-layer * { pointer-events: auto; }
+
+        /* HEADER */
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; padding: 0 30px; 
+            background: rgba(0,0,0,0.85); border-bottom: 2px solid var(--ice); 
+            box-shadow: 0 0 20px rgba(165, 242, 243, 0.2); backdrop-filter: blur(10px);
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; letter-spacing: 3px; color: var(--ice); }
+        .metric-bar { display: flex; gap: 30px; }
+        .metric { text-align: right; }
+        .m-val { font-size: 1.1rem; color: #fff; font-weight: bold; }
+        .m-lbl { font-size: 0.55rem; color: #888; letter-spacing: 1px; }
+
+        .main { display: grid; grid-template-columns: 380px 1fr 400px; gap: 20px; padding: 20px; overflow: hidden; }
+        
+        /* PANELS */
+        .card { 
+            background: rgba(15, 15, 25, 0.95); border: 1px solid #333; padding: 20px; border-radius: 12px; 
+            display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            backdrop-filter: blur(15px);
+        }
+
+        /* POOL RESERVOIRS */
+        .vat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
+        .vat-item { border: 1px solid #222; padding: 10px; text-align: center; background: #080808; }
+        .vat-bar { width: 100%; height: 60px; background: #111; margin-bottom: 5px; position: relative; overflow: hidden; }
+        .vat-fill { position: absolute; bottom: 0; width: 100%; transition: height 0.8s; opacity: 0.7; }
+
+        /* MINT DASHBOARD */
+        .mint-panel { border: 1px solid var(--ice); background: rgba(165, 242, 243, 0.05); padding: 15px; border-radius: 8px; margin-top: 15px; }
+        .mint-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .btn-mint { background: var(--ice); color: #000; font-weight: bold; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
+
+        /* SWAP ENGINE */
+        .swap-input { background: #000; border: 1px solid #444; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+        .token-sel { background: #222; color: #fff; border: none; padding: 5px; font-weight: bold; border-radius: 4px; }
+        .amt-in { background: transparent; border: none; color: #fff; text-align: right; width: 60%; font-size: 1.2rem; outline: none; }
+        .btn-swap { background: var(--term); color: #000; font-weight: bold; padding: 18px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; margin-top: 10px; box-shadow: 0 0 20px rgba(0,255,65,0.3); }
+
+        .footer { background: #000; border-top: 1px solid #333; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; font-size: 0.65rem; color: #444; }
+    </style>
+</head>
+<body>
+
+    <canvas id="chart-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="header">
+            <div class="logo">FROST<span style="color:var(--term)">SWAP</span> <span style="font-size:0.7rem; color:var(--plat);">ETF_v91</span></div>
+            <div class="metric-bar">
+                <div class="metric">
+                    <div class="m-val" id="total-tvl">$102,450,200</div>
+                    <div class="m-lbl">OMNI-POOL TVL</div>
+                </div>
+                <div class="metric">
+                    <div class="m-val" id="fees" style="color:var(--term)">$0.00</div>
+                    <div class="m-lbl">ETF DIVIDENDS</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="card">
+                <div style="font-size:0.75rem; color:var(--ice); letter-spacing:2px; margin-bottom:15px;">SUB ZERO TETHER MINT (fszUSD)</div>
+                <div class="mint-panel">
+                    <div class="m-val" id="fsz-supply">5,000,000</div>
+                    <div class="m-lbl">fszUSD CIRCULATING</div>
+                    <div style="height:4px; background:#111; margin-top:10px;"><div id="collat-bar" style="width:75%; height:100%; background:var(--ice); box-shadow:0 0 10px var(--ice);"></div></div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.6rem; color:#888; margin-top:5px;">
+                        <span>Collateral Ratio</span>
+                        <span style="color:var(--term)">150.2% (SAFE)</span>
+                    </div>
+                </div>
+
+                <div class="vat-grid">
+                    <div class="vat-item">
+                        <div class="vat-bar"><div class="vat-fill" style="height:85%; background:var(--btc);"></div></div>
+                        <div class="m-lbl">wBTC RESERVE</div>
+                    </div>
+                    <div class="vat-item">
+                        <div class="vat-bar"><div class="vat-fill" style="height:60%; background:var(--bch);"></div></div>
+                        <div class="m-lbl">wBCH RESERVE</div>
+                    </div>
+                </div>
+
+                <div style="margin-top:auto; padding-top:20px;">
+                    <button class="btn-mint" style="width:100%;" onclick="alert('Locking BTC for fszUSD Mint...')">MINT STABLECOIN</button>
+                </div>
+            </div>
+
+            <div></div>
+
+            <div class="card">
+                <div style="font-size:0.75rem; color:var(--plat); letter-spacing:2px; margin-bottom:15px;">FROST OMNI-SWAP</div>
+                
+                <div class="swap-input">
+                    <div class="m-lbl">YOU SEND</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <input type="number" class="amt-in" value="1.0" id="in-val" oninput="calcOut()">
+                        <select id="in-tok" class="token-sel" onchange="calcOut()">
+                            <option value="wBTC">wBTC</option>
+                            <option value="fszUSD">fszUSD</option>
+                            <option value="fPLAT">fPLAT</option>
+                            <option value="FTC">FTC</option>
+                            <option value="FRST">FRST</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="text-align:center; color:#333; margin:5px 0;">↓</div>
+
+                <div class="swap-input">
+                    <div class="m-lbl">YOU RECEIVE</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <input type="text" class="amt-in" id="out-val" readonly value="2971.11">
+                        <select id="out-tok" class="token-sel" onchange="calcOut()">
+                            <option value="FTC">FTC</option>
+                            <option value="fszUSD">fszUSD</option>
+                            <option value="fPLAT">fPLAT</option>
+                            <option value="FRST">FRST</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn-swap" onclick="executeSwap()">EXECUTE OMNI-SWAP</button>
+
+                <div style="margin-top:20px; border-top:1px solid #222; padding-top:15px; font-size:0.65rem; color:#666;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span>Pool Fee (0.3%)</span>
+                        <span id="fee-disp">0.003 wBTC</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Price Impact</span>
+                        <span style="color:var(--term)">< 0.01%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div>NEWKIRK ETF PROTOCOL // TOTAL EMISSION CAP ENFORCED // 741.FROSTCHAIN SYNC</div>
+            <div id="status">STATUS: BALANCED</div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const prices = {
+            'wBTC': 95000, 'wBCH': 450, 'fszUSD': 1.00, 'fPLAT': 1842.10, 'FTC': 31.97, 'FRST': 1.50, 'FNR': 180.00
+        };
+        let earned = 0;
+
+        // --- CALCS ---
+        function calcOut() {
+            const inTok = document.getElementById('in-tok').value;
+            const outTok = document.getElementById('out-tok').value;
+            const inAmt = parseFloat(document.getElementById('in-val').value) || 0;
+            const outAmt = (inAmt * prices[inTok]) / prices[outTok];
+            document.getElementById('out-val').value = outAmt.toFixed(4);
+            document.getElementById('fee-disp').innerText = (inAmt * 0.003).toFixed(4) + " " + inTok;
+        }
+
+        function executeSwap() {
+            const btn = document.querySelector('.btn-swap');
+            btn.innerText = "BALANCING POOL...";
+            setTimeout(() => {
+                btn.innerText = "EXECUTE OMNI-SWAP";
+                const val = parseFloat(document.getElementById('in-val').value);
+                earned += (val * prices[document.getElementById('in-tok').value] * 0.003);
+                document.getElementById('fees').innerText = "$" + earned.toLocaleString(undefined, {minimumFractionDigits: 2});
+            }, 800);
+        }
+
+        // --- VISUALS ---
+        const cvs = document.getElementById('chart-canvas');
+        const ctx = cvs.getContext('2d');
+        let t = 0;
+        function resize() { cvs.width = window.innerWidth; cvs.height = window.innerHeight; }
+        window.onresize = resize; resize();
+        function animate() {
+            ctx.clearRect(0,0,cvs.width,cvs.height);
+            ctx.strokeStyle = 'rgba(165, 242, 243, 0.4)';
+            ctx.beginPath();
+            ctx.moveTo(0, cvs.height/2);
+            for(let i=0; i<cvs.width; i+=10) {
+                const y = cvs.height/2 + Math.sin(i*0.01 + t)*40 + Math.cos(i*0.005 - t)*20;
+                ctx.lineTo(i, y);
+            }
+            ctx.stroke();
+            t += 0.02;
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>

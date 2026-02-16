@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>FROST_PRINT</title>
+<style>
+  body { background: #fff; color: #000; font-family: monospace; padding: 50px; }
+  .paper-wallet { border: 4px dashed #000; padding: 20px; display: flex; justify-content: space-between; align-items: center; width: 600px; margin: auto; }
+  .qr { width: 100px; height: 100px; background: #000; }
+</style>
+</head>
+<body onload="window.print()">
+  <div class="paper-wallet">
+    <div>
+      <h3>FROSTCHAIN SOVEREIGN PAPER</h3>
+      <p>ADDRESS: [ mary.frostchain ]</p>
+      <p>PRIVATE KEY: [ SATOSHI_SHIELD_HIDDEN ]</p>
+    </div>
+    <div class="qr"></div>
+  </div>
+</body>
+</html>

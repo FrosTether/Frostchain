@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DELTA // SLEEP_MINER</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        body,html{margin:0;padding:0;width:100%;height:100%;background:#000;color:#222;font-family:"Share Tech Mono",monospace;overflow:hidden;}
+        canvas{position:absolute;top:0;left:0;z-index:1;opacity:0.3;}
+        #ui{position:absolute;z-index:10;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;pointer-events:none;}
+        .btn{padding:30px;background:rgba(0,0,0,0.9);border:1px solid #111;border-radius:100px;color:#333;cursor:pointer;pointer-events:auto;transition:0.5s;}
+        .active{border-color:#4b0082;color:#4b0082;box-shadow:0 0 40px #1a0033;}
+        .hud{position:absolute;top:20px;right:20px;text-align:right;font-size:10px;color:#1a1a1a;}
+    </style>
+</head>
+<body>
+    <canvas id="t"></canvas>
+    <div class="hud">FTC: 12,370,000<br>FNR: 4,412,100<br>FRST: 13.37%</div>
+    <div id="ui"><div class="btn" onclick="start()">ENGAGE_DELTA_SLEEP</div></div>
+    <script>
+        let audioCtx, isEngaged = false;
+        const ennead = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        async function start() {
+            if(isEngaged) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const fL = ennead[Math.floor(Math.random()*9)];
+            const oscL = audioCtx.createOscillator(); const oscR = audioCtx.createOscillator();
+            const m = audioCtx.createChannelMerger(2);
+            oscL.frequency.value = fL; oscR.frequency.value = fL + 3.14; // Pi Delta
+            oscL.connect(m,0,0); oscR.connect(m,0,1); m.connect(audioCtx.destination);
+            [oscL, oscR].forEach(o => o.start());
+            isEngaged = true; document.querySelector('.btn').classList.add('active');
+            document.querySelector('.btn').innerText = "DELTA_SYNC_ACTIVE";
+        }
+        const c = document.getElementById('t'); const ctx = c.getContext('2d');
+        let n = []; c.width = window.innerWidth; c.height = window.innerHeight;
+        for(let i=0;i<80;i++) n.push({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-0.5)*0.2,vy:(Math.random()-0.5)*0.2});
+        function d(){ ctx.fillStyle='rgba(0,0,0,0.1)'; ctx.fillRect(0,0,c.width,c.height);
+            n.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>c.width)p.vx*=-1; if(p.y<0||p.y>c.height)p.vy*=-1;
+                ctx.fillStyle='#1a0033'; ctx.beginPath(); ctx.arc(p.x,p.y,1,0,Math.PI*2); ctx.fill();
+            }); requestAnimationFrame(d); } d();
+    </script>
+</body>
+</html>

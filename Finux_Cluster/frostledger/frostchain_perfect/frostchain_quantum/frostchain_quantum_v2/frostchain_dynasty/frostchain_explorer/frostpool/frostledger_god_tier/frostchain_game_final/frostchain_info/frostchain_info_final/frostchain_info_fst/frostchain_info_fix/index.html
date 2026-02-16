@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FROSTCHAIN // FST_LIVE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+:root { --core: #00fbff; --gold: #ffd700; --bch: #8dc351; --bg: #050505; --panel: #0a0a0a; --border: #333; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; font-size: 13px; }
+
+.nav-bar { background: #000; border-bottom: 2px solid var(--core); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+.brand { font-size: 1.4em; color: var(--core); letter-spacing: 2px; font-weight: bold; }
+.fst-badge { font-size: 10px; border: 1px solid var(--core); color: var(--core); padding: 3px 8px; animation: pulse 1s infinite; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; gap: 20px; }
+
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+.card { background: var(--panel); border: 1px solid var(--border); padding: 20px; position: relative; }
+.card::after { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--core); }
+.card.bch { border-color: var(--bch); }
+.card.bch::after { background: var(--bch); }
+
+.lbl { font-size: 10px; color: #666; margin-bottom: 5px; letter-spacing: 1px; }
+.val { font-size: 1.8em; color: #fff; font-weight: bold; }
+.sub { font-size: 10px; color: #555; margin-top: 5px; }
+
+.tbl { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); margin-top: 20px; }
+.tbl th { text-align: left; padding: 10px; background: #111; color: #888; font-size: 10px; }
+.tbl td { padding: 10px; border-bottom: 1px solid #222; color: #ddd; font-family: monospace; }
+.hash { color: var(--gold); }
+.fst-time { color: var(--core); font-weight: bold; }
+
+@keyframes pulse { 50% { opacity: 0.5; } }
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <div class="brand">FROSTCHAIN.INFO</div>
+  <div class="fst-badge">⚡ FST: 5 MINUTE BLOCKS</div>
+</div>
+
+<div class="container">
+
+  <div class="stats-row">
+    <div class="card bch">
+      <div class="lbl">BCH ANCHOR HEIGHT</div>
+      <div class="val" id="bch-h">837,630</div>
+      <div class="sub">10 MINUTE TICK</div>
+    </div>
+    <div class="card">
+      <div class="lbl">FROST HEIGHT (FST)</div>
+      <div class="val" id="fst-h">1,675,260</div>
+      <div class="sub">2 BLOCKS / BCH BLOCK</div>
+    </div>
+    <div class="card">
+      <div class="lbl">LATEST REWARD</div>
+      <div class="val">13.37 FTC</div>
+      <div class="sub">ISSUED TWICE PER ANCHOR</div>
+    </div>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>HEIGHT</th><th>TYPE</th><th>BCH ANCHOR</th><th>HASH</th><th>REWARD</th><th>FST TIME</th></tr></thead>
+    <tbody id="blocks"></tbody>
+  </table>
+
+</div>
+
+<script>
+// CONFIG
+let bchHeight = 837630;
+let fstHeight = bchHeight * 2;
+// Start "Time" at current moment, but we will decouple simulation from wall-clock
+let fstTime = new Date(); 
+
+function rndHash() { return '0000' + Math.random().toString(16).substr(2, 12) + '...'; }
+
+function fmtTime(d) {
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function init() {
+  // Pre-fill a few rows
+  for(let i=0; i<4; i++) {
+    bchHeight--; 
+    fstHeight -= 2;
+    fstTime.setMinutes(fstTime.getMinutes() - 10); // Go back 10 mins
+    
+    // Add Block A (Base Time)
+    addRow(fstHeight+1, bchHeight, 13.37, new Date(fstTime.getTime() + 0*60000));
+    // Add Block B (+5 Mins)
+    addRow(fstHeight+2, bchHeight, 13.37, new Date(fstTime.getTime() + 5*60000));
+  }
+  // Reset for live
+  bchHeight += 4;
+  fstHeight += 8;
+  fstTime = new Date(); // Reset to now
+}
+
+// SIMULATION LOOP (Runs every 6s, but simulates 10 mins of blockchain time)
+setInterval(() => {
+  bchHeight++;
+  
+  // FST BLOCK 1 (Anchor Time)
+  fstHeight++;
+  addRow(fstHeight, bchHeight, 13.37, fstTime);
+  
+  // FST BLOCK 2 (Anchor + 5 Mins)
+  fstHeight++;
+  let nextTime = new Date(fstTime.getTime() + 5*60000);
+  addRow(fstHeight, bchHeight, 13.37, nextTime);
+  
+  // Advance virtual clock by 10 mins for next loop
+  fstTime = new Date(fstTime.getTime() + 10*60000);
+  
+}, 6000);
+
+function addRow(h, anchor, r, t) {
+  const tbody = document.getElementById('blocks');
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td style="color:#fff; font-weight:bold;">${h}</td>
+    <td><span style="color:var(--core)">FST_BLOCK</span></td>
+    <td style="color:#888;">#${anchor}</td>
+    <td class="hash">${rndHash()}</td>
+    <td>+${r.toFixed(2)} FTC</td>
+    <td class="fst-time">${fmtTime(t)}</td>
+  `;
+  tbody.prepend(row);
+  if(tbody.children.length > 10) tbody.removeChild(tbody.lastChild);
+}
+
+init();
+
+</script>
+</body>
+</html>

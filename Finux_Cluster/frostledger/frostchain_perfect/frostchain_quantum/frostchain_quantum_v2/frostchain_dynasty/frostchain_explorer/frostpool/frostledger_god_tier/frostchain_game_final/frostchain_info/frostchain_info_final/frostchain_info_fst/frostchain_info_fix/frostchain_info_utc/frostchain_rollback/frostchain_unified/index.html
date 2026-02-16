@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FROSTCHAIN // UNIFIED_EXPLORER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { 
+  --core: #00fbff; --gold: #ffd700; --bch: #8dc351; --doge: #ba9f33; 
+  --bg: #020202; --panel: #0a0a0a; --border: #1a1a1a; 
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; font-size: 12px; }
+
+/* NAV */
+.nav { background: #000; border-bottom: 2px solid var(--core); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+.brand { font-size: 1.4em; color: var(--core); letter-spacing: 2px; font-weight: bold; }
+.clock { color: #fff; font-size: 11px; background: #111; padding: 5px 10px; border: 1px solid #222; }
+
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; display: grid; gap: 20px; }
+
+/* TRI-CHAIN HUD */
+.hud { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.chain-card { background: var(--panel); border: 1px solid var(--border); padding: 15px; border-top: 3px solid #333; }
+.chain-card.frost { border-top-color: var(--core); }
+.chain-card.bch { border-top-color: var(--bch); }
+.chain-card.doge { border-top-color: var(--doge); }
+
+.lbl { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+.val { font-size: 1.6em; color: #fff; font-weight: bold; margin: 5px 0; }
+.sub { font-size: 10px; color: #444; }
+
+/* DATA TABLES */
+.main-view { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.section-title { color: var(--core); border-bottom: 1px solid #222; padding: 10px 0; margin-bottom: 10px; font-size: 14px; }
+
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); margin-bottom: 20px; }
+th { text-align: left; padding: 10px; background: #000; color: #666; font-size: 9px; }
+td { padding: 10px; border-bottom: 1px solid #111; font-family: monospace; font-size: 11px; }
+.hash { color: var(--gold); }
+.type-fst { color: var(--core); }
+.type-bch { color: var(--bch); }
+.type-doge { color: var(--doge); }
+
+@keyframes pulse { 50% { opacity: 0.5; } }
+.live-node { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; background: var(--core); animation: pulse 1s infinite; }
+
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="brand">FROSTCHAIN // UNIFIED_INFO</div>
+  <div class="clock" id="clock">UTC SYNCING...</div>
+</div>
+
+<div class="container">
+  
+  <div class="hud">
+    <div class="chain-card doge">
+      <div class="lbl">DOGECOIN (SCRYPT)</div>
+      <div class="val" id="doge-h">5,102,400</div>
+      <div class="sub">1m BLOCK TIME | DOGE -> MOON</div>
+    </div>
+    <div class="chain-card bch">
+      <div class="lbl">BITCOIN CASH (SHA-256)</div>
+      <div class="val" id="bch-h">837,650</div>
+      <div class="sub">10m BLOCK TIME | ANCHOR_SYNC</div>
+    </div>
+    <div class="chain-card frost">
+      <div class="lbl">FROSTCHAIN (SHA-256 MERGED)</div>
+      <div class="val" id="fst-h">1,675,300</div>
+      <div class="sub">5m FST | 13.37 REWARD x 2</div>
+    </div>
+  </div>
+
+  <div class="main-view">
+    <div>
+      <div class="section-title"><div class="live-node"></div> LIVE NETWORK LEDGER (FST + BCH + DOGE)</div>
+      <table>
+        <thead><tr><th>HEIGHT</th><th>CHAIN</th><th>HASH</th><th>REWARD</th><th>UTC TIME</th></tr></thead>
+        <tbody id="ledger-body"></tbody>
+      </table>
+    </div>
+
+    <div>
+      <div class="section-title">ECONOMICS (FROST)</div>
+      <div class="chain-card frost" style="margin-bottom:10px;">
+        <div class="lbl">PUBLIC MINABLE</div>
+        <div class="val" style="font-size:1.2em">65,630,000 FTC</div>
+      </div>
+      <div class="chain-card" style="border-top-color:var(--gold)">
+        <div class="lbl">ARCHITECT PREMINE</div>
+        <div class="val" style="font-size:1.2em; color:var(--gold)">12,370,000 FTC</div>
+        <div class="sub" style="color:var(--core)">drfrost.frostchain</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const BLOCK_TIMES = { FST: 300000, BCH: 600000, DOGE: 60000 };
+let heights = { fst: 1675300, bch: 837650, doge: 5102400 };
+
+function update() {
+  const now = new Date();
+  document.getElementById('clock').innerText = now.toUTCString();
+  
+  // Update HUD
+  document.getElementById('fst-h').innerText = heights.fst.toLocaleString();
+  document.getElementById('bch-h').innerText = heights.bch.toLocaleString();
+  document.getElementById('doge-h').innerText = heights.doge.toLocaleString();
+}
+
+function addEntry(type, h, reward) {
+  const tbody = document.getElementById('ledger-body');
+  const row = document.createElement('tr');
+  const hash = '0000' + Math.abs(Math.sin(h)*1000000).toString(16).substr(0,10) + '...';
+  const time = new Date().toUTCString().split(' ')[4];
+  
+  let typeClass = 'type-' + type.toLowerCase();
+  
+  row.innerHTML = `
+    <td style="color:#fff">${h}</td>
+    <td class="${typeClass}">${type}</td>
+    <td class="hash">${hash}</td>
+    <td>${reward}</td>
+    <td>${time}</td>
+  `;
+  tbody.prepend(row);
+  if(tbody.children.length > 15) tbody.removeChild(tbody.lastChild);
+}
+
+// SIMULATION ENGINE
+// Doge every 10s (Simulated fast for feed visibility, usually 1m)
+setInterval(() => { heights.doge++; addEntry('DOGE', heights.doge, '10,000 DOGE'); }, 15000);
+
+// Frost/BCH Pair
+setInterval(() => {
+  heights.bch++;
+  addEntry('BCH', heights.bch, '6.25 BCH');
+  
+  // Dual Frost blocks per anchor
+  setTimeout(() => { heights.fst++; addEntry('FST', heights.fst, '13.37 FTC'); }, 2000);
+  setTimeout(() => { heights.fst++; addEntry('FST', heights.fst, '13.37 FTC'); }, 5000);
+}, 30000);
+
+setInterval(update, 1000);
+update();
+
+</script>
+</body>
+</html>

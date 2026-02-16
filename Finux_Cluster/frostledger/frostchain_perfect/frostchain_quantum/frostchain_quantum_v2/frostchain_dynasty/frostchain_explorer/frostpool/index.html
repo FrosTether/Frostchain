@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FROSTPOOL // STRATUM_BRIDGE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --core: #00fbff; --bch: #8dc351; --bg: #050505; --alert: #ff0055; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; padding: 20px; text-align: center; }
+
+.container { max-width: 900px; margin: 0 auto; border: 2px solid var(--bch); padding: 40px; background: #0a0a0a; box-shadow: 0 0 50px rgba(141, 195, 81, 0.1); }
+
+h1 { color: var(--bch); margin: 0 0 10px 0; font-size: 2.5em; letter-spacing: -1px; }
+.sub { color: #666; font-size: 12px; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 2px; }
+
+.config-box { background: #000; border: 1px dashed var(--core); padding: 20px; margin: 30px 0; text-align: left; }
+.param { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+.key { color: #888; }
+.val { color: var(--core); font-weight: bold; font-family: 'Courier New', monospace; }
+
+.alert-box { border: 1px solid var(--alert); background: rgba(255, 0, 85, 0.1); padding: 15px; color: var(--alert); font-size: 12px; margin-top: 30px; }
+
+.stats-row { display: flex; justify-content: space-between; margin-top: 40px; border-top: 1px solid #333; padding-top: 20px; }
+.stat { text-align: center; }
+.stat-val { font-size: 2em; color: #fff; font-weight: bold; }
+.stat-lbl { font-size: 10px; color: #666; }
+
+.copy-btn { width: 100%; background: var(--bch); color: #000; border: none; padding: 15px; font-weight: bold; cursor: pointer; margin-top: 20px; font-family: 'Share Tech Mono'; font-size: 1.2em; }
+.copy-btn:hover { background: #fff; }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>FROSTPOOL // V215</h1>
+  <div class="sub">OFFICIAL BITCOIN CASH > FROSTCHAIN MIGRATION BRIDGE</div>
+
+  <div style="font-size:14px; max-width:600px; margin:0 auto; color:#aaa;">
+    ATTENTION BCH MINERS: THE NETWORK HAS FORKED.
+    POINT YOUR HASHRATE TO THE NEW STRATUM TARGET TO EARN <b>13.37 FTC</b> PER BLOCK + <b>MERGED MINING BONUSES</b>.
+  </div>
+
+  <div class="config-box">
+    <div style="color:var(--bch); margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:5px;">>> MINER CONFIGURATION (ASIC/GPU)</div>
+    
+    <div class="param">
+      <span class="key">URL (STRATUM+TCP):</span>
+      <span class="val">stratum+tcp://frost.pool.surge.sh:3333</span>
+    </div>
+    <div class="param">
+      <span class="key">WORKER:</span>
+      <span class="val">[YOUR_ADDRESS].worker1</span>
+    </div>
+    <div class="param">
+      <span class="key">PASSWORD:</span>
+      <span class="val">x (or "1337")</span>
+    </div>
+    <div class="param">
+      <span class="key">ALGORITHM:</span>
+      <span class="val">SHA-256 (MERGED)</span>
+    </div>
+  </div>
+
+  <button class="copy-btn" onclick="alert('STRATUM URL COPIED: POINT MINERS NOW.')">COPY STRATUM URL</button>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-lbl">ACTIVE WORKERS</div>
+      <div class="stat-val" id="workers">14,205</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">POOL HASHRATE</div>
+      <div class="stat-val">452 PH/s</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">BASE REWARD</div>
+      <div class="stat-val" style="color:var(--core);">13.37 FTC</div>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    > NOTIFICATION BROADCAST: ACTIVE<br>
+    > ALL NODES SIGNALING "FROST_V215" UPGRADE.<br>
+    > LEGACY BCH BLOCKS ARE NOW INVALID ON THIS CHAIN.
+  </div>
+
+</div>
+
+<script>
+// Live Worker Simulation
+setInterval(() => {
+  let w = parseInt(document.getElementById('workers').innerText.replace(',',''));
+  w += Math.floor(Math.random() * 5) - 2; // Fluctuate
+  document.getElementById('workers').innerText = w.toLocaleString();
+}, 2000);
+</script>
+
+</body>
+</html>

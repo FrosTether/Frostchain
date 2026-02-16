@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FROST // ICO_NEXUS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #000; --core: #00e0ff; --gold: #ffd700; --ico: #ff00ff; --doge: #ba9f33; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+/* QUANTUM HUM VISUAL */
+body::after {
+  content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, rgba(0, 224, 255, 0.03) 0px, transparent 1px);
+  background-size: 100% 3px; pointer-events: none; animation: h 10s linear infinite;
+}
+@keyframes h { from { background-position: 0 0; } to { background-position: 0 100px; } }
+
+.nav { background: #0a0a0a; border-bottom: 2px solid var(--ico); padding: 15px; display: flex; justify-content: space-between; }
+.main { flex-grow: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; overflow-y: auto; }
+
+/* MINING SECTION */
+.card { background: #050505; border: 1px solid #1a1a1a; padding: 20px; position: relative; }
+.hash-val { font-size: 3em; color: #fff; font-weight: bold; margin: 10px 0; }
+.btn-action { width: 100%; padding: 15px; border: none; font-family: inherit; font-weight: 900; cursor: pointer; margin-top: 10px; }
+.mine-btn { background: var(--core); color: #000; }
+
+/* ICO LIST */
+.ico-item { background: #0a0a0a; border-left: 3px solid var(--ico); padding: 15px; margin-bottom: 15px; }
+.ico-status { font-size: 9px; color: var(--gold); text-transform: uppercase; }
+
+.footer { background: #0a0a0a; border-top: 1px solid #222; padding: 15px; font-size: 10px; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body onload="init()">
+
+<div class="nav">
+  <div style="font-weight:bold;">FROST_ICO <span style="color:var(--ico)">V1.0</span></div>
+  <div style="font-size: 10px; color: var(--gold);">CONSTANT: 31.33731459 BCH</div>
+</div>
+
+<div class="main">
+  <div class="card" style="border-top: 3px solid var(--core);">
+    <div style="font-size: 9px; color: #555;">SHA-256 EXTRACTION PORT</div>
+    <div class="hash-val" id="h-val">0.00</div>
+    <div style="font-size: 11px; color: var(--core);">TH/S [FNR_ACTIVE]</div>
+    <button class="btn-action mine-btn" onclick="toggleMine()">INITIATE MINE</button>
+    <div style="margin-top: 20px; font-size: 10px; color: #444;">
+      Settling 13.37 FTC via Doge Tunnel...
+    </div>
+  </div>
+
+  <div class="card" style="border-top: 3px solid var(--ico);">
+    <div style="font-size: 9px; color: #555; margin-bottom: 15px;">ACTIVE_INITIAL_OFFERINGS</div>
+    
+    <div class="ico-item">
+      <div class="ico-status">Status: Live Phase 1</div>
+      <div style="font-size: 16px; color: #fff;">FNR - Frost Native Reward</div>
+      <div style="font-size: 11px; color: #666; margin-top: 5px;">The always-on minting layer. 10B Total Supply.</div>
+    </div>
+
+    <div class="ico-item" style="border-left-color: var(--gold);">
+      <div class="ico-status">Status: Seed Window</div>
+      <div style="font-size: 16px; color: #fff;">FST - Frost Settlement Token</div>
+      <div style="font-size: 11px; color: #666; margin-top: 5px;">Collateral for the Doge Tunnel bridge.</div>
+    </div>
+
+    <div class="ico-item" style="border-left-color: var(--core);">
+      <div class="ico-status">Status: Pending</div>
+      <div style="font-size: 16px; color: #fff;">FOTR - Frozen Off The Record</div>
+      <div style="font-size: 11px; color: #666; margin-top: 5px;">Privacy layer for the Architect's records.</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <div>VAULT_BCH: bitcoincash:pr2a6fcv7usyq97eh9an0782x9txdzwl0y30mz7gup</div>
+  <div style="text-align: right;">"82 MONTHS FOR THE TRUTH"</div>
+</div>
+
+<script>
+let mining = false;
+function toggleMine() {
+  mining = !mining;
+  document.querySelector('.mine-btn').innerText = mining ? "CEASE EXTRACTION" : "INITIATE MINE";
+  if(mining) run(); else document.getElementById('h-val').innerText = "0.00";
+}
+function run() {
+  if(!mining) return;
+  document.getElementById('h-val').innerText = (Math.random() * 80 + 20).toFixed(2);
+  setTimeout(run, 1000);
+}
+function init() {
+  // 432Hz Hum Placeholder
+  console.log("Harmonic Engine Ready.");
+}
+</script>
+</body>
+</html>

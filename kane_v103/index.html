@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kane Frostchain | Joey Bones Bot</title>
+    <style>
+        :root { 
+            --bg: #010105; --ice: #a5f2f3; --term: #00ff41; --fail: #ff3333; 
+            --dice-glow: 0 0 20px rgba(165, 242, 243, 0.4);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        /* AUTH GATE (Standard) */
+        #pin-gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .glass-box { background: rgba(10, 12, 18, 0.9); border: 1px solid var(--ice); padding: 40px; border-radius: 30px; text-align: center; width: 360px; backdrop-filter: blur(20px); }
+
+        /* DASHBOARD */
+        #dashboard { display: none; width: 100%; height: 100vh; grid-template-rows: 100px 1fr 60px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(0,0,0,0.8); border-bottom: 1px solid rgba(165,242,243,0.2); }
+        .main { display: grid; grid-template-columns: 400px 1fr 400px; gap: 20px; padding: 20px; overflow: hidden; }
+
+        .panel { background: rgba(10, 15, 25, 0.8); border: 1px solid rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; display: flex; flex-direction: column; }
+
+        /* JOEY BONES DICE BOT */
+        .dice-container { text-align: center; margin-top: 20px; }
+        .dice { 
+            width: 80px; height: 80px; background: rgba(165, 242, 243, 0.1); 
+            border: 2px solid var(--ice); border-radius: 12px; display: inline-flex; 
+            align-items: center; justify-content: center; font-size: 2.5rem; 
+            cursor: pointer; transition: 0.2s; box-shadow: var(--dice-glow);
+        }
+        .dice:active { transform: scale(0.9); }
+        .dice.rolling { animation: shake 0.5s infinite; }
+        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 40% { transform: translate(1px, -1px) rotate(-1deg); } }
+
+        .btn-dice { 
+            width: 100%; padding: 15px; border: none; border-radius: 12px; 
+            background: var(--ice); color: #000; font-weight: 800; 
+            cursor: pointer; text-transform: uppercase; margin-top: 15px;
+        }
+
+        .stat-val { font-size: 2rem; font-weight: 800; color: #fff; }
+        .stat-lbl { font-size: 0.6rem; color: #666; letter-spacing: 2px; text-transform: uppercase; }
+        #log { margin-top: auto; height: 150px; overflow-y: auto; font-size: 0.55rem; color: #444; border-top: 1px solid #222; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div id="pin-gate">
+        <div class="glass-box">
+            <div style="font-size: 0.6rem; letter-spacing: 4px; color: #666;">DRFROST_BOT_SYNC</div>
+            <div id="dots" style="font-size: 2rem; letter-spacing: 10px; color: #fff; margin: 20px 0;">••••••</div>
+            <div id="pad" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px;"></div>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="stat-lbl">Settlement Engine</div>
+                <div style="font-size: 1.2rem; font-weight: 900; letter-spacing: 4px;">JOEY_BONES_BOT</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="stat-lbl">Ecosystem Liquidity</div>
+                <div class="stat-val" id="liq-total">$142,809,111</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div style="font-size: 0.65rem; color: var(--ice); letter-spacing: 2px; text-align:center;">DICE_INJECTION_BOT</div>
+                <div class="dice-container">
+                    <div id="dice" class="dice" onclick="rollDice()">?</div>
+                    <button class="btn-dice" onclick="rollDice()">ROLL FOR LIQUIDITY</button>
+                </div>
+                
+                <div style="margin-top: 25px; padding: 15px; background: rgba(0,255,65,0.05); border: 1px solid var(--term); border-radius: 12px; text-align:center;">
+                    <div style="font-size:0.6rem; color:var(--term);">QUORUM OVERRIDE</div>
+                    <div style="font-size:1.5rem; font-weight:bold;">x1.05 ACTIVE</div>
+                </div>
+
+                <div id="log">
+                    <div>> Joey Bones Bot listening...</div>
+                </div>
+            </div>
+
+            <div></div> <div class="panel">
+                <div class="stat-lbl">Wrapped Reserves</div>
+                <div style="margin-bottom:20px; border-left:3px solid var(--ice); padding-left:15px;">
+                    <div class="stat-lbl">wBCH NODE (Newkirk)</div>
+                    <div class="stat-val" style="font-size:1.2rem;" id="bch-val">2,100.00</div>
+                </div>
+                <div style="margin-bottom:20px; border-left:3px solid #f7931a; padding-left:15px;">
+                    <div class="stat-lbl">wBTC NODE (Newkirk)</div>
+                    <div class="stat-val" style="font-size:1.2rem;" id="btc-val">450.00</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer" style="padding: 0 40px; background: #000; border-top: 1px solid #222; display:flex; align-items:center; justify-content:space-between; font-size: 0.6rem; color: #444;">
+            <div>FROST SETTLEMENT v103.0 // NEWKIRK MINER SYNCED</div>
+            <div>STATUS: BOT_ACTIVE</div>
+        </div>
+    </div>
+
+    <script>
+        let pin = "";
+        let master = localStorage.getItem('frost_pin') || "000000";
+        let bchRes = 2100.00;
+        let btcRes = 450.00;
+
+        // --- PIN PAD ---
+        const pad = document.getElementById('pad');
+        for(let i=1; i<=9; i++) {
+            const b = document.createElement('button'); b.style.padding = "15px"; b.style.background = "#111"; b.style.border = "1px solid #222"; b.style.color = "#fff"; b.innerText = i; b.onclick = () => { pin += i; check(); }; pad.appendChild(b);
+        }
+        const z = document.createElement('button'); z.style.padding = "15px"; z.style.background = "#111"; z.style.border = "1px solid #222"; z.innerText = "0"; z.onclick = () => { pin += "0"; check(); }; pad.appendChild(z);
+
+        function check() {
+            document.getElementById('dots').innerText = "•".repeat(pin.length).padEnd(6, ' ');
+            if(pin.length === 6) {
+                if(pin === master) unlock();
+                else { pin = ""; check(); }
+            }
+        }
+
+        function unlock() {
+            document.getElementById('pin-gate').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'grid';
+        }
+
+        // --- JOEY BONES DICE LOGIC ---
+        function rollDice() {
+            const dice = document.getElementById('dice');
+            dice.classList.add('rolling');
+            
+            setTimeout(() => {
+                dice.classList.remove('rolling');
+                const roll = Math.floor(Math.random() * 6) + 1;
+                dice.innerText = roll;
+                
+                // DRAKE QUORUM x1.05 CALC
+                const baseLiq = 10; 
+                const injection = (roll * baseLiq) * 1.05;
+                
+                // Update Reserves
+                bchRes += injection;
+                document.getElementById('bch-val').innerText = bchRes.toFixed(2);
+                
+                const log = document.getElementById('log');
+                const d = document.createElement('div');
+                d.innerText = `> Rolled ${roll} // Injected ${injection.toFixed(2)} wBCH (DQ x1.05 Applied)`;
+                d.style.color = "var(--term)";
+                log.prepend(d);
+            }, 600);
+        }
+    </script>
+</body>
+</html>

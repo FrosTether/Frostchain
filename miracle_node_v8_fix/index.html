@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Command Hub</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --dim: #004400; --warn: #ff0055; --panel: rgba(10, 10, 10, 0.95); --gold: #ffd700; --pink: #ff00ff; --blue: #00d4ff; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; user-select: none; }
+        
+        /* GATE */
+        #gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gate-box { border: 2px solid var(--term); padding: 30px; width: 300px; text-align: center; box-shadow: 0 0 20px var(--dim); background: #050505; }
+        input { width: 90%; background: #111; border: 1px solid #333; color: #fff; padding: 12px; margin-bottom: 10px; font-family: inherit; text-align: center; outline: none; }
+        .btn-main { background: var(--term); color: #000; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+
+        /* DASHBOARD LAYOUT */
+        #dash { display: none; height: 100vh; grid-template-columns: 350px 1fr; grid-template-rows: 60px 1fr; }
+        #tangle { position: absolute; inset: 0; z-index: 0; opacity: 0.2; pointer-events: none; }
+
+        /* HEADER */
+        .header { grid-column: 1 / -1; background: var(--panel); border-bottom: 1px solid var(--dim); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; }
+        .master-key { font-size: 0.6rem; color: #666; font-family: monospace; border: 1px dashed #333; padding: 2px 5px; }
+
+        /* LEFT PANEL: STATS & EXPLORER */
+        .left-panel { background: rgba(0,0,0,0.8); border-right: 1px solid var(--dim); display: flex; flex-direction: column; padding: 15px; z-index: 10; overflow-y: auto; }
+        
+        .stat-card { background: #0a0a0a; border: 1px solid #222; padding: 15px; margin-bottom: 15px; border-left: 3px solid #fff; }
+        .stat-val { font-size: 1.2rem; font-weight: bold; }
+        .stat-label { font-size: 0.7rem; color: #888; }
+        
+        .explorer-box { flex: 1; border: 1px solid var(--dim); background: #000; overflow-y: auto; font-size: 0.7rem; }
+        .block-row { padding: 8px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+        .block-new { animation: flash 1s; }
+        @keyframes flash { from { background: var(--dim); } to { background: transparent; } }
+
+        .withdraw-btn { background: #222; color: var(--gold); border: 1px solid var(--gold); padding: 15px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .withdraw-btn:hover { background: var(--gold); color: #000; }
+
+        /* RIGHT PANEL: FROSTCHAT OTR */
+        .chat-panel { display: flex; flex-direction: column; position: relative; z-index: 10; background: rgba(0,0,0,0.5); }
+        .chat-header { padding: 10px; border-bottom: 1px solid var(--dim); font-size: 0.8rem; color: #888; display: flex; justify-content: space-between; }
+        .otr-badge { background: var(--dim); color: var(--term); padding: 2px 5px; border-radius: 3px; font-size: 0.6rem; }
+        
+        .chat-log { flex: 1; overflow-y: auto; padding: 20px; }
+        .msg-row { margin-bottom: 10px; display: flex; flex-direction: column; }
+        .msg-sender { font-size: 0.7rem; color: #888; margin-bottom: 2px; }
+        .msg-bubble { background: #0a0a0a; border: 1px solid var(--dim); padding: 8px 12px; border-radius: 4px; display: inline-block; max-width: 80%; word-wrap: break-word; }
+        .msg-bubble.me { align-self: flex-end; border-color: var(--term); background: rgba(0, 255, 65, 0.1); }
+        
+        .chat-input-area { padding: 15px; background: #000; border-top: 1px solid var(--dim); display: flex; gap: 10px; }
+        .chat-input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 10px; font-family: inherit; }
+        
+        /* AUDIO TOGGLES */
+        .audio-bar { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; }
+        .audio-btn { background: #000; border: 1px solid #444; color: #666; padding: 5px 10px; font-size: 0.6rem; cursor: pointer; }
+        .audio-btn.active { border-color: var(--term); color: var(--term); box-shadow: 0 0 5px var(--term); }
+
+        /* RESPONSIVE */
+        @media (max-width: 700px) {
+            #dash { grid-template-columns: 1fr; grid-template-rows: 50px 200px 1fr; }
+            .left-panel { border-right: none; border-bottom: 1px solid var(--dim); }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle"></canvas>
+
+    <div id="gate">
+        <div class="gate-box">
+            <div style="font-size:1.2rem; font-weight:bold; margin-bottom:5px;">MIRACLE NODE v8.1</div>
+            <div style="font-size:0.7rem; color:#888; margin-bottom:20px;">FROSTCHAT OTR ENABLED</div>
+            <input type="text" id="id-in" placeholder="identity.frostchain">
+            <input type="password" id="pin-in" placeholder="PIN (4-6 Digits)" maxlength="6">
+            <button class="btn-main" onclick="login()">SECURE LOGIN</button>
+            <div id="err" style="color:var(--warn); font-size:0.7rem; height:15px; margin-top:5px;"></div>
+        </div>
+    </div>
+
+    <div id="dash">
+        <div class="header">
+            <div>
+                <span id="user-display" style="font-weight:bold;">GUEST</span>
+                <span style="font-size:0.7rem; color:var(--term); margin-left:10px;">● ONLINE</span>
+            </div>
+            <div class="master-key">BRIDGE: 4AEreX...</div>
+        </div>
+
+        <div class="left-panel">
+            <div style="font-size:0.8rem; color:#888; margin-bottom:10px;">MINING YIELD (SESSION)</div>
+            
+            <div class="stat-card" style="border-left-color: #ff00ff;">
+                <div class="stat-val" id="frst-val">0.00</div>
+                <div class="stat-label">FRST (Frostcoin)</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #ffd700;">
+                <div class="stat-val" id="ftc-val">0.00</div>
+                <div class="stat-label">FTC (Frost Token)</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #00d4ff;">
+                <div class="stat-val" id="fnr-val">0.00</div>
+                <div class="stat-label">FNR (Node Reward)</div>
+            </div>
+
+            <div style="font-size:0.8rem; color:#888; margin:10px 0;">FROSTCHAIN EXPLORER</div>
+            <div class="explorer-box" id="block-list"></div>
+
+            <button class="withdraw-btn" onclick="withdraw()">
+                <span>WITHDRAW FUNDS</span>
+                <span style="font-size:0.7rem;">VIA GRAYSON API ↗</span>
+            </button>
+        </div>
+
+        <div class="chat-panel">
+            <div class="chat-header">
+                <span>SECURE CHANNEL: GLOBAL</span>
+                <span class="otr-badge">OTR ENCRYPTED</span>
+            </div>
+            
+            <div class="audio-bar">
+                <button class="audio-btn" id="btn-alpha" onclick="toggleAudio('alpha')">ALPHA</button>
+                <button class="audio-btn" id="btn-delta" onclick="toggleAudio('delta')">DELTA</button>
+            </div>
+
+            <div class="chat-log" id="chat-box">
+                <div class="msg-row">
+                    <span class="msg-sender">SYSTEM</span>
+                    <span class="msg-bubble">Frostchat OTR Protocol Initialized. Identity Verified.</span>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="msg-input" class="chat-input" placeholder="Type encrypted message...">
+                <button class="btn-main" style="width:auto; margin:0; padding:0 20px;" onclick="sendMsg()">SEND</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- AUTH ---
+        function login() {
+            const id = document.getElementById('id-in').value;
+            const pin = document.getElementById('pin-in').value;
+            // Allow 4-6 digit PINs
+            if(id.includes('.frostchain') && pin.length >= 4 && pin.length <= 6) {
+                document.getElementById('gate').style.display = 'none';
+                document.getElementById('dash').style.display = 'grid';
+                document.getElementById('user-display').innerText = id;
+                startMining();
+                initTangle();
+            } else {
+                document.getElementById('err').innerText = "INVALID CREDENTIALS";
+            }
+        }
+
+        // --- MINING & EXPLORER ---
+        let bals = { frst: 0, ftc: 0, fnr: 0 };
+        function startMining() {
+            setInterval(() => {
+                // Increment visuals
+                bals.frst += 314.15; bals.ftc += 0.13; bals.fnr += 0.02;
+                document.getElementById('frst-val').innerText = bals.frst.toFixed(2);
+                document.getElementById('ftc-val').innerText = bals.ftc.toFixed(2);
+                document.getElementById('fnr-val').innerText = bals.fnr.toFixed(2);
+            }, 1000);
+
+            setInterval(() => {
+                // Add Block
+                const list = document.getElementById('block-list');
+                const div = document.createElement('div');
+                div.className = 'block-row block-new';
+                div.innerHTML = `
+                    <span>#${Math.floor(Math.random()*900000)}</span>
+                    <span style="color:#666;">${Math.random().toString(16).substr(2,8)}...</span>
+                    <span style="color:var(--term);">13.37 FTC</span>
+                `;
+                list.prepend(div);
+                if(list.children.length > 20) list.removeChild(list.lastChild);
+            }, 3000);
+        }
+
+        // --- WITHDRAWAL API ---
+        function withdraw() {
+            const btn = document.querySelector('.withdraw-btn');
+            btn.innerHTML = "CONNECTING TO GRAYSON API...";
+            setTimeout(() => {
+                if(confirm("REDIRECT TO GRAYSON'S WALLET FOR WITHDRAWAL?")) {
+                    window.location.href = "https://graysonswallet.surge.sh";
+                }
+                btn.innerHTML = "<span>WITHDRAW FUNDS</span><span>VIA GRAYSON API ↗</span>";
+            }, 1500);
+        }
+
+        // --- FROSTCHAT OTR (Simulated Encryption) ---
+        function sendMsg() {
+            const input = document.getElementById('msg-input');
+            const txt = input.value.trim();
+            if(!txt) return;
+
+            const box = document.getElementById('chat-box');
+            const row = document.createElement('div');
+            row.className = 'msg-row';
+            row.style.alignItems = 'flex-end';
+            
+            // 1. Create Scrambled Bubble
+            const bubble = document.createElement('span');
+            bubble.className = 'msg-bubble me';
+            bubble.innerText = scramble(txt); // Show scramble first
+            row.appendChild(bubble);
+            box.appendChild(row);
+            box.scrollTop = box.scrollHeight;
+            input.value = "";
+
+            // 2. Decrypt Animation
+            let iterations = 0;
+            const interval = setInterval(() => {
+                bubble.innerText = scramble(txt);
+                iterations++;
+                if(iterations > 5) {
+                    clearInterval(interval);
+                    bubble.innerText = txt; // Reveal final text
+                    bubble.style.borderColor = "var(--term)";
+                }
+            }, 50);
+        }
+
+        function scramble(str) {
+            const chars = "!@#$%^&*()_+-=[]{}|;:,.<>?/~`";
+            return str.split('').map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
+        }
+
+        // --- AUDIO ENGINE ---
+        let actx, osc;
+        function toggleAudio(mode) {
+            if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+            if(osc) { osc.stop(); osc = null; document.querySelectorAll('.audio-btn').forEach(b=>b.classList.remove('active')); return; }
+            
+            const freq = mode === 'alpha' ? 11.11 : 3.14;
+            document.getElementById('btn-'+mode).classList.add('active');
+            
+            // Simple binaural simulation
+            osc = actx.createOscillator();
+            const g = actx.createGain();
+            g.gain.value = 0.1;
+            osc.connect(g).connect(actx.destination);
+            osc.frequency.value = 432; 
+            osc.start();
+            osc.stop = () => { osc.disconnect(); }; // Mock stop
+        }
+
+        // --- TANGLE ---
+        function initTangle() {
+            const c = document.getElementById('tangle');
+            const ctx = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            let pts = Array(30).fill(0).map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5),vy:(Math.random()-.5)}));
+            function anim(){
+                ctx.clearRect(0,0,c.width,c.height);
+                ctx.strokeStyle='rgba(0,255,65,0.2)';
+                pts.forEach(p=>{
+                    p.x+=p.vx; p.y+=p.vy;
+                    if(p.x<0||p.x>c.width)p.vx*=-1; if(p.y<0||p.y>c.height)p.vy*=-1;
+                    pts.forEach(p2=>{
+                        if(Math.hypot(p.x-p2.x,p.y-p2.y)<100) { ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); }
+                    });
+                });
+                requestAnimationFrame(anim);
+            }
+            anim();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kane | Volatility Engine</title>
+    <style>
+        :root { --bg: #020202; --btc: #f7931a; --bch: #0ac18e; --kane: #d400ff; --term: #33ff00; --frst: #ff00ff; --gold: #ffd700; --grid: #111; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
+        
+        #app { display: grid; grid-template-rows: 60px 1fr 150px; height: 100%; max-width: 900px; margin: 0 auto; border-left: 1px solid #222; border-right: 1px solid #222; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 2px solid var(--kane); background: #000; z-index: 10; }
+
+        .main { padding: 15px; overflow-y: auto; display: grid; grid-template-columns: 280px 1fr; gap: 15px; }
+
+        /* CHARTS */
+        .chart-container { background: #000; border: 1px solid #222; position: relative; height: 100%; min-height: 300px; display: flex; flex-direction: column; }
+        canvas { width: 100%; flex: 1; image-rendering: pixelated; }
+
+        /* WALLET & TRADE */
+        .side-panel { display: flex; flex-direction: column; gap: 10px; }
+        .asset-card { background: #080808; border: 1px solid #222; padding: 10px; border-left: 3px solid #333; }
+        .val { font-size: 1.1rem; font-weight: bold; color: #fff; }
+        .lbl { font-size: 0.55rem; color: #666; text-transform: uppercase; }
+
+        .trade-box { background: #0a0a0a; border: 1px solid #222; padding: 15px; margin-top: 10px; }
+        select, input { background: #000; border: 1px solid #333; color: var(--term); padding: 8px; font-family: inherit; width: 100%; margin-bottom: 8px; font-size: 0.8rem; }
+        
+        .btn-trade { background: var(--kane); color: #fff; border: none; padding: 12px; width: 100%; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* BOTTOM FEED */
+        .feed-grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #333; background: #000; }
+        .log-box { font-size: 0.65rem; color: #666; padding: 10px; overflow-y: auto; height: 130px; border-right: 1px solid #222; }
+        .order-flow { font-size: 0.65rem; padding: 10px; height: 130px; overflow-y: auto; }
+        .buy { color: var(--term); }
+        .sell { color: #ff3333; }
+
+        @media (max-width: 800px) { .main { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div>
+                <div style="font-weight:bold; font-size:1rem; color:var(--kane);">KANEFROSTCHAIN</div>
+                <div style="font-size:0.55rem; color:#666;">VOLATILITY_ENGINE v3.1</div>
+            </div>
+            <div style="text-align:right;">
+                <div id="live-price" style="font-size:1.1rem; font-weight:bold; color:var(--frst);">FRST: 0.042 BTC</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="side-panel">
+                <div class="asset-card" style="border-color: var(--btc);"><div class="lbl">wfBTC</div><div class="val" id="wfbtc-bal">1.042</div></div>
+                <div class="asset-card" style="border-color: var(--frst);"><div class="lbl">FRST</div><div class="val" id="frst-bal">157,079.63</div></div>
+                <div class="asset-card" style="border-color: var(--gold);"><div class="lbl">FTC</div><div class="val" id="ftc-bal">11.8M</div></div>
+                
+                <div class="trade-box">
+                    <div class="lbl" style="margin-bottom:5px;">QUICK SWAP</div>
+                    <select id="pay"><option value="wfbtc">wfBTC</option><option value="ftc">FTC</option></select>
+                    <select id="get"><option value="frst">FRST</option><option value="fnr">FNR</option></select>
+                    <input type="number" id="amt" placeholder="Amount">
+                    <button class="btn-trade" onclick="executeTrade()">SWAP ASSET</button>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div style="padding:10px; font-size:0.6rem; color:#444; border-bottom:1px solid #111;">FRST / wfBTC - 1m Real-Time Entropy</div>
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+
+        <div class="feed-grid">
+            <div class="log-box" id="log">
+                <div>> Engine v3.1 Online.</div>
+                <div>> Newkirk Liquidity Bridge: SYNCED.</div>
+            </div>
+            <div class="order-flow" id="flow">
+                <div style="color:#444;">[ LIVE ORDER FLOW ]</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let balances = { wfbtc: 1.042, ftc: 11870000, frst: 157079.63, fnr: 4412100 };
+        let priceHistory = Array(100).fill(42);
+        
+        // CANVAS CHART
+        const canvas = document.getElementById('chart');
+        const ctx = canvas.getContext('2d');
+        function drawChart() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            
+            // Grid
+            ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
+            for(let i=0; i<10; i++) {
+                ctx.beginPath(); ctx.moveTo(0, i*(canvas.height/10)); ctx.lineTo(canvas.width, i*(canvas.height/10)); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(i*(canvas.width/10), 0); ctx.lineTo(i*(canvas.width/10), canvas.height); ctx.stroke();
+            }
+
+            // Line
+            ctx.strokeStyle = '#ff00ff'; ctx.lineWidth = 2; ctx.beginPath();
+            const step = canvas.width / (priceHistory.length - 1);
+            priceHistory.forEach((p, i) => {
+                const y = canvas.height - (p * (canvas.height / 100));
+                if(i===0) ctx.moveTo(0, y); else ctx.lineTo(i*step, y);
+            });
+            ctx.stroke();
+            
+            // Glow
+            ctx.shadowBlur = 10; ctx.shadowColor = '#ff00ff'; ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        // SIMULATION ENGINE
+        setInterval(() => {
+            let last = priceHistory[priceHistory.length - 1];
+            let next = last + (Math.random() - 0.5) * 2;
+            if(next < 10) next = 10; if(next > 90) next = 90;
+            priceHistory.shift();
+            priceHistory.push(next);
+            document.getElementById('live-price').innerText = `FRST: 0.0${next.toFixed(0)} BTC`;
+            drawChart();
+            
+            // Random Order Flow
+            if(Math.random() > 0.8) {
+                const type = Math.random() > 0.5 ? 'buy' : 'sell';
+                const amt = (Math.random() * 500).toFixed(2);
+                const div = document.createElement('div');
+                div.className = type;
+                div.innerText = `[${new Date().toLocaleTimeString()}] ${type.toUpperCase()} ${amt} FRST @ 0.0${next.toFixed(0)}`;
+                const f = document.getElementById('flow');
+                f.appendChild(div);
+                if(f.childNodes.length > 15) f.removeChild(f.childNodes[1]);
+                f.scrollTop = f.scrollHeight;
+            }
+        }, 1000);
+
+        function executeTrade() {
+            const amt = parseFloat(document.getElementById('amt').value);
+            if(!amt || balances.wfbtc < amt) return;
+            balances.wfbtc -= amt;
+            balances.frst += amt * 1000;
+            updateUI();
+            logIt(`SWAP SUCCESS: ${amt} wfBTC -> FRST`, 'success');
+        }
+
+        function updateUI() {
+            document.getElementById('wfbtc-bal').innerText = balances.wfbtc.toFixed(4);
+            document.getElementById('frst-bal').innerText = balances.frst.toLocaleString();
+            document.getElementById('ftc-bal').innerText = (balances.ftc/1000000).toFixed(1) + "M";
+        }
+
+        function logIt(msg, c) {
+            const d = document.createElement('div');
+            if(c) d.className = c;
+            d.innerText = `> ${msg}`;
+            const l = document.getElementById('log');
+            l.appendChild(d); l.scrollTop = l.scrollHeight;
+        }
+
+        window.addEventListener('resize', drawChart);
+        updateUI(); drawChart();
+    </script>
+</body>
+</html>

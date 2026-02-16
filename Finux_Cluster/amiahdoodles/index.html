@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>CRYPTODOKU // PRO_MINER_v215</title>
+<style>
+  :root { --bg: #050505; --ftc: #00fbff; --purple: #b026ff; --green: #00ff41; --gold: #ffd700; }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; padding: 20px; display: flex; justify-content: center; }
+  
+  .terminal { width: 900px; display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+  .panel { background: #0a0a0a; border: 1px solid #333; padding: 20px; border-radius: 8px; position: relative; }
+  .panel.active { border-color: var(--ftc); box-shadow: 0 0 15px rgba(0, 251, 255, 0.1); }
+  
+  h1 { font-size: 1.5em; color: var(--ftc); margin: 0 0 10px 0; letter-spacing: 2px; }
+  .badge { font-size: 9px; padding: 2px 6px; border: 1px solid var(--purple); color: var(--purple); border-radius: 3px; }
+  
+  /* SUDOKU GRID */
+  .grid { display: grid; grid-template-columns: repeat(9, 40px); gap: 2px; margin: 20px auto; width: fit-content; border: 2px solid #444; }
+  .cell { width: 40px; height: 40px; background: #111; color: var(--ftc); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2em; transition: 0.2s; }
+  .cell:hover { background: #222; color: #fff; }
+  .cell.fixed { color: #555; cursor: default; }
+  .cell.solved { background: #003300; color: var(--green); }
+
+  /* DATA STREAMS */
+  .stat-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px; border-bottom: 1px dashed #222; padding-bottom: 4px; }
+  .val { color: var(--green); font-weight: bold; }
+  
+  .log { height: 150px; overflow-y: auto; font-size: 10px; color: #666; margin-top: 10px; font-family: monospace; border-top: 2px solid #222; padding-top: 10px; }
+  
+  .nav-btn { display: block; background: #111; color: #888; text-decoration: none; padding: 10px; text-align: center; margin-top: 10px; border: 1px solid #333; font-size: 10px; transition: 0.2s; }
+  .nav-btn:hover { border-color: var(--gold); color: var(--gold); }
+</style>
+</head>
+<body onload="initProMode()">
+
+<div class="terminal">
+  
+  <div class="panel active">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h1>CRYPTODOKU_v215</h1>
+      <span class="badge">GHOST_VERIFIED</span>
+    </div>
+    
+    <div class="grid" id="grid"></div>
+    
+    <div class="log" id="console">
+      > SYSTEM_BOOT_v215... OK.<br>
+      > MERGING_ECOSYSTEM_UPDATES... COMPLETE.<br>
+      > CONNECTED_TO_SINK: satoshi.frostchain...
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2 style="font-size:12px; color:var(--purple); border-bottom:1px solid var(--purple); padding-bottom:5px;">NETWORK_TELEMETRY</h2>
+    
+    <div class="stat-row"><span>BLOCK_REWARD</span> <span class="val">13.37 FTC</span></div>
+    <div class="stat-row"><span>BLOCK_TIME</span> <span class="val">300 SEC (5m)</span></div>
+    <div class="stat-row"><span>NEXT_HALVING</span> <span class="val">5y 8m 00d</span></div>
+    <div class="stat-row"><span>HASHRATE</span> <span class="val" id="hash">0.00 H/s</span></div>
+    
+    <div style="margin-top: 30px;">
+      <h2 style="font-size:12px; color:var(--gold); border-bottom:1px solid var(--gold); padding-bottom:5px;">SOVEREIGN_SINK</h2>
+      <div class="stat-row"><span>TARGET</span> <span class="val" style="color:var(--gold)">satoshi.frostchain</span></div>
+      <div class="stat-row"><span>STATUS</span> <span class="val">ACCUMULATING...</span></div>
+    </div>
+
+    <div style="margin-top: 40px;">
+      <a href="http://amiahdoodles.surge.sh" class="nav-btn">>> ACCESS_SOCIAL_LAYER (DPR_CLUB)</a>
+      <a href="http://frostchainexplorer.surge.sh" class="nav-btn">>> VIEW_LEDGER (BLOCK_9_PROOF)</a>
+      <a href="http://frstico.surge.sh" class="nav-btn">>> SATOSHI_LEGACY (ICO_PORTAL)</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let hash = 0;
+  
+  function initProMode() {
+    renderGrid();
+    setInterval(updateTelemetry, 800);
+    log("MINING_ENGINE_ONLINE. SOLVE_TO_HASH.");
+  }
+
+  function renderGrid() {
+    const g = document.getElementById('grid');
+    g.innerHTML = '';
+    for(let i=0; i<81; i++) {
+      let d = document.createElement('div');
+      d.className = 'cell';
+      if(Math.random() > 0.7) {
+        d.innerText = Math.floor(Math.random()*9)+1;
+        d.classList.add('fixed');
+      } else {
+        d.onclick = function() {
+           if(this.innerText == '') {
+             this.innerText = Math.floor(Math.random()*9)+1;
+             this.classList.add('solved');
+             mineShare();
+           }
+        }
+      }
+      g.appendChild(d);
+    }
+  }
+
+  function mineShare() {
+    log("VALID_SHARE_SUBMITTED > [NONCE_" + Math.floor(Math.random()*9999) + "]");
+    hash += 13.37;
+  }
+
+  function updateTelemetry() {
+    document.getElementById('hash').innerText = (hash + Math.random()*10).toFixed(2) + " H/s";
+  }
+
+  function log(msg) {
+    let c = document.getElementById('console');
+    c.innerHTML = `> ${msg}<br>` + c.innerHTML;
+  }
+</script>
+</body>
+</html>

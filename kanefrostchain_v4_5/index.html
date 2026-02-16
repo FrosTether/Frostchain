@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kane | Liquidity Injector</title>
+    <style>
+        :root { --bg: #000; --frst: #d400ff; --fnr: #00d2ff; --ftc: #33ff00; --xmr: #ff6600; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; }
+        #app { max-width: 500px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+
+        .header { text-align: center; border-bottom: 1px solid #222; padding-bottom: 15px; }
+        .satoshi-link { font-size: 0.6rem; color: var(--ftc); letter-spacing: 1px; }
+
+        /* FAIR VALUE CARDS */
+        .card { background: #080808; border: 1px solid #222; padding: 15px; border-radius: 10px; position: relative; }
+        .card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+        .c-frst::before { background: var(--frst); }
+        .c-fnr::before { background: var(--fnr); }
+        .c-ftc::before { background: var(--ftc); }
+
+        .lbl { font-size: 0.7rem; color: #666; text-transform: uppercase; }
+        .val { font-size: 1.8rem; font-weight: bold; }
+        .peg { font-size: 0.6rem; color: #444; margin-top: 5px; }
+
+        /* INJECTOR BUTTON */
+        .injector-box { background: #0a0a0a; border: 1px dashed #444; padding: 20px; text-align: center; border-radius: 12px; }
+        .btn-inject { background: #fff; color: #000; border: none; width: 100%; padding: 18px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .btn-inject:active { transform: scale(0.98); }
+
+        .log { font-size: 0.65rem; color: #555; height: 80px; overflow-y: auto; border-top: 1px solid #111; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div style="font-weight:bold; font-size:1.2rem;">KANEFROSTCHAIN</div>
+            <div class="satoshi-link">CONNECTED: Satoshi.frostchain</div>
+        </div>
+
+        <div class="card c-fnr">
+            <div class="lbl">Reserve (FNR)</div>
+            <div class="val" id="fnr-price">$103.12</div>
+            <div class="peg">PEG: 31.337% OF XMR ($329.08)</div>
+        </div>
+
+        <div class="card c-frst">
+            <div class="lbl">Governance (FRST)</div>
+            <div class="val">$0.31459</div>
+            <div class="peg">PEG: PI TETHER (STABLE)</div>
+        </div>
+
+        <div class="card c-ftc">
+            <div class="lbl">Frostcoin (FTC)</div>
+            <div class="val" id="ftc-price">$18.23</div>
+            <div class="peg">BACKED BY NEWKIRK STRATUM YIELD</div>
+        </div>
+
+        <div class="injector-box">
+            <div class="lbl" style="margin-bottom:10px;">SATOSHI YIELD LIQUIDATOR</div>
+            <button class="btn-inject" onclick="injectLiquidity()">Inject Satoshi Yield</button>
+        </div>
+
+        <div class="log" id="log">
+            <div>> Monitoring Satoshi.frostchain hashrate...</div>
+            <div>> Current XMR Price: $329.08</div>
+        </div>
+    </div>
+
+    <script>
+        const XMR_BASE = 329.08;
+        const PI_PEG = 0.31459;
+        
+        function injectLiquidity() {
+            const log = document.getElementById('log');
+            log.innerHTML += `<div style="color:var(--ftc)">> Liquidating Satoshi Yield...</div>`;
+            log.innerHTML += `<div>> Adding Liquidity to FTC, FNR, and FRST pools...</div>`;
+            
+            setTimeout(() => {
+                log.innerHTML += `<div style="color:#fff">> Success: Pools Re-Balanced to Fair Value.</div>`;
+                log.scrollTop = log.scrollHeight;
+            }, 1500);
+        }
+
+        // Live Market Flux
+        setInterval(() => {
+            const ftc = 18.23 + (Math.random() - 0.5) * 0.1;
+            const fnr = (XMR_BASE * 0.31337) + (Math.random() - 0.5) * 0.5;
+            document.getElementById('ftc-price').innerText = "$" + ftc.toFixed(2);
+            document.getElementById('fnr-price').innerText = "$" + fnr.toFixed(2);
+        }, 4000);
+    </script>
+</body>
+</html>

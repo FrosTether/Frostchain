@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Public Terminal</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --blue: #00d4ff; --pink: #ff00ff; }
+        body { margin: 0; padding: 0; background: var(--bg); overflow: hidden; font-family: 'Courier New', monospace; color: var(--term); }
+        
+        /* TANGLE BACKGROUND */
+        #tangle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.4; }
+
+        /* UI LAYER */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; }
+
+        /* LOGIN MODAL (The API Connection) */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .login-box { border: 2px solid var(--term); padding: 30px; text-align: center; box-shadow: 0 0 20px var(--term); background: #000; }
+        .login-input { background: #111; border: 1px solid #333; color: #fff; padding: 10px; font-family: inherit; width: 250px; text-align: center; margin-top: 20px; font-size: 1.2rem; }
+        .login-btn { background: var(--term); color: #000; font-weight: bold; border: none; padding: 10px 30px; margin-top: 10px; cursor: pointer; text-transform: uppercase; }
+
+        /* HEADER STATS */
+        .header { display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
+        .identity-box { border: 1px solid var(--term); padding: 10px; background: rgba(0,0,0,0.8); pointer-events: auto; }
+        .active-user { color: #fff; font-weight: bold; font-size: 1.2rem; }
+        .status-badge { background: var(--term); color: #000; font-size: 0.7rem; padding: 2px 6px; display: inline-block; margin-top: 5px; }
+
+        /* REWARD STACK */
+        .reward-panel { text-align: right; background: rgba(0,0,0,0.8); padding: 10px; border-left: 4px solid var(--gold); pointer-events: auto; }
+        .token-row { margin-bottom: 5px; font-weight: bold; }
+        .token-ftc { color: var(--gold); }
+        .token-fnr { color: var(--blue); }
+        .token-frst { color: var(--pink); }
+
+        /* LOG */
+        .log-container { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; margin-top: 20px; margin-bottom: 60px; pointer-events: none; }
+        .log-box { height: 200px; overflow-y: auto; background: rgba(0,20,0,0.8); border: 1px solid #333; padding: 10px; font-size: 0.7rem; pointer-events: auto; }
+        .log-entry { margin-bottom: 3px; }
+        .log-mint { color: var(--gold); border-bottom: 1px dashed #333; padding-bottom: 2px; }
+
+        /* CONTROLS */
+        .controls { position: absolute; bottom: 10px; width: 100%; display: flex; justify-content: center; gap: 10px; pointer-events: auto; }
+        .ctrl-btn { background: transparent; border: 1px solid var(--term); color: var(--term); padding: 10px 20px; cursor: pointer; font-size: 0.8rem; }
+        .ctrl-btn:hover { background: var(--term); color: #000; }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2 style="margin:0; color:var(--term);">GRAYSON'S WALLET API</h2>
+            <p style="color:#888; font-size:0.8rem;">CONNECT YOUR IDENTITY TO MINE</p>
+            
+            <input type="text" id="username-input" class="login-input" placeholder="name.frostchain">
+            <br>
+            <button class="login-btn" onclick="connectWallet()">CONNECT WALLET.DAT</button>
+            <div id="login-status" style="margin-top:10px; font-size:0.8rem; height:20px;"></div>
+        </div>
+    </div>
+
+    <div id="ui-layer">
+        
+        <div class="header">
+            <div class="identity-box">
+                <div class="active-user" id="display-user">GUEST</div>
+                <div style="font-size:0.8rem; color:#888;">STATUS: <span style="color:var(--term);">MINING</span></div>
+                <div class="status-badge">NEWKIRK CODE: ENFORCED</div>
+                <div style="font-size:0.8rem; margin-top:5px;">HASHRATE: <span id="hashrate">0</span> H/s</div>
+            </div>
+
+            <div class="reward-panel">
+                <div style="font-size:0.7rem; color:#888;">BLOCK REWARD ESTIMATE</div>
+                <div class="token-row token-ftc">FTC: <span id="pend-ftc">0.00</span></div>
+                <div class="token-row token-fnr">FNR: <span id="pend-fnr">0.00</span></div>
+                <div class="token-row token-frst">FRST: <span id="pend-frst">0.00</span></div>
+            </div>
+        </div>
+
+        <div class="log-container">
+            <div class="log-box" id="log-box">
+                <div class="log-entry">> SYSTEM READY. WAITING FOR IDENTITY...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button class="ctrl-btn" onclick="checkSync()">CHECK SYNC</button>
+        <button class="ctrl-btn" onclick="location.reload()">DISCONNECT</button>
+    </div>
+
+    <script>
+        // CONFIG
+        const REWARD_FTC = 13.37;
+        const REWARD_FNR = 2.50;
+        const REWARD_FRST = 31415.90;
+        let currentUser = "GUEST";
+        let isMining = false;
+        
+        // --- AUTH LOGIC ---
+        function connectWallet() {
+            const input = document.getElementById('username-input').value;
+            const status = document.getElementById('login-status');
+            
+            if(input.length < 3 || !input.includes('.')) {
+                status.innerText = "INVALID FORMAT (use name.frostchain)";
+                status.style.color = "red";
+                return;
+            }
+
+            status.style.color = "var(--term)";
+            status.innerText = "VERIFYING VIA GRAYSON API...";
+            
+            setTimeout(() => {
+                currentUser = input;
+                document.getElementById('display-user').innerText = currentUser;
+                document.getElementById('login-overlay').style.display = 'none';
+                startMining();
+            }, 1500);
+        }
+
+        // --- MINING LOOP ---
+        function startMining() {
+            isMining = true;
+            log(`> IDENTITY VERIFIED: ${currentUser}`);
+            log(`> WALLET.DAT LINKED SUCCESSFULLY`);
+            log(`> NEWKIRK CODE PROTOCOL: ACTIVE`);
+            
+            // Start Hashrate
+            setInterval(() => {
+                let hash = 3500 + Math.random() * 500;
+                document.getElementById('hashrate').innerText = Math.floor(hash);
+            }, 800);
+
+            // Start Block Progress
+            let progress = 0;
+            setInterval(() => {
+                progress += 1;
+                
+                // Visual trickle
+                document.getElementById('pend-ftc').innerText = ((progress/100) * REWARD_FTC).toFixed(2);
+                document.getElementById('pend-fnr').innerText = ((progress/100) * REWARD_FNR).toFixed(2);
+                document.getElementById('pend-frst').innerText = ((progress/100) * REWARD_FRST).toFixed(2);
+
+                if(progress >= 100) {
+                    mintBlock();
+                    progress = 0;
+                }
+            }, 100); 
+        }
+
+        function mintBlock() {
+            log(`BLOCK FOUND! REWARDS SENT TO ${currentUser}`, true);
+            log(`>> MINTED: ${REWARD_FTC} FTC + ${REWARD_FNR} FNR + ${REWARD_FRST} FRST`);
+        }
+
+        function checkSync() {
+            log("> PINGING GRAYSON NODE... LATENCY: 12ms [SYNCED]");
+        }
+
+        function log(msg, highlight=false) {
+            const box = document.getElementById('log-box');
+            const div = document.createElement('div');
+            div.className = highlight ? 'log-entry log-mint' : 'log-entry';
+            div.innerText = msg;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // --- TANGLE BACKGROUND ---
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+        let particles = [];
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if(this.x < 0 || this.x > width) this.vx *= -1;
+                if(this.y < 0 || this.y > height) this.vy *= -1;
+            }
+            draw() {
+                ctx.fillStyle = '#005500';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+        for(let i=0; i<40; i++) particles.push(new Particle());
+
+        function animate() {
+            ctx.clearRect(0,0,width,height);
+            particles.forEach((p, i) => {
+                p.update();
+                p.draw();
+                for(let j=i; j<particles.length; j++) {
+                    const p2 = particles[j];
+                    const d = Math.hypot(p.x-p2.x, p.y-p2.y);
+                    if(d < 120) {
+                        ctx.strokeStyle = `rgba(0,255,65,${1 - d/120})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Secure Login</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --err: #ff0055; --panel: rgba(10, 10, 10, 0.95); }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; }
+        
+        /* LOGIN OVERLAY */
+        #login-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        .login-box { border: 2px solid var(--term); padding: 30px; width: 300px; text-align: center; box-shadow: 0 0 30px rgba(0, 255, 65, 0.2); background: #050505; }
+        .logo { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px var(--term); }
+        
+        input { width: 90%; background: #111; border: 1px solid #333; color: #fff; padding: 12px; margin-bottom: 15px; font-family: inherit; text-align: center; outline: none; }
+        input:focus { border-color: var(--term); }
+        
+        .btn { background: var(--term); color: #000; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+        .btn:hover { background: #fff; }
+
+        .error-msg { color: var(--err); font-size: 0.8rem; height: 20px; margin-top: 10px; }
+
+        /* DASHBOARD (Hidden by default) */
+        #dashboard { display: none; height: 100vh; position: relative; }
+        #tangle-canvas { position: absolute; inset: 0; z-index: 0; opacity: 0.4; }
+        
+        .hud { position: relative; z-index: 10; padding: 20px; display: flex; justify-content: space-between; }
+        .status-panel { text-align: right; border-right: 2px solid var(--term); padding-right: 15px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-gate">
+        <div class="login-box">
+            <div class="logo">MIRACLE NODE<br><span style="font-size:0.8rem; color:#888;">SECURE ACCESS</span></div>
+            
+            <input type="text" id="user-input" placeholder="identity.frostchain">
+            <input type="password" id="pin-input" placeholder="PIN (4 Digits)" maxlength="4">
+            
+            <button class="btn" onclick="authenticate()">AUTHENTICATE</button>
+            <div id="error-log" class="error-msg"></div>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <canvas id="tangle-canvas"></canvas>
+        
+        <div class="hud">
+            <div>
+                <div style="font-weight:bold; font-size:1.2rem; color:#fff;">CONNECTED</div>
+                <div id="active-user" style="color:var(--term);">...</div>
+            </div>
+            <div class="status-panel">
+                <div style="color:gold;">MINING ACTIVE</div>
+                <div style="font-size:0.8rem; color:#888;">AUDIO: ALPHA WAVE</div>
+                <div style="font-size:0.8rem; color:#888;">TANGLE: SYNCED</div>
+            </div>
+        </div>
+        
+        <div style="position:absolute; bottom:20px; width:100%; text-align:center;">
+            <button class="btn" style="width:200px; background:transparent; border:1px solid var(--term); color:var(--term);" onclick="location.reload()">LOCK TERMINAL</button>
+        </div>
+    </div>
+
+    <script>
+        // --- AUTHENTICATION LOGIC ---
+        function authenticate() {
+            const user = document.getElementById('user-input').value.trim();
+            const pin = document.getElementById('pin-input').value.trim();
+            const log = document.getElementById('error-log');
+
+            // 1. Validate Username Format
+            if(!user.endsWith('.frostchain')) {
+                log.innerText = "ERROR: MUST END IN .frostchain";
+                shakeBox();
+                return;
+            }
+
+            // 2. Validate PIN Length
+            if(pin.length !== 4 || isNaN(pin)) {
+                log.innerText = "ERROR: PIN MUST BE 4 DIGITS";
+                shakeBox();
+                return;
+            }
+
+            // 3. Success
+            log.style.color = "var(--term)";
+            log.innerText = "IDENTITY VERIFIED...";
+            
+            setTimeout(() => {
+                document.getElementById('login-gate').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('active-user').innerText = user;
+                initTangle(); // Start visuals only after login
+            }, 1000);
+        }
+
+        function shakeBox() {
+            const box = document.querySelector('.login-box');
+            box.style.transform = "translateX(10px)";
+            setTimeout(() => box.style.transform = "translateX(-10px)", 50);
+            setTimeout(() => box.style.transform = "translateX(10px)", 100);
+            setTimeout(() => box.style.transform = "translateX(0)", 150);
+        }
+
+        // --- VISUALS (TANGLE) ---
+        function initTangle() {
+            const canvas = document.getElementById('tangle-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            
+            let nodes = Array.from({length: 40}, () => ({
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+                vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2
+            }));
+
+            function animate() {
+                ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+                nodes.forEach((n) => {
+                    n.x += n.vx; n.y += n.vy;
+                    if(n.x<0||n.x>canvas.width) n.vx*=-1;
+                    if(n.y<0||n.y>canvas.height) n.vy*=-1;
+                    nodes.forEach(n2 => {
+                        let d = Math.hypot(n.x-n2.x, n.y-n2.y);
+                        if(d < 100) {
+                            ctx.strokeStyle = `rgba(0, 255, 65, ${1 - d/100})`;
+                            ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                        }
+                    });
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+    </script>
+</body>
+</html>

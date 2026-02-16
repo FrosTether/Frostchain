@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Miracle Miner | Master Node</title>
+    <style>
+        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 20px; }
+        .nav { display: flex; justify-content: space-between; border-bottom: 2px solid #00ff41; padding-bottom: 10px; }
+        .cli-box { background: #000; height: 300px; overflow-y: scroll; border: 1px solid #333; margin: 20px 0; padding: 10px; }
+        input { background: transparent; border: none; color: #fff; width: 80%; outline: none; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <div>MIRACLE NODE [v3.0]</div>
+        <div id="miner-stat">MINER: CHECKING...</div>
+        <div>ID: drfrost.frostchain</div>
+    </div>
+    <div class="cli-box" id="output"></div>
+    <div>frostchain-cli > <input type="text" id="input" autofocus onkeydown="if(event.key==='Enter') run()"></div>
+    <script>
+        const out = document.getElementById('output');
+        async function run() {
+            const val = document.getElementById('input').value;
+            document.getElementById('input').value = "";
+            const res = await fetch('http://127.0.0.1:8082/api/cli', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({sig: "FROST_PROTOCOL_MASTER_777", cmd: val.split(' ')[0], params: val.split(' ').slice(1)})
+            });
+            const data = await res.json();
+            out.innerHTML += "<div>> " + val + "</div><div>" + (data.output || data.message) + "</div>";
+            out.scrollTop = out.scrollHeight;
+        }
+        // Auto-check miner every 10s
+        setInterval(async () => {
+            const res = await fetch('http://127.0.0.1:8082/api/cli', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({sig: "FROST_PROTOCOL_MASTER_777", cmd: "miner-status"})
+            });
+            const data = await res.json();
+            document.getElementById('miner-stat').innerText = "MINER: " + data.output;
+        }, 10000);
+    </script>
+</body>
+</html>

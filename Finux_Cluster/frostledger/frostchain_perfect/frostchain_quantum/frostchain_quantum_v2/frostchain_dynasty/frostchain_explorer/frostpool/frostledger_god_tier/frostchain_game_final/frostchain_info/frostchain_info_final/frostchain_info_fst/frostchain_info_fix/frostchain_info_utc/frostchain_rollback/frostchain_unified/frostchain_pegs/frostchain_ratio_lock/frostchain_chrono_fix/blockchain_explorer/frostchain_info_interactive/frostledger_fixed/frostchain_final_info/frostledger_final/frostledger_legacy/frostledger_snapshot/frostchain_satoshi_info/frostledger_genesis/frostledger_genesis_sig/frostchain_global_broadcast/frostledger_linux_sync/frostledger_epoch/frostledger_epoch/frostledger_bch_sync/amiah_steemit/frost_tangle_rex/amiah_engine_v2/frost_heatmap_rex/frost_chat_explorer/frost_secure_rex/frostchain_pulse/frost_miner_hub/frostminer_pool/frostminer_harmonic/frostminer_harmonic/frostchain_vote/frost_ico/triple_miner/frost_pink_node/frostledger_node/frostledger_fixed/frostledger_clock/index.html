@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FROSTLEDGER // SATOSHI_CLOCK</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #000; --core: #00e0ff; --xmr: #f60; --doge: #ba9f33; --pink: #ff007f; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* PINK NOISE ATMOSPHERIC */
+body::after {
+  content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, rgba(255,0,127,0.03) 0px, transparent 1px);
+  background-size: 100% 3px; pointer-events: none; z-index: 100;
+}
+
+.nav { background: #000; border-bottom: 2px solid var(--pink); padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+.main { flex-grow: 1; display: grid; grid-template-columns: 350px 1fr; gap: 20px; padding: 20px; overflow: hidden; }
+
+.stats-panel { display: flex; flex-direction: column; gap: 10px; }
+.card { background: #050505; border: 1px solid #1a1a1a; padding: 15px; border-left: 3px solid var(--core); position: relative; }
+.val { font-size: 18px; color: #fff; font-weight: bold; }
+
+/* BLOCK COUNTDOWN */
+.timer-ring { font-size: 32px; color: var(--pink); font-weight: 900; text-align: center; margin: 20px 0; text-shadow: 0 0 15px var(--pink); }
+
+.ledger-box { background: #030303; border: 1px solid #111; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.block-pulse { background: #080808; border: 1px solid #1a1a1a; padding: 15px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 11px; }
+.asset-tag { font-size: 9px; font-weight: bold; padding: 2px 5px; color: #000; display: block; width: fit-content; margin-bottom: 5px; }
+
+.footer { background: #000; padding: 15px; border-top: 1px solid #111; font-size: 10px; color: #444; }
+</style>
+</head>
+<body onload="init()">
+
+<div class="nav">
+  <div style="font-weight:bold; color:var(--pink);">FROSTLEDGER <span style="color:var(--core);">CLOCK_V4</span></div>
+  <div style="font-size: 10px; color: var(--gold);">BLOCK_TIME: 300s (2X BCH PARITY)</div>
+</div>
+
+<div class="main">
+  <div class="stats-panel">
+    <div class="card" style="border-left-color: var(--pink);">
+      <div style="font-size:9px; color:#555;">NEXT_TRIPLE_PULSE</div>
+      <div class="timer-ring" id="timer">300</div>
+      <div style="font-size:9px; color:var(--pink); text-align:center;">SECONDS REMAINING</div>
+    </div>
+    
+    <div class="card" style="border-left-color: var(--xmr);">
+      <div style="font-size:9px; color:#555;">FNR (XMR FORK)</div>
+      <div class="val">33,000,000 <span style="font-size:9px; color:#444;">CAP</span></div>
+    </div>
+    
+    <div class="card" style="border-left-color: var(--doge);">
+      <div style="font-size:9px; color:#555;">FRST (PI_SYNC)</div>
+      <div class="val">31,415,926,535</div>
+    </div>
+    
+    <div style="margin-top:auto; padding: 10px; font-size: 10px; color: #333; line-height: 1.4;">
+      "I did 82 months. Every 300 seconds, the truth is minted anew."
+    </div>
+  </div>
+
+  <div class="ledger-box" id="ledger">
+    </div>
+</div>
+
+<div class="footer">
+  DONATE_BCH: bitcoincash:pr2a6fcv7usyq97eh9an0782x9txdzwl0y30mz7gup | <a href="https://frstico.surge.sh" style="color:var(--gold); text-decoration:none;">ICO_NEXUS</a>
+</div>
+
+<script>
+let timeLeft = 300;
+const ledger = document.getElementById('ledger');
+
+function triplePulse() {
+  const hash = '0000' + Math.random().toString(16).substr(2, 24);
+  const pulse = document.createElement('div');
+  pulse.className = 'block-pulse';
+  pulse.innerHTML = `
+    <div><span class="asset-tag" style="background:var(--pink);">FTC_NATIVE</span><span style="color:#fff;">+13.37</span></div>
+    <div><span class="asset-tag" style="background:var(--xmr);">FNR_XMR</span><span style="color:#fff;">+33.00</span></div>
+    <div><span class="asset-tag" style="background:var(--doge);">FRST_DOGE</span><span style="color:#fff;">+3.141</span></div>
+    <div style="grid-column: 1 / 4; color: #444; border-top: 1px solid #111; padding-top: 5px; font-size: 9px;">SIG: ${hash} // 300S_SYNC_COMPLETE</div>
+  `;
+  ledger.prepend(pulse);
+  if(ledger.children.length > 10) ledger.removeChild(ledger.lastChild);
+}
+
+function updateClock() {
+  timeLeft--;
+  if (timeLeft <= 0) {
+    triplePulse();
+    timeLeft = 300;
+  }
+  document.getElementById('timer').innerText = timeLeft;
+}
+
+function init() {
+  setInterval(updateClock, 1000);
+  // Pre-fill ledger with some history
+  for(let i=0; i<3; i++) triplePulse();
+}
+</script>
+</body>
+</html>

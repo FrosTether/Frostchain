@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Frostscan | v1.7 Genesis Ledger</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --fnr: #00d2ff; --cyan: #00ffff; }
+        body { margin:0; background:var(--bg); color:var(--term); font-family:'Courier New', monospace; overflow:hidden; }
+        .grid { display:grid; grid-template-rows:60px 100px 1fr; height:100vh; padding:0 20px; }
+        .card { background:rgba(10,10,10,0.9); border:1px solid #222; padding:15px; border-left:4px solid var(--term); }
+        table { width:100%; border-collapse:collapse; font-size:0.75rem; margin-top:20px; }
+        th { text-align:left; background:#111; padding:12px; color:var(--cyan); }
+        td { padding:12px; border-bottom:1px solid #111; color:#ccc; }
+        .stealth { color:#444; font-style:italic; }
+    </style>
+</head>
+<body>
+    <div class="grid">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222;">
+            <div style="font-weight:bold;">FROSTSCAN v1.7</div>
+            <div style="font-size:0.7rem; color:var(--gold);">SUPPLY_LOCKED: 33M FNR | 100M FTC</div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px; padding-top:15px;">
+            <div class="card" style="border-left-color:var(--fnr);">
+                <div style="font-size:0.6rem; color:#666;">FNR TOTAL SUPPLY</div>
+                <div style="font-size:1.2rem; font-weight:bold;">33,000,000</div>
+            </div>
+            <div class="card" style="border-left-color:var(--gold);">
+                <div style="font-size:0.6rem; color:#666;">FTC TOTAL SUPPLY</div>
+                <div style="font-size:1.2rem; font-weight:bold;">100,000,000</div>
+            </div>
+            <div class="card" style="border-left-color:var(--cyan);">
+                <div style="font-size:0.6rem; color:#666;">drfrost GENESIS STAKE</div>
+                <div style="font-size:1.2rem; font-weight:bold;">13.37%</div>
+            </div>
+            <div class="card">
+                <div style="font-size:0.6rem; color:#666;">PoTW HASHPOWER</div>
+                <div style="font-size:1.2rem; font-weight:bold;">65.8 EH/s</div>
+            </div>
+        </div>
+        <div style="overflow-y:auto; border:1px solid #222; background:rgba(5,5,5,0.95);">
+            <table>
+                <thead><tr><th>Height</th><th>Block Type</th><th>Miner</th><th>Reward</th></tr></thead>
+                <tbody id="feed"></tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        let h=948221;
+        function add(){
+            const isFNR = Math.random() > 0.7;
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${h--}</td><td>${isFNR?'FNR_RESERVE':'MERGED_SHA256'}</td><td>${isFNR?'<span class="stealth">[HIDDEN_IDENTITY]</span>':'drfrost.frostchain'}</td><td style="color:var(--gold)">${isFNR?'2.50 FNR':'13.37 FTC'}</td>`;
+            document.getElementById('feed').prepend(row);
+        }
+        for(let i=0; i<15; i++) add();
+        setInterval(add, 4000);
+    </script>
+</body>
+</html>

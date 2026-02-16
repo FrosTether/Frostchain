@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cryptodoku.surge.sh</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #000;
+  color: #ffb100;
+  font-family: 'Share Tech Mono', monospace;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: #000;
+  border-bottom: 1px solid #1a1a1a;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.hash-display { color: #ffb100; }
+.timer { color: #ffb100; }
+.ftc-display { color: #ffb100; }
+
+.game-section {
+  display: flex;
+  justify-content: center;
+  padding: 30px 20px 20px 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(9, 55px);
+  grid-template-rows: repeat(9, 55px);
+  gap: 2px;
+  background: #1a1a1a;
+  padding: 6px;
+  border: 3px solid #444;
+}
+
+.cell {
+  width: 55px;
+  height: 55px;
+  background: #000;
+  border: 1px solid #222;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.1s;
+}
+
+.cell.filled {
+  background: #ffb100;
+  box-shadow: 0 0 25px #ffb100, inset 0 0 20px rgba(255,177,0,0.9);
+  border-color: #ffb100;
+}
+
+.cell.preview {
+  background: rgba(255, 177, 0, 0.3);
+  border-color: #ffb100;
+  box-shadow: 0 0 10px rgba(255, 177, 0, 0.5);
+}
+
+.cell.invalid {
+  background: rgba(255, 0, 0, 0.2);
+  border-color: #ff0000;
+}
+
+/* 3x3 GRID BORDERS - EXACT MATCH */
+.cell:nth-child(3n) { border-right: 2px solid #444; }
+.cell:nth-child(6n) { border-right: 3px solid #555; }
+.cell:nth-child(9n) { border-right: 3px solid #666; }
+
+.cell:nth-child(n+19):nth-child(-n+27) { border-bottom: 2px solid #444; }
+.cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #444; }
+.cell:nth-child(n+28):nth-child(-n+36) { border-bottom: 3px solid #555; }
+.cell:nth-child(n+55):nth-child(-n+63) { border-bottom: 3px solid #555; }
+
+.pieces-dock {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 25px;
+  margin-bottom: 20px;
+}
+
+.piece-wrapper {
+  background: #000;
+  border: 2px solid #333;
+  padding: 12px;
+  cursor: pointer;
+  min-width: 80px;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.piece-wrapper:hover:not(.placed) {
+  border-color: #ffb100;
+  transform: scale(1.05);
+}
+
+.piece-wrapper.selected {
+  border-color: #00ff41;
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.6);
+  transform: scale(1.1);
+}
+
+.piece-wrapper.placed {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.piece {
+  display: grid;
+  gap: 2px;
+}
+
+.piece-block {
+  width: 16px;
+  height: 16px;
+  background: #ffb100;
+  box-shadow: 0 0 8px #ffb100;
+  border-radius: 1px;
+}
+
+.piece-block.empty {
+  background: transparent;
+  box-shadow: none;
+}
+
+.seal-log {
+  margin: 0 auto;
+  margin-top: 20px;
+  background: #000;
+  border: 2px solid #1a1a1a;
+  padding: 15px;
+  max-width: 600px;
+  min-height: 130px;
+  max-height: 130px;
+  overflow: hidden;
+}
+
+.seal-entry {
+  color: #ffb100;
+  font-size: 12px;
+  padding: 5px 0;
+  opacity: 0.9;
+}
+
+.seal-entry::before {
+  content: '▶ ';
+  color: #ffb100;
+}
+
+.controls {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  margin-top: 30px;
+  padding: 20px;
+  margin-bottom: 40px;
+}
+
+.control-btn {
+  background: transparent;
+  border: none;
+  color: #00ff41;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 10px 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+
+.control-btn.inactive {
+  color: #666;
+}
+
+.control-btn:hover {
+  text-shadow: 0 0 10px currentColor;
+}
+
+.burn-btn {
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 12px 35px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.burn-btn:hover {
+  box-shadow: 0 0 25px #fff;
+  transform: translateY(-2px);
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 15px #ffb100; }
+  50% { box-shadow: 0 0 30px #ffb100; }
+}
+
+.cell.filled {
+  animation: glow-pulse 2s infinite;
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="hash-display"><span id="hash-rate">869.5</span> H/s</div>
+  <div class="timer"><span id="timer">0:40</span></div>
+  <div class="ftc-display">FTC <span id="ftc-display">256</span>A</div>
+</div>
+
+<div class="game-section">
+  <div class="grid" id="game-grid"></div>
+</div>
+
+<div class="pieces-dock" id="pieces-dock"></div>
+
+<div class="seal-log" id="seal-log">
+  <div class="seal-entry">256-LINK SEALING BLOCK 95421f7f</div>
+  <div class="seal-entry">256-LINK SEALING BLOCK 5e3ff1b1</div>
+  <div class="seal-entry">256-LINK SEALING BLOCK 0904b24e</div>
+  <div class="seal-entry">256-LINK SEALING BLOCK</div>
+</div>
+
+<div class="controls">
+  <button class="control-btn" id="fnr-btn" onclick="toggleFNR()">FNR AUTOMATIC</button>
+  <button class="control-btn inactive" id="fai-btn" onclick="toggleFAI()">FAI GHOST</button>
+  <button class="burn-btn" onclick="resetGame()">BURN</button>
+</div>
+
+<script>
+// ========== FROSTCHAIN CONSTANTS ==========
+const FRST_CONFIG = {
+  TOTAL_SUPPLY: 477500000000,
+  BLOCK_REWARD_BASE: 314.15,
+  FTC_256A_REWARD: 256,
+  HASH_RATE_CAP: 869.5,
+  FAI_REDUCTION: 0.55
+};
+
+// ========== DOGECORE ENGINE ==========
+class DogeCoreEngine {
+  constructor() {
+    this.hashRate = 869.5;
+    this.frstMined = 0;
+    this.ftcMined = 256;
+    this.blocksSealedCount = 4;
+    this.faiActive = false;
+    this.fnrAutomatic = true;
+    this.lastSealTime = Date.now();
+  }
+
+  computeHashRate(score, linesCleared) {
+    const baseHash = FRST_CONFIG.HASH_RATE_CAP;
+    const modifier = this.faiActive ? 0.45 : 1.0;
+    this.hashRate = baseHash * modifier;
+    return this.hashRate;
+  }
+
+  mineFRST(blocksPlaced, linesCleared) {
+    const reward = (blocksPlaced * FRST_CONFIG.BLOCK_REWARD_BASE) + (linesCleared * 100);
+    this.frstMined += reward;
+    return reward;
+  }
+
+  sealBlock() {
+    const now = Date.now();
+    if (now - this.lastSealTime >= 5000) {
+      this.blocksSealedCount++;
+      this.ftcMined += FRST_CONFIG.FTC_256A_REWARD;
+      this.lastSealTime = now;
+      return {
+        sealed: true,
+        hash: this.generateBlockHash()
+      };
+    }
+    return { sealed: false };
+  }
+
+  generateBlockHash() {
+    const chars = '0123456789abcdef';
+    let hash = '';
+    for (let i = 0; i < 8; i++) {
+      hash += chars[Math.floor(Math.random() * 16)];
+    }
+    return hash;
+  }
+
+  toggleFAI() {
+    this.faiActive = !this.faiActive;
+    this.computeHashRate(0, 0);
+    return this.faiActive;
+  }
+
+  toggleFNR() {
+    this.fnrAutomatic = !this.fnrAutomatic;
+    return this.fnrAutomatic;
+  }
+}
+
+// ========== WOODOKU ENGINE ==========
+class WoodokuEngine {
+  constructor() {
+    this.grid = Array(9).fill(null).map(() => Array(9).fill(0));
+    this.score = 0;
+    this.linesCleared = 0;
+    this.currentPieces = [];
+    this.gameOver = false;
+    this.generateNewPieces();
+  }
+
+  getPieceShapes() {
+    return {
+      single: [[0,0]],
+      double_h: [[0,0],[0,1]],
+      double_v: [[0,0],[1,0]],
+      triple_h: [[0,0],[0,1],[0,2]],
+      triple_v: [[0,0],[1,0],[2,0]],
+      L_small: [[0,0],[1,0],[1,1]],
+      square_2x2: [[0,0],[0,1],[1,0],[1,1]],
+      L_large: [[0,0],[1,0],[2,0],[2,1]],
+      T_small: [[0,0],[0,1],[0,2],[1,1]],
+      plus: [[0,1],[1,0],[1,1],[1,2],[2,1]],
+      line_4: [[0,0],[0,1],[0,2],[0,3]],
+      line_5: [[0,0],[0,1],[0,2],[0,3],[0,4]]
+    };
+  }
+
+  generateNewPieces() {
+    this.currentPieces = [];
+    const shapes = this.getPieceShapes();
+    const shapeKeys = Object.keys(shapes);
+    
+    for (let i = 0; i < 3; i++) {
+      const randomKey = shapeKeys[Math.floor(Math.random() * shapeKeys.length)];
+      this.currentPieces.push({
+        blocks: JSON.parse(JSON.stringify(shapes[randomKey])),
+        placed: false
+      });
+    }
+  }
+
+  canPlacePiece(piece, row, col) {
+    for (const [dr, dc] of piece.blocks) {
+      const r = row + dr;
+      const c = col + dc;
+      if (r < 0 || r >= 9 || c < 0 || c >= 9 || this.grid[r][c] !== 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  placePiece(piece, row, col) {
+    if (!this.canPlacePiece(piece, row, col)) return false;
+    
+    for (const [dr, dc] of piece.blocks) {
+      this.grid[row + dr][col + dc] = 1;
+    }
+    
+    piece.placed = true;
+    const cleared = this.checkAndClearLines();
+    this.linesCleared += cleared;
+    this.score += piece.blocks.length * 10 + cleared * 100;
+    
+    if (this.currentPieces.every(p => p.placed)) {
+      this.generateNewPieces();
+    }
+    
+    this.checkGameOver();
+    
+    return { blocksPlaced: piece.blocks.length, linesCleared: cleared };
+  }
+
+  checkAndClearLines() {
+    let cleared = 0;
+    const rowsToClear = [];
+    const colsToClear = [];
+    const boxesToClear = [];
+
+    for (let r = 0; r < 9; r++) {
+      if (this.grid[r].every(cell => cell !== 0)) rowsToClear.push(r);
+    }
+
+    for (let c = 0; c < 9; c++) {
+      if (this.grid.every(row => row[c] !== 0)) colsToClear.push(c);
+    }
+
+    for (let boxRow = 0; boxRow < 3; boxRow++) {
+      for (let boxCol = 0; boxCol < 3; boxCol++) {
+        let full = true;
+        for (let r = boxRow * 3; r < boxRow * 3 + 3; r++) {
+          for (let c = boxCol * 3; c < boxCol * 3 + 3; c++) {
+            if (this.grid[r][c] === 0) {
+              full = false;
+              break;
+            }
+          }
+          if (!full) break;
+        }
+        if (full) boxesToClear.push([boxRow, boxCol]);
+      }
+    }
+
+    rowsToClear.forEach(r => {
+      for (let c = 0; c < 9; c++) this.grid[r][c] = 0;
+      cleared++;
+    });
+
+    colsToClear.forEach(c => {
+      for (let r = 0; r < 9; r++) this.grid[r][c] = 0;
+      cleared++;
+    });
+
+    boxesToClear.forEach(([boxRow, boxCol]) => {
+      for (let r = boxRow * 3; r < boxRow * 3 + 3; r++) {
+        for (let c = boxCol * 3; c < boxCol * 3 + 3; c++) {
+          this.grid[r][c] = 0;
+        }
+      }
+      cleared++;
+    });
+
+    return cleared;
+  }
+
+  checkGameOver() {
+    for (const piece of this.currentPieces) {
+      if (piece.placed) continue;
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (this.canPlacePiece(piece, r, c)) {
+            this.gameOver = false;
+            return;
+          }
+        }
+      }
+    }
+    this.gameOver = true;
+  }
+
+  reset() {
+    this.grid = Array(9).fill(null).map(() => Array(9).fill(0));
+    this.score = 0;
+    this.linesCleared = 0;
+    this.gameOver = false;
+    this.generateNewPieces();
+  }
+}
+
+// ========== GAME INITIALIZATION ==========
+const game = new WoodokuEngine();
+const dogecore = new DogeCoreEngine();
+let selectedPiece = null;
+let selectedPieceIndex = null;
+let elapsedSeconds = 40;
+
+// Timer
+setInterval(() => {
+  elapsedSeconds++;
+  const mins = Math.floor(elapsedSeconds / 60);
+  const secs = elapsedSeconds % 60;
+  document.getElementById('timer').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+}, 1000);
+
+// Block sealing
+setInterval(() => {
+  const result = dogecore.sealBlock();
+  if (result.sealed) {
+    addSealLog(result.hash);
+    document.getElementById('ftc-display').textContent = dogecore.ftcMined;
+  }
+}, 1000);
+
+function renderGrid() {
+  const gridEl = document.getElementById('game-grid');
+  gridEl.innerHTML = '';
+  
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      
+      if (game.grid[r][c] !== 0) {
+        cell.classList.add('filled');
+      }
+      
+      cell.addEventListener('mouseenter', handleCellHover);
+      cell.addEventListener('click', handleCellClick);
+      
+      gridEl.appendChild(cell);
+    }
+  }
+}
+
+function renderPieces() {
+  const dockEl = document.getElementById('pieces-dock');
+  dockEl.innerHTML = '';
+  
+  game.currentPieces.forEach((piece, index) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'piece-wrapper';
+    if (piece.placed) wrapper.classList.add('placed');
+    if (selectedPieceIndex === index) wrapper.classList.add('selected');
+    
+    const maxRow = Math.max(...piece.blocks.map(b => b[0]));
+    const maxCol = Math.max(...piece.blocks.map(b => b[1]));
+    
+    const pieceEl = document.createElement('div');
+    pieceEl.className = 'piece';
+    pieceEl.style.gridTemplateColumns = `repeat(${maxCol + 1}, 16px)`;
+    pieceEl.style.gridTemplateRows = `repeat(${maxRow + 1}, 16px)`;
+    
+    for (let r = 0; r <= maxRow; r++) {
+      for (let c = 0; c <= maxCol; c++) {
+        const block = document.createElement('div');
+        block.className = 'piece-block';
+        
+        const hasBlock = piece.blocks.some(([br, bc]) => br === r && bc === c);
+        if (!hasBlock) {
+          block.classList.add('empty');
+        }
+        
+        pieceEl.appendChild(block);
+      }
+    }
+    
+    wrapper.appendChild(pieceEl);
+    
+    if (!piece.placed) {
+      wrapper.addEventListener('click', () => selectPiece(index));
+    }
+    
+    dockEl.appendChild(wrapper);
+  });
+}
+
+function selectPiece(index) {
+  if (game.currentPieces[index].placed) return;
+  selectedPieceIndex = index;
+  selectedPiece = game.currentPieces[index];
+  renderPieces();
+  clearPreviews();
+}
+
+function handleCellHover(e) {
+  if (!selectedPiece || selectedPiece.placed) return;
+  
+  clearPreviews();
+  
+  const row = parseInt(e.target.dataset.row);
+  const col = parseInt(e.target.dataset.col);
+  
+  const canPlace = game.canPlacePiece(selectedPiece, row, col);
+  
+  selectedPiece.blocks.forEach(([dr, dc]) => {
+    const r = row + dr;
+    const c = col + dc;
+    if (r >= 0 && r < 9 && c >= 0 && c < 9) {
+      const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+      if (cell) {
+        cell.classList.add(canPlace ? 'preview' : 'invalid');
+      }
+    }
+  });
+}
+
+function clearPreviews() {
+  document.querySelectorAll('.cell').forEach(cell => {
+    cell.classList.remove('preview', 'invalid');
+  });
+}
+
+function handleCellClick(e) {
+  if (!selectedPiece || selectedPiece.placed) return;
+  
+  const row = parseInt(e.target.dataset.row);
+  const col = parseInt(e.target.dataset.col);
+  
+  const result = game.placePiece(selectedPiece, row, col);
+  if (result) {
+    const frstReward = dogecore.mineFRST(result.blocksPlaced, result.linesCleared);
+    const hashRate = dogecore.computeHashRate(game.score, game.linesCleared);
+    document.getElementById('hash-rate').textContent = hashRate.toFixed(1);
+    
+    selectedPiece = null;
+    selectedPieceIndex = null;
+    renderGrid();
+    renderPieces();
+    clearPreviews();
+  }
+}
+
+function addSealLog(hash) {
+  const log = document.getElementById('seal-log');
+  const entry = document.createElement('div');
+  entry.className = 'seal-entry';
+  entry.textContent = `256-LINK SEALING BLOCK ${hash}`;
+  
+  log.insertBefore(entry, log.firstChild);
+  
+  if (log.children.length > 4) {
+    log.removeChild(log.lastChild);
+  }
+}
+
+function toggleFNR() {
+  const active = dogecore.toggleFNR();
+  const btn = document.getElementById('fnr-btn');
+  if (active) {
+    btn.classList.remove('inactive');
+    btn.textContent = 'FNR AUTOMATIC';
+  } else {
+    btn.classList.add('inactive');
+    btn.textContent = 'FNR MANUAL';
+  }
+}
+
+function toggleFAI() {
+  const active = dogecore.toggleFAI();
+  const btn = document.getElementById('fai-btn');
+  if (active) {
+    btn.classList.remove('inactive');
+    btn.textContent = 'FAI GHOST (55% REDUCE)';
+  } else {
+    btn.classList.add('inactive');
+    btn.textContent = 'FAI GHOST';
+  }
+  
+  const hashRate = dogecore.computeHashRate(game.score, game.linesCleared);
+  document.getElementById('hash-rate').textContent = hashRate.toFixed(1);
+}
+
+function resetGame() {
+  game.reset();
+  selectedPiece = null;
+  selectedPieceIndex = null;
+  renderGrid();
+  renderPieces();
+  dogecore.hashRate = FRST_CONFIG.HASH_RATE_CAP;
+  document.getElementById('hash-rate').textContent = dogecore.hashRate.toFixed(1);
+}
+
+// Initial render
+renderGrid();
+renderPieces();
+</script>
+
+</body>
+</html>

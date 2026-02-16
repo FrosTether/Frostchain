@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Frostchain | v45.1 Vault</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --fnr: #00d2ff; --cyan: #00ffff; }
+        body { margin:0; background:var(--bg); color:var(--term); font-family:'Courier New', monospace; overflow:hidden; }
+        #dash { display:grid; grid-template-columns:340px 1fr 340px; height:100vh; }
+        .panel { background:rgba(5,5,5,0.96); border:1px solid #222; padding:15px; }
+        .vault-card { background:#0a0a0a; border:1px solid #333; padding:20px; border-left:4px solid var(--gold); margin-bottom:20px; }
+        .val { font-size:1.6rem; font-weight:bold; color:#fff; }
+    </style>
+</head>
+<body>
+    <div id="dash">
+        <div class="panel">
+            <div style="color:var(--gold); font-size:0.6rem; margin-bottom:10px;">NETWORK_SUPPLY_CAP</div>
+            <div style="font-size:1rem;">FNR: 33,000,000</div>
+            <div style="font-size:1rem;">FTC: 100,000,000</div>
+        </div>
+        <div style="padding:20px; overflow-y:auto; z-index:60;">
+            <div class="vault-card" style="border-left-color:var(--gold);">
+                <div style="font-size:0.6rem; color:var(--gold);">drfrost FTC BALANCE (ADJUSTED)</div>
+                <div class="val">11,870,000.00 FTC</div>
+                <div style="font-size:0.55rem; color:#444;">13.37% Stake | -1M ICO | -500k Airdrops</div>
+            </div>
+            <div class="vault-card" style="border-left-color:var(--fnr);">
+                <div style="font-size:0.6rem; color:var(--fnr);">drfrost FNR BALANCE (GENESIS)</div>
+                <div class="val">4,412,100.00 FNR</div>
+                <div style="font-size:0.55rem; color:#444;">13.37% Stake Hard-Locked</div>
+            </div>
+        </div>
+        <div class="panel">
+            <div style="font-size:0.6rem; color:#555;">KERNEL_STATUS</div>
+            <div style="color:var(--term)">> Frostoise Shell Sync... OK</div>
+        </div>
+    </div>
+</body>
+</html>

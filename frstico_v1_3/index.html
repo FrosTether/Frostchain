@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frost ICO | Live Ticker</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --frst: #d400ff; --fnr: #00d2ff; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; overflow-x: hidden; }
+        #app { max-width: 500px; margin: 0 auto; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; gap: 15px; }
+        
+        .header { text-align: center; border-bottom: 2px solid var(--term); padding-bottom: 15px; }
+
+        /* TICKER BARS */
+        .supply-status { background: #111; padding: 12px; border-radius: 8px; margin-bottom: 5px; }
+        .bar-bg { width: 100%; height: 6px; background: #222; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 100%; transition: width 1s ease-in-out; }
+
+        /* ASSET SELECTION */
+        .asset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; }
+        .asset-btn { background: #111; border: 1px solid #333; color: #444; padding: 12px 5px; cursor: pointer; border-radius: 6px; font-size: 0.65rem; font-weight: bold; }
+        .asset-btn.active { color: #fff; border-color: #fff; background: #1a1a1a; }
+        .asset-btn.active.ftc { border-color: var(--term); color: var(--term); }
+        .asset-btn.active.fnr { border-color: var(--fnr); color: var(--fnr); }
+        .asset-btn.active.frst { border-color: var(--frst); color: var(--frst); }
+
+        /* ICO CARD */
+        .ico-card { background: #080808; border: 1px solid #222; padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 0 30px rgba(0,255,65,0.05); }
+        .price-val { font-size: 2.2rem; font-weight: bold; color: var(--gold); margin: 10px 0; }
+        .label { font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+
+        .bridge-box { background: #000; border: 1px dashed #444; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 0.65rem; word-break: break-all; color: var(--term); cursor: pointer; }
+        input { background: #000; border: 1px solid #333; color: #fff; width: 100%; padding: 18px; margin-top: 15px; border-radius: 10px; font-family: inherit; font-size: 1.2rem; text-align: center; box-sizing: border-box; }
+        .btn-mint { background: var(--term); color: #000; border: none; width: 100%; padding: 20px; border-radius: 10px; font-weight: bold; text-transform: uppercase; cursor: pointer; margin-top: 15px; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div style="font-weight:bold; font-size:1.4rem; color:var(--term);">FROST ICO v1.3</div>
+            <div style="font-size:0.6rem; color:#444; margin-top:5px; letter-spacing:2px;">LIQUIDITY SOURCE: ICO.frostchain</div>
+        </div>
+
+        <div id="tickers">
+            <div class="supply-status">
+                <div style="display:flex; justify-content:space-between; font-size:0.6rem;">
+                    <span style="color:var(--term)">FTC (Premine)</span>
+                    <span id="ftc-rem">1,000,000 REMAINING</span>
+                </div>
+                <div class="bar-bg"><div id="ftc-bar" class="bar-fill" style="background:var(--term);"></div></div>
+            </div>
+            <div class="supply-status">
+                <div style="display:flex; justify-content:space-between; font-size:0.6rem;">
+                    <span style="color:var(--fnr)">FNR (Reserve)</span>
+                    <span id="fnr-rem">400,000 REMAINING</span>
+                </div>
+                <div class="bar-bg"><div id="fnr-bar" class="bar-fill" style="background:var(--fnr);"></div></div>
+            </div>
+            <div class="supply-status">
+                <div style="display:flex; justify-content:space-between; font-size:0.6rem;">
+                    <span style="color:var(--frst)">FRST (Governance)</span>
+                    <span id="frst-rem">3,141,592 REMAINING</span>
+                </div>
+                <div class="bar-bg"><div id="frst-bar" class="bar-fill" style="background:var(--frst);"></div></div>
+            </div>
+        </div>
+
+        <div class="asset-grid">
+            <button id="ftc-tab" class="asset-btn active ftc" onclick="setAsset('ftc')">SELECT FTC</button>
+            <button id="fnr-tab" class="asset-btn" onclick="setAsset('fnr')">SELECT FNR</button>
+            <button id="frst-tab" class="asset-btn" onclick="setAsset('frst')">SELECT FRST</button>
+        </div>
+
+        <div class="ico-card">
+            <div class="label" id="asset-label">FTC UNIT PRICE</div>
+            <div class="price-val" id="price-display">$18.23</div>
+            
+            <div style="display:flex; justify-content:space-between; margin: 10px 0;">
+                <button id="d-btn" style="width:48%; background:#111; border:1px solid #fff; color:#fff; padding:10px; border-radius:5px; font-size:0.7rem;" onclick="setBridge('doge')">DOGE BRIDGE</button>
+                <button id="x-btn" style="width:48%; background:#111; border:1px solid #333; color:#555; padding:10px; border-radius:5px; font-size:0.7rem;" onclick="setBridge('xmr')">XMR BRIDGE</button>
+            </div>
+
+            <div class="bridge-box" id="addr" onclick="copyAddr()">DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s</div>
+            
+            <input type="number" id="buy-amt" placeholder="Amount to Purchase">
+            
+            <button class="btn-mint" onclick="initiateSwap()">Initiate Atomic Swap</button>
+        </div>
+    </div>
+
+    <script>
+        const DATA = {
+            ftc: { price: "$18.23", label: "FTC UNIT PRICE (Fair Value)", total: 1000000 },
+            fnr: { price: "$103.12", label: "FNR UNIT PRICE (31.337% XMR)", total: 400000 },
+            frst: { price: "$0.31459", label: "FRST UNIT PRICE (Pi-Peg)", total: 3141592 }
+        };
+        const ADDRS = {
+            doge: "DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s",
+            xmr: "4AEreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab"
+        };
+        
+        let activeAsset = 'ftc';
+        let supplies = { ftc: 982140, fnr: 394200, frst: 3110200 }; // Randomized initial drift
+
+        function setAsset(asset) {
+            activeAsset = asset;
+            document.querySelectorAll('.asset-btn').forEach(b => b.classList.remove('active', 'ftc', 'fnr', 'frst'));
+            document.getElementById(asset + '-tab').classList.add('active', asset);
+            document.getElementById('price-display').innerText = DATA[asset].price;
+            document.getElementById('asset-label').innerText = DATA[asset].label;
+        }
+
+        function setBridge(b) {
+            document.getElementById('d-btn').style.borderColor = b === 'doge' ? '#fff' : '#333';
+            document.getElementById('x-btn').style.borderColor = b === 'xmr' ? '#fff' : '#333';
+            document.getElementById('addr').innerText = ADDRS[b];
+        }
+
+        function copyAddr() {
+            navigator.clipboard.writeText(document.getElementById('addr').innerText);
+            alert("Bridge Address Copied.");
+        }
+
+        function initiateSwap() {
+            const amt = document.getElementById('buy-amt').value;
+            if(!amt) return;
+            alert(`Atomic Swap Locked: Requesting ${amt} ${activeAsset.toUpperCase()} Settlement.`);
+        }
+
+        // Live Ticker Logic
+        setInterval(() => {
+            for(let k in supplies) {
+                if(Math.random() > 0.8) supplies[k] -= Math.floor(Math.random() * 5);
+                const pct = (supplies[k] / DATA[k].total) * 100;
+                document.getElementById(k+'-rem').innerText = supplies[k].toLocaleString() + " REMAINING";
+                document.getElementById(k+'-bar').style.width = pct + "%";
+            }
+        }, 2000);
+
+        setAsset('ftc');
+    </script>
+</body>
+</html>

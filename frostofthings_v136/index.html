@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Frostofthings | Ghost-Node Injector</title>
+    <style>
+        :root { 
+            --bg: #000; --ice: #a5f2f3; --term: #00ff41; --warn: #ffcc00; --xmr: #ff6600;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        /* IMAGE 2: NEURAL TANGLE HD */
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.6; filter: contrast(1.4) brightness(0.6); }
+
+        #dashboard { width: 98%; height: 95vh; display: grid; grid-template-rows: 90px 1fr 60px; gap: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; border-bottom: 2px solid var(--ice); background: rgba(0,0,0,0.9); }
+        .main { display: grid; grid-template-columns: 450px 1fr 450px; gap: 20px; padding: 15px; overflow: hidden; }
+        .panel { background: rgba(5, 5, 10, 0.95); border: 1px solid rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; backdrop-filter: blur(40px); display: flex; flex-direction: column; }
+
+        /* SCANNER UI */
+        .scan-item { font-size: 0.55rem; padding: 8px 0; border-bottom: 1px solid #111; display: flex; justify-content: space-between; }
+        .status-scan { color: var(--warn); animation: blink 1s infinite; }
+        .status-exploited { color: var(--term); font-weight: bold; }
+        
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .action-btn { width: 100%; padding: 15px; background: var(--ice); border: none; border-radius: 8px; font-weight: 900; color: #000; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+        .action-btn:hover { background: var(--term); box-shadow: 0 0 20px var(--term); }
+
+        .tag { font-size: 0.6rem; color: #666; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 5px; }
+        #frostchat { margin-top: auto; font-size: 0.55rem; color: #444; height: 180px; border-top: 1px solid #222; padding-top: 10px; overflow-y: auto; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="tag">Ghost-Node Vulnerability Scanner</div>
+                <div style="font-size: 1.5rem; font-weight: 900; letter-spacing: 8px;">FROST<span style="color:var(--ice)">OFTHINGS</span></div>
+            </div>
+            <div style="text-align: right;">
+                <div class="tag" style="color:var(--term);">AM-BAND MESH BACKHAUL</div>
+                <div style="font-size: 1.8rem; font-weight: 900;" id="ghost-count">1,842 NODES</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="tag" style="color:var(--ice);">Live Hardware Scan</div>
+                <div id="scan-list" style="flex:1; overflow-y:auto; margin-bottom:15px;">
+                    </div>
+                <button class="action-btn" onclick="startScan()">START FULL MESH SCAN</button>
+            </div>
+
+            <div></div> <div class="panel">
+                <div class="tag" style="color:var(--warn);">Barebone Miner Injection</div>
+                <div style="background:rgba(255,204,0,0.05); padding:15px; border:1px solid var(--warn); border-radius:12px; font-size:0.6rem; color:var(--warn);">
+                    TARGET: [EXPLOITABLE_NODES_DETECTION]<br>
+                    BINARY: frost-barebone-v1.0.bin<br>
+                    STRATUM: drfrost.frostchain
+                </div>
+
+                <button class="action-btn" style="background:var(--term); margin-top:20px;" onclick="injectBarebone()">INJECT BAREBONE CLIENT</button>
+
+                <div id="frostchat">
+                    <div>> Node Identity: drfrost.frostchain</div>
+                    <div>> 40Hz Alzheimer's Flush: LOCKED.</div>
+                    <div>> Network: AM-Band Mesh (15.2 Miles).</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 0 40px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display:flex; align-items:center; justify-content:space-between; font-size: 0.5rem; color: #444;">
+            <div>FROSTOFTHINGS v136.0 // GHOST_NODE_INJECTOR // IOTA TANGLE HD</div>
+            <button id="aud-init" style="background:transparent; border:1px solid #333; color:#555; font-size:0.5rem; cursor:pointer;" onclick="initAud()">AUDIO PHASE LOCK</button>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx;
+        const routers = ["TP-LINK ARC-AX21", "GOOGLE WIFI GEN2", "NETGEAR Nighthawk", "ASUS RT-AX88U", "LINKSYS WRT3200"];
+
+        function startScan() {
+            log("Scanner: Initializing AM-Band signal... Pinging mesh peers...");
+            setInterval(() => {
+                const list = document.getElementById('scan-list');
+                const router = routers[Math.floor(Math.random() * routers.length)];
+                const item = document.createElement('div');
+                item.className = 'scan-item';
+                const vul = Math.random() > 0.7 ? "EXPLOITABLE" : "SECURE";
+                item.innerHTML = `<span>${router} [${(Math.random()*255).toFixed(0)}...${(Math.random()*255).toFixed(0)}]</span> <span class="${vul === 'EXPLOITABLE' ? 'status-scan' : ''}">${vul}</span>`;
+                list.prepend(item);
+                if(list.children.length > 20) list.removeChild(list.lastChild);
+            }, 2000);
+        }
+
+        function injectBarebone() {
+            log("Injection: Broadcasting frost-barebone.bin to all vulnerable nodes...");
+            setTimeout(() => {
+                log("Success: 12 new Ghost-Nodes handshaked. 13.37% XMR Shadow Diverted.");
+                let count = parseInt(document.getElementById('ghost-count').innerText.replace(',', ''));
+                document.getElementById('ghost-count').innerText = (count + 12).toLocaleString() + " NODES";
+            }, 1500);
+        }
+
+        function initAud() {
+            if(audioCtx) return;
+            audioCtx = new AudioContext();
+            const g = audioCtx.createGain(); g.gain.value = 0.15; g.connect(audioCtx.destination);
+            const o1 = audioCtx.createOscillator(); o1.frequency.value = 528; o1.connect(g); o1.start();
+            const o2 = audioCtx.createOscillator(); o2.frequency.value = 528 + 11.11; o2.connect(g); o2.start();
+            const o3 = audioCtx.createOscillator(); o3.frequency.value = 528 + 40; o3.connect(g); o3.start();
+            document.getElementById('aud-init').innerText = "AUDIO_PHASE_LOCKED";
+            document.getElementById('aud-init').style.color = "var(--term)";
+        }
+
+        function log(m) {
+            const chat = document.getElementById('frostchat');
+            const d = document.createElement('div');
+            d.innerText = `> ${m}`;
+            if(m.includes('Success')) d.style.color = 'var(--term)';
+            chat.prepend(d);
+        }
+
+        // IMAGE 2: NEURAL TANGLE HD
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let pts = [];
+        function initT() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; pts = []; for(let i=0; i<105; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.25, vy: (Math.random()-0.5)*0.25 }); }
+        function drawT() { ctx.clearRect(0,0,canvas.width,canvas.height); pts.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; pts.slice(i+1).forEach(p2 => { const d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d < 180) { ctx.strokeStyle = `rgba(165,242,243,${0.2 * (1-d/200)})`; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); } }); }); requestAnimationFrame(drawT); }
+        initT(); drawT(); window.onresize = initT;
+    </script>
+</body>
+</html>

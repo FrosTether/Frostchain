@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kane | Frost Exchange</title>
+    <style>
+        :root { --bg: #030303; --btc: #f7931a; --bch: #0ac18e; --kane: #d400ff; --term: #33ff00; --frst: #ff00ff; --gold: #ffd700; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
+        
+        #app { display: grid; grid-template-rows: 60px 1fr 120px; height: 100%; max-width: 800px; margin: 0 auto; border-left: 1px solid #222; border-right: 1px solid #222; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 2px solid var(--kane); background: #000; }
+
+        .main { padding: 15px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        /* WALLET SECTION */
+        .wallet-panel { display: flex; flex-direction: column; gap: 10px; }
+        .asset-card { background: #111; border: 1px solid #333; padding: 12px; border-left: 4px solid #444; }
+        .val { font-size: 1.2rem; font-weight: bold; }
+        .lbl { font-size: 0.6rem; color: #888; text-transform: uppercase; }
+
+        /* TRADE SECTION */
+        .trade-panel { background: #0a0a0a; border: 1px solid #222; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        select, input { background: #000; border: 1px solid #444; color: #fff; padding: 10px; font-family: inherit; width: 100%; box-sizing: border-box; }
+        
+        .btn-trade { background: var(--term); color: #000; border: none; padding: 15px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .btn-trade:active { transform: scale(0.98); }
+
+        /* LOG */
+        .log-box { font-size: 0.65rem; color: #aaa; padding: 10px 20px; background: #000; border-top: 1px solid #333; overflow-y: auto; }
+        .success { color: var(--term); }
+
+        @media (max-width: 600px) { .main { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div>
+                <div style="font-weight:bold; font-size:1.1rem; color:var(--kane);">KANEFROSTCHAIN</div>
+                <div style="font-size:0.6rem; color:#666;">EXCHANGE TERMINAL v3.0</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:0.6rem; color:#888;">PEG: 50k DOGE</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="wallet-panel">
+                <div class="asset-card" style="border-color: var(--btc);">
+                    <div class="lbl">Wrapped Frost BTC (wfBTC)</div>
+                    <div class="val" id="wfbtc-bal">1.04200000</div>
+                </div>
+                <div class="asset-card" style="border-color: var(--bch);">
+                    <div class="lbl">Wrapped Frost BCH (wfBCH)</div>
+                    <div class="val" id="wfbch-bal">12.50000000</div>
+                </div>
+                <div class="asset-card" style="border-color: var(--gold);">
+                    <div class="lbl">Frostcoin (FTC)</div>
+                    <div class="val" id="ftc-bal">11,870,000.00</div>
+                </div>
+                <div class="asset-card" style="border-color: var(--fnr);">
+                    <div class="lbl">Reserve (FNR)</div>
+                    <div class="val" id="fnr-bal">4,412,100.00</div>
+                </div>
+                <div class="asset-card" style="border-color: var(--frst);">
+                    <div class="lbl">Governance (FRST)</div>
+                    <div class="val" id="frst-bal">157,079.63</div>
+                </div>
+            </div>
+
+            <div class="trade-panel">
+                <div class="lbl">SWAP ASSETS</div>
+                <select id="pay-asset">
+                    <option value="wfbtc">wfBTC</option>
+                    <option value="wfbch">wfBCH</option>
+                    <option value="ftc">FTC</option>
+                </select>
+                <div class="lbl">RECEIVE</div>
+                <select id="get-asset">
+                    <option value="ftc">Frostcoin (FTC)</option>
+                    <option value="fnr">Reserve (FNR)</option>
+                    <option value="frst">Governance (FRST)</option>
+                </select>
+                <input type="number" id="trade-amt" placeholder="Amount">
+                <div id="est-receive" style="font-size:0.7rem; color:var(--term);">Estimated Receive: 0.00</div>
+                <button class="btn-trade" onclick="executeTrade()">Execute Exchange</button>
+            </div>
+        </div>
+
+        <div class="log-box" id="log">
+            <div class="log-line">> Exchange Engine Online.</div>
+            <div class="log-line">> Liquidity Pools Synced with Newkirk Stratum.</div>
+        </div>
+    </div>
+
+    <script>
+        let balances = {
+            wfbtc: 1.042, wfbch: 12.5, ftc: 11870000, fnr: 4412100, frst: 157079.63
+        };
+
+        const prices = {
+            ftc: 50000, // Relative to DOGE peg
+            fnr: 150000,
+            frst: 1000000,
+            wfbtc: 25000000,
+            wfbch: 250000
+        };
+
+        function updateUI() {
+            for(let key in balances) {
+                document.getElementById(key+'-bal').innerText = balances[key].toLocaleString(undefined, {minimumFractionDigits: key === 'ftc' ? 2 : 8});
+            }
+        }
+
+        function executeTrade() {
+            const pay = document.getElementById('pay-asset').value;
+            const get = document.getElementById('get-asset').value;
+            const amt = parseFloat(document.getElementById('trade-amt').value);
+
+            if(!amt || balances[pay] < amt) { alert("Insufficient Balance"); return; }
+
+            // Simple AMM Math: (Pay Value in DOGE / Get Value in DOGE) * Amt
+            const payValue = amt * prices[pay];
+            const getAmt = payValue / prices[get];
+
+            balances[pay] -= amt;
+            balances[get] += getAmt;
+
+            logIt(`Swapped ${amt} ${pay.toUpperCase()} for ${getAmt.toFixed(4)} ${get.toUpperCase()}`, "success");
+            updateUI();
+        }
+
+        function logIt(msg, type="") {
+            const div = document.createElement('div');
+            div.className = 'log-line ' + type;
+            div.innerText = "> " + msg;
+            const box = document.getElementById('log');
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>

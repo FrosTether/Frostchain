@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostSweep | Withdrawal Finalized</title>
+    <style>
+        :root { 
+            --bg: #000; --ice: #a5f2f3; --term: #00ff41; --xmr: #ff6600; 
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.6; filter: contrast(1.4) brightness(0.6); }
+
+        .confirmation-box { 
+            width: 500px; padding: 40px; background: rgba(5, 5, 10, 0.95); 
+            border: 2px solid var(--term); border-radius: 24px; text-align: center;
+            box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); backdrop-filter: blur(40px);
+        }
+        
+        .success-icon { font-size: 3rem; color: var(--term); margin-bottom: 20px; }
+        .amount { font-size: 2.5rem; font-weight: 900; color: #fff; margin: 15px 0; }
+        .sub-addr { font-size: 0.55rem; color: #666; word-break: break-all; margin-top: 20px; line-height: 1.4; padding: 10px; background: #000; border-radius: 8px; }
+        .tag { font-size: 0.6rem; color: #444; letter-spacing: 3px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div class="confirmation-box">
+        <div class="success-icon">✓</div>
+        <div class="tag" style="color:var(--term);">Withdrawal Successful</div>
+        <div class="amount">84.1215 XMR</div>
+        <div class="tag">Settled to Subaddress</div>
+        <div class="sub-addr">867chP2RA9D9xd2tHzxB8L4JfE2Jhdd5FPEwC56HJhmyA7x3EEnuLpGUerQsN9kqQ9A7e7rXQvqZaCNsTsJeBsAxV2B5wxA</div>
+        
+        <div style="margin-top: 30px; font-size: 0.6rem; color: var(--ice);">
+            IDENTITY: drfrost.frostchain<br>
+            STATUS: PHASE_LOCKED_IRREVERSIBLE
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let pts = [];
+        function initT() { 
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight; 
+            pts = []; for(let i=0; i<100; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.2, vy: (Math.random()-0.5)*0.2 }); 
+        }
+        function drawT() { 
+            ctx.clearRect(0,0,canvas.width,canvas.height); 
+            pts.forEach((p, i) => { 
+                p.x += p.vx; p.y += p.vy; 
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; 
+                pts.slice(i+1).forEach(p2 => { 
+                    const d = Math.hypot(p.x-p2.x, p.y-p2.y); 
+                    if(d < 180) { ctx.strokeStyle = `rgba(165,242,243,${0.2 * (1-d/180)})`; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); } 
+                }); 
+            }); 
+            requestAnimationFrame(drawT); 
+        }
+        initT(); drawT();
+    </script>
+</body>
+</html>

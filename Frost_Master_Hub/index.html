@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>FROST_MINER // MASTER_HUB</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#000;--blue:#00e0ff;--gold:#ffd700;--pink:#ff69b4;--violet:#4b0082;}
+        body, html{margin:0;padding:0;width:100%;height:100%;background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;overflow-x:hidden;}
+        #master-deck{padding:40px;display:flex;flex-direction:column;align-items:center;min-height:100vh;background:radial-gradient(circle at center, #1a0033 0%, #000 80%);}
+        .header{text-align:center;margin-bottom:50px;}
+        .title{font-size:32px;letter-spacing:12px;color:var(--blue);text-shadow:0 0 20px var(--blue);}
+        .grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px;width:100%;max-width:1000px;}
+        .deck-card{background:rgba(0,0,0,0.8);border:1px solid #222;padding:30px;border-radius:20px;text-decoration:none;transition:0.4s;display:flex;flex-direction:column;justify-content:center;backdrop-filter:blur(10px);}
+        .deck-card:hover{border-color:var(--pink);box-shadow:0 0 40px rgba(255,105,180,0.2);transform:translateY(-5px);}
+        .card-title{font-size:18px;color:var(--gold);margin-bottom:10px;letter-spacing:3px;}
+        .card-desc{font-size:10px;color:#555;text-transform:uppercase;}
+        .footer-stats{margin-top:auto;padding-top:50px;text-align:center;font-size:11px;color:#333;letter-spacing:2px;}
+        .pulse{animation:p 2s infinite;}
+        @keyframes p{0%,100%{opacity:1;}50%{opacity:0.4;}}
+    </style>
+</head>
+<body>
+    <div id="master-deck">
+        <div class="header">
+            <div class="title">FROST_SYSTEMS_v114</div>
+            <div style="font-size:10px;color:var(--pink);margin-top:10px;letter-spacing:5px;">drfrost.frostchain // SOVEREIGN_HUB</div>
+        </div>
+
+        <div class="grid">
+            <a href="https://miracle-node.surge.sh" class="deck-card" style="border-color:var(--pink);">
+                <div class="card-title">MIRACLE_MINER</div>
+                <div class="card-desc">40Hz_Gamma // Rez_HD_Tangle // Sound_Engine</div>
+            </a>
+            <a href="https://frostscan.surge.sh" class="deck-card">
+                <div class="card-title">FROST_SCAN</div>
+                <div class="card-desc">Public_Ledger // Block_Explorer // Transparency</div>
+            </a>
+            <a href="https://frostislinux.surge.sh" class="deck-card">
+                <div class="card-title">FROST_IS_LINUX</div>
+                <div class="card-desc">Kernel_Portal // System_Integration // Root</div>
+            </a>
+            <a href="https://graysonswallet.surge.sh" class="deck-card">
+                <div class="card-title">GRAYSONS_WALLET</div>
+                <div class="card-desc">Private_Vault // Liquidity_Monitor // $2.10M</div>
+            </a>
+            <a href="https://frostgen.surge.sh" class="deck-card">
+                <div class="card-title">WALLET_GENERATOR</div>
+                <div class="card-desc">Quantum_Address_Gen // Keys_Entrainment</div>
+            </a>
+        </div>
+
+        <div class="footer-stats">
+            <span class="pulse">NETWORK_LIVE</span><br><br>
+            FTC: 12,370,000 | FNR: 4,412,100 | FRST: 13.37% | LIQ: $2.10M
+        </div>
+    </div>
+</body>
+</html>

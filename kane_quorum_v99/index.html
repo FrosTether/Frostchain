@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kane Frostchain | Drake Quorum</title>
+    <style>
+        :root { 
+            --bg: #020205; --ice: #a5f2f3; --term: #00ff41; --fail: #ff3333; 
+            --gold: #ffd700; --plat: #e5e4e2; --dq-glow: 0 0 20px rgba(0, 255, 65, 0.4);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        body { 
+            background: var(--bg); color: var(--ice); font-family: 'Inter', 'Courier New', monospace; 
+            height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* HDR BACKGROUND */
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.5; filter: blur(1px); }
+        .grid-overlay { 
+            position: fixed; inset: 0; z-index: -1; 
+            background-image: linear-gradient(rgba(0,255,65,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,65,0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* PIN ENCLAVE STYLED */
+        #pin-gate {
+            position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.95);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(20px);
+        }
+        .glass-box { 
+            background: rgba(15, 15, 25, 0.8); border: 1px solid rgba(165, 242, 243, 0.2); 
+            padding: 40px; border-radius: 20px; text-align: center; width: 360px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .pin-display { font-size: 2.5rem; letter-spacing: 12px; margin-bottom: 30px; color: #fff; height: 50px; text-shadow: var(--dq-glow); }
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .num-btn { 
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); 
+            color: #fff; padding: 20px; cursor: pointer; border-radius: 12px; font-size: 1.2rem; transition: 0.2s;
+        }
+        .num-btn:hover { background: var(--ice); color: #000; box-shadow: 0 0 15px var(--ice); }
+
+        /* MAIN UI */
+        #dashboard { display: none; width: 95%; max-width: 1400px; height: 90vh; display: none; grid-template-rows: auto 1fr; gap: 30px; position: relative; }
+        .header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .main-grid { display: grid; grid-template-columns: 400px 1fr 400px; gap: 30px; overflow: hidden; }
+
+        /* DATA CARDS */
+        .glass-panel { 
+            background: rgba(10, 15, 25, 0.7); border: 1px solid rgba(255,255,255,0.1); 
+            padding: 30px; border-radius: 24px; backdrop-filter: blur(10px); display: flex; flex-direction: column;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+        .dq-indicator { 
+            background: rgba(0, 255, 65, 0.1); border: 1px solid var(--term); 
+            padding: 10px; border-radius: 8px; font-size: 0.7rem; color: var(--term); margin-bottom: 20px;
+            text-align: center; letter-spacing: 1px; box-shadow: var(--dq-glow);
+        }
+
+        .liq-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05); 
+        }
+        .btn-inject { 
+            background: var(--term); color: #000; border: none; padding: 10px 20px; 
+            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.75rem;
+            transition: 0.3s;
+        }
+        .btn-inject:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--term); }
+
+        .stat-large { font-size: 3rem; font-weight: bold; color: #fff; margin: 10px 0; }
+        .lbl-cap { font-size: 0.65rem; color: #666; letter-spacing: 2px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <div class="grid-overlay"></div>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="pin-gate">
+        <div class="glass-box">
+            <div id="gate-title" style="font-size: 0.7rem; color: #888; margin-bottom: 15px; letter-spacing: 3px;">SYSTEM_ENCLAVE_V99</div>
+            <div class="pin-display" id="pin-dots">••••••</div>
+            <div class="numpad" id="numpad"></div>
+            <button class="num-btn" style="grid-column: span 3; margin-top: 15px; font-size: 0.9rem; font-weight: bold;" id="gate-btn" onclick="submitPIN()">MOUNT ENCLAVE</button>
+            <div id="pin-status" style="margin-top: 15px; font-size: 0.6rem; color: #444;">ID: drfrost.frostchain detected</div>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="lbl-cap">Consensus Engine</div>
+                <div style="font-size: 1.8rem; font-weight: bold; letter-spacing: 8px;">KANE<span style="color:var(--term)">FROSTCHAIN</span></div>
+            </div>
+            <div style="text-align: right;">
+                <div class="lbl-cap">Ecosystem AUM</div>
+                <div class="stat-large" id="aum-val" style="font-size: 2.2rem; margin: 0;">$102,450,200</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="glass-panel">
+                <div class="dq-indicator">DRAKE QUORUM x1.05 ACTIVE</div>
+                <div class="lbl-cap">Liquidity Injection</div>
+                <div class="liq-item">
+                    <span>wBTC <span style="font-size:0.6rem; color:#666;">ASIC_01</span></span>
+                    <button class="btn-inject" onclick="inject('wBTC')">INJECT</button>
+                </div>
+                <div class="liq-item">
+                    <span>wBCH <span style="font-size:0.6rem; color:#666;">ASIC_02</span></span>
+                    <button class="btn-inject" onclick="inject('wBCH')">INJECT</button>
+                </div>
+                <div class="liq-item">
+                    <span>FTC <span style="font-size:0.6rem; color:#666;">LIQUID</span></span>
+                    <button class="btn-inject" onclick="inject('FTC')">INJECT</button>
+                </div>
+                <div style="margin-top:auto; font-size:0.6rem; color:#444;">SECURED_BY: DRFROST_ENCLAVE</div>
+            </div>
+
+            <div></div> <div class="glass-panel">
+                <div class="lbl-cap">Platinum Governance</div>
+                <div class="stat-large" style="color:var(--plat);">$1,842.10</div>
+                <div class="lbl-cap" style="margin-top:30px;">Sub Zero Tether</div>
+                <div class="stat-large" style="color:var(--ice);">5,000,000</div>
+                
+                <div style="margin-top:auto; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;">
+                    <div id="log" style="font-size:0.6rem; color:#555; height:100px; overflow:hidden;">
+                        <div>> Drake Quorum verified consensus...</div>
+                        <div>> Efficiency multiplier 1.05x applied...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPin = "";
+        let masterPin = localStorage.getItem('frost_pin') || "000000"; 
+        
+        function initNumpad() {
+            const pad = document.getElementById('numpad');
+            for(let i=1; i<=9; i++) {
+                const b = document.createElement('button');
+                b.className = 'num-btn'; b.innerText = i; b.onclick = () => { currentPin += i; updateDots(); };
+                pad.appendChild(b);
+            }
+            const z = document.createElement('button'); z.className = 'num-btn'; z.innerText = '0'; z.onclick = () => { currentPin += '0'; updateDots(); };
+            const c = document.createElement('button'); c.className = 'num-btn'; c.innerText = 'C'; c.onclick = () => { currentPin = ""; updateDots(); };
+            pad.appendChild(c); pad.appendChild(z);
+        }
+
+        function updateDots() { document.getElementById('pin-dots').innerText = "•".repeat(currentPin.length).padEnd(6, ' '); }
+
+        function submitPIN() {
+            if (currentPin === masterPin) {
+                document.getElementById('pin-gate').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('pin-gate').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'grid';
+                    initTangle(); drawTangle();
+                }, 500);
+            } else {
+                document.getElementById('pin-status').innerText = "ACCESS_DENIED";
+                currentPin = ""; updateDots();
+            }
+        }
+
+        function inject(type) {
+            const log = document.getElementById('log');
+            const d = document.createElement('div');
+            // DRAKE QUORUM x1.05 CALC
+            const base = type === 'wBTC' ? 95000 : (type === 'wBCH' ? 450 : 31);
+            const boosted = (base * 1.05).toFixed(2);
+            d.innerText = `> ${type} Injection: ${boosted} (DQ Adjusted)`;
+            log.prepend(d);
+        }
+
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function initTangle() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            for(let i=0; i<60; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3 });
+        }
+        function drawTangle() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1;
+                if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                particles.slice(i+1).forEach(p2 => {
+                    if(Math.hypot(p.x-p2.x, p.y-p2.y) < 180) {
+                        ctx.strokeStyle = 'rgba(0, 255, 65, 0.1)';
+                        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+                    }
+                });
+            });
+            requestAnimationFrame(drawTangle);
+        }
+
+        initNumpad();
+        window.onresize = initTangle;
+    </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FROSTBASE // VOLUNTARYISTJ</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        :root { --bg: #050505; --cyan: #00eaff; --green: #00ff41; --panel: #111; }
+        body { background: var(--bg); color: var(--green); font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .container { border: 1px solid var(--cyan); padding: 30px; background: var(--panel); width: 450px; text-align: center; }
+        h1 { color: var(--cyan); margin: 0 0 10px 0; text-transform: uppercase; }
+        .target-box { background: #000; border: 1px solid #333; padding: 15px; margin: 20px 0; font-size: 0.8rem; color: #888; word-break: break-all; }
+        button { background: rgba(0, 234, 255, 0.1); border: 1px solid var(--cyan); color: var(--cyan); padding: 15px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: var(--cyan); color: #000; }
+        .status { margin-top: 15px; font-weight: bold; }
+        .match { color: var(--green); }
+        .mismatch { color: #ff3333; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Identity Link</h1>
+        <div>Voluntaryistj.base.eth</div>
+
+        <div class="target-box">
+            <strong>TARGET ADDRESS:</strong><br>
+            <span style="color:#fff">0x6556fBB94508bFa8CE919f691ef71d4181D36D20</span>
+        </div>
+
+        <div id="connection-status" class="status" style="color:#666">WAITING FOR METAMASK...</div>
+        
+        <button id="btn-import">IMPORT WALLET</button>
+    </div>
+
+<script>
+    const TARGET = "0x6556fBB94508bFa8CE919f691ef71d4181D36D20";
+    const BASE_ID = '0x2105'; // Chain ID 8453
+
+    const btn = document.getElementById('btn-import');
+    const status = document.getElementById('connection-status');
+
+    btn.onclick = async () => {
+        if (!window.ethereum) return status.innerText = "METAMASK NOT FOUND";
+        
+        try {
+            btn.innerText = "VERIFYING...";
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            await provider.send("eth_requestAccounts", []);
+            
+            // 1. FORCE BASE NETWORK
+            try {
+                await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE_ID }] });
+            } catch (e) {
+                // Auto-Add Base if missing
+                if(e.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: BASE_ID, chainName: 'Base Mainnet',
+                            rpcUrls: ['https://mainnet.base.org'],
+                            nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                            blockExplorerUrls: ['https://basescan.org']
+                        }]
+                    });
+                }
+            }
+
+            // 2. CHECK ADDRESS MATCH
+            const signer = provider.getSigner();
+            const userAddr = await signer.getAddress();
+
+            if (userAddr.toLowerCase() === TARGET.toLowerCase()) {
+                status.innerHTML = "<span class='match'>[SUCCESS] IDENTITY VERIFIED</span>";
+                btn.innerText = "WALLET IMPORTED";
+                btn.style.background = "#00ff41";
+                btn.style.color = "#000";
+                btn.disabled = true;
+            } else {
+                status.innerHTML = "<span class='mismatch'>[WARNING] ADDRESS MISMATCH</span><br><span style='font-size:0.7em'>Connected: " + userAddr.substring(0,6) + "...</span>";
+                btn.innerText = "RETRY IMPORT";
+            }
+
+        } catch (e) {
+            status.innerText = "CONNECTION FAILED";
+            console.error(e);
+        }
+    };
+</script>
+</body>
+</html>

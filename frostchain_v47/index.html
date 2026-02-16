@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frostchain | v47 Triple Miner</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --fnr: #00d2ff; --btc: #f7931a; --cyan: #00ffff; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #dash { display: grid; grid-template-columns: 340px 1fr 340px; height: 100vh; position: relative; }
+        #tangle-canvas { position: fixed; inset: 0; z-index: 5; filter: contrast(1.8) brightness(1.2); opacity: 0.3; }
+
+        .panel { background: rgba(5,5,5,0.96); border: 1px solid #222; z-index: 50; padding: 15px; overflow-y: auto; backdrop-filter: blur(12px); }
+        .header { grid-column: 1 / -1; height: 60px; background: #000; border-bottom: 2px solid var(--term); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 100; }
+        
+        .stat-box { background: #080808; border: 1px solid #222; padding: 15px; margin-bottom: 12px; border-left: 4px solid var(--term); }
+        .val { font-size: 1.5rem; font-weight: bold; color: #fff; }
+        .lbl { font-size: 0.6rem; color: #666; text-transform: uppercase; letter-spacing: 2px; }
+
+        .active-pulse { color: var(--term); animation: pulse 2s infinite; font-size: 0.6rem; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        button { width: 100%; padding: 12px; margin-bottom: 8px; background: #000; border: 1px solid #333; color: #666; font-weight: bold; cursor: pointer; text-align: left; font-family: inherit; }
+        button.active { border-color: var(--cyan); color: var(--cyan); }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dash">
+        <div class="header">
+            <div style="display:flex; gap:20px; align-items:center;">
+                <span style="color:var(--term); font-weight:bold;">FROSTOISE_KERNEL_v47</span>
+                <span class="active-pulse">TRIPLE_MINER_ACTIVE</span>
+            </div>
+            <div style="font-size:0.7rem; color:var(--gold);">IDENTITY: drfrost.frostchain</div>
+        </div>
+
+        <div class="panel">
+            <div class="stat-box" style="border-left-color: var(--btc);">
+                <div class="lbl">SHA-256 REDIRECT (BTC/BCH)</div>
+                <div class="val" id="btc-h">42.8 EH/s</div>
+            </div>
+
+            <div class="stat-box" style="border-left-color: var(--gold);">
+                <div class="lbl">FTC MERGED WORK</div>
+                <div class="val" id="ftc-h">1.2 PH/s</div>
+            </div>
+
+            <div class="lbl" style="margin: 15px 0 10px 0;">FREQUENCY MODES</div>
+            <button id="btn-alpha" onclick="setMode('alpha')">ALPHA [40Hz] ALZHEIMER'S</button>
+            <button id="btn-theta" onclick="setMode('theta')">THETA [6.39Hz] FLOW</button>
+            <button id="btn-delta" onclick="setMode('delta')">DELTA [PI Hz] DEEP SYNC</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; height:100%; z-index:60; padding:20px;">
+            <div style="background:#0a0a0a; border:1px solid #333; padding:20px; border-left:4px solid var(--gold);">
+                <div class="lbl" style="color:var(--gold)">13.37% GENESIS PRE-MINE [FTC]</div>
+                <div style="font-size:2rem; font-weight:bold; color:#fff;">11,870,000.00</div>
+                <div style="font-size:0.55rem; color:#444;">-1M ICO | -500K AIRDROPS APPLIED</div>
+            </div>
+
+            <div style="background:#0a0a0a; border:1px solid #333; padding:20px; border-left:4px solid var(--fnr); margin-top:20px;">
+                <div class="lbl" style="color:var(--fnr)">13.37% GENESIS PRE-MINE [FNR]</div>
+                <div style="font-size:2rem; font-weight:bold; color:#fff;">4,412,100.00</div>
+                <div style="font-size:0.55rem; color:#444;">HARD-LOCKED TO BLOCK 0</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="lbl">BLOCK_SYNC_CLOCK</div>
+            <div style="font-size:3rem; text-align:center; padding:20px 0;" id="timer">300</div>
+            
+            <div class="lbl">BITCHAT_XMR_FEED</div>
+            <div id="log" style="height:300px; background:#000; border:1px solid #222; padding:10px; font-size:0.65rem; overflow-y:auto; margin-top:10px;">
+                <div style="color:var(--term)">> Triple-Miner Bridge Restored.</div>
+                <div style="color:var(--cyan)">> Grayson API synced: drfrost.dat</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let t = 300;
+        setInterval(() => {
+            t--;
+            document.getElementById('timer').innerText = t;
+            if(t <= 0) t = 300;
+            document.getElementById('btc-h').innerText = (42 + Math.random()).toFixed(1) + " EH/s";
+        }, 1000);
+
+        function setMode(m) {
+            document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-'+m).classList.add('active');
+            alert("Mode Switched: " + m.toUpperCase());
+        }
+    </script>
+</body>
+</html>

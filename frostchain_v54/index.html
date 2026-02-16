@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frostchain | v54 Stable</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --fnr: #00d2ff; --btc: #f7931a; --cyan: #00ffff; --sol: #9945ff; --poh: #14f195; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        /* OPTIMIZED CANVAS */
+        #tangle-canvas { position: fixed; inset: 0; z-index: 5; cursor: crosshair; opacity: 0.6; }
+
+        /* UI LAYOUT */
+        #dash { display: grid; grid-template-columns: 340px 1fr 340px; height: 100vh; position: relative; z-index: 100; transition: opacity 0.3s; }
+        
+        /* LIGHTER PANELS (No Blur) */
+        .panel { background: rgba(10,10,10,0.95); border: 1px solid #222; padding: 15px; overflow-y: auto; }
+        .header { grid-column: 1 / -1; height: 50px; background: #000; border-bottom: 2px solid var(--term); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 200; }
+
+        /* MODULES */
+        .stat-box { background: #080808; border: 1px solid #333; padding: 10px; margin-bottom: 8px; border-left: 3px solid var(--term); }
+        .val { font-size: 1.1rem; font-weight: bold; color: #fff; }
+        .lbl { font-size: 0.6rem; color: #888; text-transform: uppercase; }
+        
+        /* FREQ BUTTONS */
+        .btn-mode { width: 100%; padding: 12px; margin-bottom: 5px; background: #000; border: 1px solid #333; color: #666; font-weight: bold; cursor: pointer; text-align: left; display: flex; justify-content: space-between; }
+        .btn-mode.active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+
+        /* START SCREEN (CRITICAL) */
+        #start-gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        
+        /* FULLSCREEN */
+        body.fs-active #dash { opacity: 0; pointer-events: none; }
+        .fs-toggle { position: fixed; bottom: 20px; right: 20px; z-index: 300; background: #000; border: 1px solid #444; color: #888; padding: 8px 15px; font-size: 0.7rem; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+    <input type="file" id="local-file" accept="audio/*" style="display:none" onchange="handleFile(this.files)">
+
+    <div id="start-gate" onclick="startSystem()">
+        <div style="text-align:center; border: 1px solid var(--term); padding: 30px; width: 80%; max-width: 400px;">
+            <h1 style="color:var(--term); margin:0;">MIRACLE NODE v54</h1>
+            <p style="color:var(--gold); font-size:0.8rem; margin-top:10px;">[ TAP TO ENGAGE ]</p>
+            <div style="font-size:0.6rem; color:#555; margin-top:10px;">OPTIMIZED FOR MOBILE STABILITY</div>
+        </div>
+    </div>
+
+    <button class="fs-toggle" onclick="toggleFS()">[ IMMERSIVE ]</button>
+
+    <div id="dash">
+        <div class="header">
+            <div style="font-weight:bold;">FROSTOISE <span style="color:var(--sol)">v54 STABLE</span></div>
+            <div style="font-size:0.7rem;">AUDIO: <span id="audio-stat" style="color:#666;">STANDBY</span></div>
+        </div>
+
+        <div class="panel">
+            <div class="stat-box" style="border-left-color: var(--btc);">
+                <div class="lbl">SHA-256 (BTC/BCH)</div>
+                <div class="val" id="btc-h">0.0 EH/s</div>
+            </div>
+            <div class="stat-box" style="border-left-color: var(--sol);">
+                <div class="lbl">SEALEVEL TPS</div>
+                <div class="val" id="tps">0</div>
+            </div>
+
+            <div class="lbl" style="margin: 20px 0 5px 0;">AUDIO ENGINE</div>
+            <button id="btn-alpha" class="btn-mode" onclick="setFreq('alpha')">ALPHA 40Hz</button>
+            <button id="btn-theta" class="btn-mode" onclick="setFreq('theta')">THETA 6.39Hz</button>
+            <button id="btn-delta" class="btn-mode" onclick="setFreq('delta')">DELTA PI Hz</button>
+
+            <div style="margin-top:20px; padding-top:10px; border-top:1px solid #333;">
+                <div id="track-name" style="font-size:0.6rem; color:var(--sol); margin-bottom:5px;">NO FILE</div>
+                <button onclick="document.getElementById('local-file').click()" style="width:100%; background:#111; color:#fff; border:1px solid #444; padding:10px; font-size:0.7rem;">LOAD MUSIC FILE</button>
+            </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; background:rgba(0,0,0,0.8); z-index:60; border-left:1px solid #222; border-right:1px solid #222;">
+            <div id="chat-log" style="flex:1; padding:15px; font-size:0.7rem; overflow-y:auto; color:#ccc;">
+                <div style="color:var(--term)">> System Standing By...</div>
+            </div>
+            <input type="text" style="background:#000; border:none; border-top:1px solid #333; padding:15px; color:#fff; font-family:inherit;" placeholder="Command..." onkeydown="if(event.key==='Enter') send(this)">
+        </div>
+
+        <div class="panel">
+            <div class="stat-box" style="border-left-color: var(--gold);">
+                <div class="lbl">FTC (wallet.dat)</div>
+                <div class="val">11,870,000.00</div>
+            </div>
+            <div class="stat-box" style="border-left-color: var(--fnr);">
+                <div class="lbl">FNR (Reserve)</div>
+                <div class="val">4,412,100.00</div>
+            </div>
+            <div style="text-align:center; padding:20px; border:1px solid #222; margin-top:20px;">
+                <div class="lbl">BLOCK TIMER</div>
+                <div style="font-size:2.5rem; color:#fff;" id="timer">300</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let actx, oscL, oscR, analyser, source;
+        let isRunning = false;
+
+        function startSystem() {
+            document.getElementById('start-gate').style.display = 'none';
+            document.getElementById('chat-log').innerHTML += '<div style="color:var(--term)">> Frostoise Kernel v54 Engaged.</div>';
+            
+            // Init Audio Context safely
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                actx = new AudioContext();
+                analyser = actx.createAnalyser();
+                analyser.fftSize = 256;
+                document.getElementById('audio-stat').innerText = "READY";
+            } catch(e) {
+                alert("Audio Engine Failed: " + e);
+            }
+
+            isRunning = true;
+            initTangle(); // Only start canvas loop NOW
+            startStats(); // Only start stats loop NOW
+        }
+
+        function setFreq(mode) {
+            if(!actx) return;
+            if(actx.state === 'suspended') actx.resume();
+            if(oscL) { try{ oscL.stop(); oscR.stop(); }catch(e){} }
+
+            document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-'+mode).classList.add('active');
+
+            let f = 432, diff = 0;
+            if(mode === 'alpha') diff = 40;
+            if(mode === 'theta') diff = 6.39;
+            if(mode === 'delta') diff = Math.PI;
+
+            oscL = actx.createOscillator(); oscR = actx.createOscillator();
+            const g = actx.createGain(); g.gain.value = 0.1;
+            
+            oscL.frequency.value = f; oscR.frequency.value = f + diff;
+            oscL.connect(g).connect(analyser); // Visualize it!
+            oscR.connect(g).connect(analyser);
+            g.connect(actx.destination);
+            
+            oscL.start(); oscR.start();
+        }
+
+        function handleFile(files) {
+            if(!files.length) return;
+            if(source) { try{ source.stop(); }catch(e){} }
+            
+            const file = files[0];
+            document.getElementById('track-name').innerText = file.name.substring(0,20).toUpperCase();
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                actx.decodeAudioData(e.target.result, function(buffer) {
+                    if(source) source.disconnect();
+                    source = actx.createBufferSource();
+                    source.buffer = buffer;
+                    source.loop = true;
+                    source.connect(analyser);
+                    analyser.connect(actx.destination);
+                    source.start(0);
+                    document.getElementById('audio-stat').innerText = "PLAYING";
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function initTangle() {
+            const canvas = document.getElementById('tangle-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            
+            // Reduced node count for stability (45 instead of 70)
+            let nodes = Array(45).fill().map(()=>({
+                x:Math.random()*canvas.width, y:Math.random()*canvas.height, 
+                vx:(Math.random()-.5), vy:(Math.random()-.5),
+                clr: ["#00ff41", "#00ffff", "#9945ff"][Math.floor(Math.random()*3)]
+            }));
+            
+            const dataArray = new Uint8Array(analyser ? analyser.frequencyBinCount : 0);
+
+            function loop() {
+                if(!isRunning) return;
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                
+                let bass = 0;
+                if(analyser) {
+                    analyser.getByteFrequencyData(dataArray);
+                    bass = dataArray[10] || 0;
+                }
+                const boost = bass / 255;
+
+                ctx.lineWidth = 1 + (boost * 3);
+                
+                for(let i=0; i<nodes.length; i++) {
+                    let n = nodes[i];
+                    n.x += n.vx * (1 + boost); 
+                    n.y += n.vy * (1 + boost);
+                    
+                    if(n.x<0||n.x>canvas.width)n.vx*=-1; 
+                    if(n.y<0||n.y>canvas.height)n.vy*=-1;
+
+                    // Optimized drawing (less nested loops)
+                    for(let j=i+1; j<nodes.length; j++) {
+                        let n2 = nodes[j];
+                        let dx = n.x - n2.x;
+                        let dy = n.y - n2.y;
+                        let d = Math.sqrt(dx*dx + dy*dy); // Faster than hypot
+                        
+                        if(d < 150 + (bass/2)) {
+                            ctx.strokeStyle = n.clr;
+                            ctx.globalAlpha = 1 - (d / (150 + bass/2));
+                            ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        function startStats() {
+            setInterval(() => {
+                let t = parseInt(document.getElementById('timer').innerText) - 1;
+                if(t < 0) t = 300;
+                document.getElementById('timer').innerText = t;
+                document.getElementById('btc-h').innerText = (42 + Math.random()).toFixed(1) + " EH/s";
+                document.getElementById('tps').innerText = (65000 + Math.floor(Math.random()*1000)).toLocaleString();
+            }, 1000);
+        }
+
+        function toggleFS() {
+            if(!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e=>{});
+                document.body.classList.add('fs-active');
+            } else {
+                document.exitFullscreen().catch(e=>{});
+                document.body.classList.remove('fs-active');
+            }
+        }
+
+        function send(el) {
+            const d = document.createElement('div');
+            d.innerHTML = `<span style="color:var(--cyan)">drfrost</span>: ${el.value}`;
+            document.getElementById('chat-log').appendChild(d);
+            el.value = "";
+        }
+    </script>
+</body>
+</html>

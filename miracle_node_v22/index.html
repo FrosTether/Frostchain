@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | v22 Fixed</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --pink: #ff00ff; --cyan: #00ffff; --gold: #ffd700; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; }
+        
+        /* 40Hz GAMMA OVERLAY */
+        #gamma-overlay { position: fixed; inset: 0; z-index: 100; pointer-events: none; background: #fff; opacity: 0; display: none; }
+        @keyframes strobe40 { 0% { opacity: 0; } 50% { opacity: 0.1; } 100% { opacity: 0; } }
+        .active-gamma #gamma-overlay { display: block; animation: strobe40 0.025s infinite; }
+
+        /* INTERFACE */
+        #gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gate-box { border: 2px solid var(--term); padding: 30px; width: 320px; text-align: center; background: #050505; }
+        
+        #dash { display: none; height: 100vh; grid-template-rows: 60px 1fr 220px; position: relative; }
+        #tangle-canvas { position: absolute; inset: 0; z-index: 0; }
+
+        .header { background: rgba(0,0,0,0.9); border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; }
+        .nav-tabs { display: flex; background: #000; border-bottom: 1px solid #222; z-index: 10; }
+        .tab { flex: 1; padding: 15px; text-align: center; color: #444; cursor: pointer; font-size: 0.8rem; }
+        .tab.active { color: var(--term); border-bottom: 2px solid var(--term); background: rgba(0,255,65,0.05); }
+
+        .view { display: none; height: 100%; padding: 20px; box-sizing: border-box; z-index: 10; position: relative; }
+        .view.active { display: block; }
+
+        /* CHAT FIX: SCROLLABLE CONTAINER */
+        .chat-container { display: flex; flex-direction: column; height: 100%; max-width: 800px; margin: 0 auto; }
+        #chat-log { flex: 1; background: rgba(5,5,5,0.95); border: 1px solid #222; overflow-y: scroll; padding: 15px; margin-bottom: 10px; font-size: 0.8rem; scroll-behavior: smooth; }
+        .chat-input-bar { display: flex; gap: 10px; }
+        .chat-input { flex: 1; background: #000; border: 1px solid var(--term); color: #fff; padding: 12px; font-family: inherit; outline: none; }
+        .send-btn { background: var(--term); color: #000; border: none; padding: 0 25px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+
+        .msg-entry { margin-bottom: 8px; animation: msgIn 0.2s ease-out; }
+        @keyframes msgIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .msg-user { color: var(--cyan); font-weight: bold; }
+        .msg-sys { color: var(--gold); font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div id="gamma-overlay"></div>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="gate">
+        <div class="gate-box">
+            <h2 style="color:var(--term)">MIRACLE TERMINAL</h2>
+            <input type="text" id="miner-id" value="drfrost.frostchain" style="width:90%; background:#111; border:1px solid #333; color:#fff; padding:12px; text-align:center;">
+            <button onclick="boot()" style="width:100%; margin-top:15px; padding:15px; background:var(--term); border:none; font-weight:bold; cursor:pointer;">RE-ENGAGE SYSTEM</button>
+        </div>
+    </div>
+
+    <div id="dash">
+        <div class="header">
+            <div>MINER: <span id="user-display" style="color:var(--cyan)">...</span></div>
+            <button onclick="toggleFS()" style="background:transparent; border:1px solid #333; color:#666; padding:5px 10px;">[ FS ]</button>
+        </div>
+
+        <div class="nav-tabs">
+            <div class="tab active" id="tab-mining" onclick="showView('mining')">MINING</div>
+            <div class="tab" id="tab-chat" onclick="showView('chat')">FROSTCHAT OTR</div>
+            <div class="tab" onclick="window.location.href='https://graysonswallet.surge.sh'">VAULT</div>
+        </div>
+
+        <div id="view-mining" class="view active">
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button id="btn-alpha" style="flex:1; padding:20px; background:#000; border:1px solid #333; color:#666;" onclick="toggleAudio('alpha')">ALPHA [40Hz]</button>
+                <button id="btn-delta" style="flex:1; padding:20px; background:#000; border:1px solid #333; color:#666;" onclick="toggleAudio('delta')">DELTA [PI Hz]</button>
+            </div>
+            <div style="border:1px solid var(--term); padding:20px; background:#001100; text-align:center;">
+                <div style="font-size:3rem; font-weight:bold; color:#fff;" id="countdown">300</div>
+                <div style="font-size:0.7rem; color:var(--term)">SYNC_PHASE_LOCKED</div>
+            </div>
+        </div>
+
+        <div id="view-chat" class="view">
+            <div class="chat-container">
+                <div id="chat-log">
+                    <div class="msg-entry msg-sys">> RECOVERING OTR SOCKETS...</div>
+                    <div class="msg-entry msg-sys">> ENCRYPTION HANDSHAKE SUCCESSFUL.</div>
+                    <div class="msg-entry msg-sys">> IDENTIFIED: <span id="chat-id-ref"></span></div>
+                </div>
+                <div class="chat-input-bar">
+                    <input type="text" id="chat-in" class="chat-input" placeholder="Broadcast encrypted..." onkeydown="if(event.key==='Enter') sendChat()">
+                    <button class="send-btn" onclick="sendChat()">SEND</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = "";
+        let actx, oscL, oscR;
+
+        function boot() {
+            currentUser = document.getElementById('miner-id').value;
+            if(currentUser.includes('.frostchain')) {
+                document.getElementById('gate').style.display = 'none';
+                document.getElementById('dash').style.display = 'block';
+                document.getElementById('user-display').innerText = currentUser;
+                document.getElementById('chat-id-ref').innerText = currentUser;
+                initTangle();
+                startConsensus();
+            }
+        }
+
+        // CHAT FIX: ISOLATED SEND LOGIC
+        function sendChat() {
+            const input = document.getElementById('chat-in');
+            const log = document.getElementById('chat-log');
+            const txt = input.value.trim();
+            if(!txt) return;
+
+            const entry = document.createElement('div');
+            entry.className = "msg-entry";
+            entry.innerHTML = `<span class="msg-user">${currentUser}:</span> <span style="color:#fff;">${txt}</span>`;
+            
+            log.appendChild(entry);
+            input.value = "";
+            log.scrollTop = log.scrollHeight; // Force scroll to bottom
+        }
+
+        function showView(v) {
+            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+            document.getElementById('view-'+v).classList.add('active');
+            document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+            document.getElementById('tab-'+v).classList.add('active');
+        }
+
+        function startConsensus() {
+            let timer = 300;
+            setInterval(() => {
+                timer--;
+                document.getElementById('countdown').innerText = timer;
+                if(timer <= 0) timer = 300;
+            }, 1000);
+        }
+
+        function toggleAudio(type) {
+            if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+            if(oscL) { oscL.stop(); oscR.stop(); oscL = null; }
+            document.body.classList.remove('active-gamma');
+            const freq = type === 'alpha' ? 40 : Math.PI;
+            if(type === 'alpha') document.body.classList.add('active-gamma');
+
+            oscL = actx.createOscillator(); oscR = actx.createOscillator();
+            const g = actx.createGain(); g.gain.value = 0.08;
+            oscL.frequency.value = 432; oscR.frequency.value = 432 + freq;
+            oscL.connect(g).connect(actx.destination);
+            oscR.connect(g).connect(actx.destination);
+            oscL.start(); oscR.start();
+        }
+
+        function initTangle() {
+            const c = document.getElementById('tangle-canvas');
+            const x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            let p = Array(35).fill().map(()=>({
+                x:Math.random()*c.width, y:Math.random()*c.height,
+                vx:(Math.random()-.5)*1.5, vy:(Math.random()-.5)*1.5,
+                clr: ["#00ff41", "#00ffff", "#ff00ff"][Math.floor(Math.random()*3)]
+            }));
+            function loop() {
+                x.clearRect(0,0,c.width,c.height);
+                p.forEach(n => {
+                    n.x+=n.vx; n.y+=n.vy;
+                    if(n.x<0||n.x>c.width)n.vx*=-1; if(n.y<0||n.y>c.height)n.vy*=-1;
+                    p.forEach(n2 => {
+                        let dist = Math.hypot(n.x-n2.x, n.y-n2.y);
+                        if(dist < 140) {
+                            x.strokeStyle = n.clr; x.globalAlpha = 1 - dist/140;
+                            x.beginPath(); x.moveTo(n.x,n.y); x.lineTo(n2.x,n2.y); x.stroke();
+                        }
+                    });
+                });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        function toggleFS() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        }
+    </script>
+</body>
+</html>

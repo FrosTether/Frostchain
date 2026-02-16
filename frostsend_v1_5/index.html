@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>FrostSend | v1.5 Fix</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; }
+        
+        /* THE FIX: Use dvh to account for mobile browser bars */
+        body { 
+            margin: 0; background: var(--bg); color: var(--term); 
+            font-family: 'Courier New', monospace; 
+            height: 100vh; height: 100dvh; 
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        #app { 
+            flex: 1; display: flex; flex-direction: column; 
+            padding: 20px; padding-bottom: calc(80px + env(safe-area-inset-bottom)); 
+            overflow-y: auto; box-sizing: border-box; 
+        }
+
+        .header { font-weight: bold; border-bottom: 2px solid var(--term); padding-bottom: 10px; margin-bottom: 20px; }
+        
+        .tab-bar { display: flex; gap: 5px; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 12px; border: 1px solid #333; text-align: center; cursor: pointer; font-size: 0.7rem; }
+        .tab.active { border-color: var(--cyan); background: rgba(0,255,255,0.05); }
+
+        .card { background: #0a0a0a; border: 1px solid #222; padding: 20px; text-align: center; margin-bottom: 20px; border-left: 4px solid var(--gold); }
+        .bal-val { font-size: 1.8rem; font-weight: bold; color: #fff; }
+
+        input { width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 16px; margin-bottom: 12px; box-sizing: border-box; font-family: inherit; font-size: 1rem; border-radius: 4px; }
+
+        /* THE FIX: Fixed Footer Button */
+        .footer-action {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            padding: 15px; padding-bottom: calc(15px + env(safe-area-inset-bottom));
+            background: linear-gradient(to top, #000 80%, transparent);
+            z-index: 50;
+        }
+
+        .btn-send { 
+            width: 100%; padding: 18px; background: var(--term); color: #000; 
+            font-weight: bold; border: none; cursor: pointer; font-size: 1.1rem; 
+            box-shadow: 0 -5px 20px rgba(0, 255, 65, 0.2); border-radius: 8px;
+        }
+
+        /* OVERLAYS */
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; flex-direction: column; align-items: center; justify-content: center; padding: 25px; }
+        .review-box { width: 100%; background: #0a0a0a; border: 1px solid #222; padding: 20px; margin-bottom: 20px; }
+        .dot-container { display: flex; gap: 12px; margin-bottom: 30px; }
+        .pin-dot { height: 14px; width: 14px; border: 1px solid var(--gold); border-radius: 50%; }
+        .pin-dot.filled { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+        .keypad { display: grid; grid-template-columns: repeat(3, 85px); gap: 15px; }
+        .key { height: 70px; border: 1px solid #222; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+    </style>
+</head>
+<body>
+
+    <div id="review-screen" class="overlay">
+        <h2 style="color:var(--term)">CONFIRM SEND</h2>
+        <div class="review-box">
+            <div style="font-size:0.6rem; color:#666;">DESTINATION</div>
+            <div id="rev-dest" style="color:#fff; margin-bottom:15px;">...</div>
+            <div style="font-size:0.6rem; color:#666;">TOTAL AMOUNT</div>
+            <div id="rev-amt" style="font-size:1.4rem; color:#fff;">...</div>
+            <div id="rev-type" style="color:var(--gold); font-weight:bold;">FTC</div>
+        </div>
+        <button class="btn-send" onclick="showPin()">AUTHORIZE & SIGN</button>
+        <div style="margin-top:20px; color:#444; cursor:pointer;" onclick="closeOverlays()">[ CANCEL ]</div>
+    </div>
+
+    <div id="pin-screen" class="overlay">
+        <div style="color:var(--gold); margin-bottom:15px; font-size:0.8rem;">ENTER 4-6 DIGIT PIN</div>
+        <div class="dot-container" id="dot-wrap">
+            <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+        </div>
+        <div class="keypad" id="pad"></div>
+        <div style="margin-top:25px; color:#444; cursor:pointer;" onclick="closeOverlays()">[ CANCEL ]</div>
+    </div>
+
+    <div id="app">
+        <div class="header">FROSTSEND v1.5</div>
+        <div class="tab-bar">
+            <div class="tab active" onclick="switchA('FTC', '11,870,000.00', this)">FTC</div>
+            <div class="tab" onclick="switchA('FNR', '4,412,100.00', this)">FNR</div>
+            <div class="tab" onclick="switchA('FRST', '3,141,592.00', this)">FRST</div>
+        </div>
+        <div class="card">
+            <div id="a-name" style="font-size:0.6rem; color:#666;">FTC BALANCE</div>
+            <div id="a-val" class="bal-val">11,870,000.00</div>
+        </div>
+        <input type="text" id="dest" placeholder="Recipient: user.frostchain">
+        <input type="number" id="amt" placeholder="Amount: 0.00">
+    </div>
+
+    <div class="footer-action">
+        <button class="btn-send" onclick="openReview()">SEND ASSET</button>
+    </div>
+
+    <script>
+        let pin = "";
+        let currentAsset = 'FTC';
+        function switchA(n, v, el){ 
+            currentAsset = n;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('a-name').innerText=n+' BALANCE'; 
+            document.getElementById('a-val').innerText=v; 
+        }
+        function openReview(){
+            const d = document.getElementById('dest').value;
+            const a = document.getElementById('amt').value;
+            if(!d || !a) return alert("Fields required");
+            document.getElementById('rev-dest').innerText = d;
+            document.getElementById('rev-amt').innerText = a;
+            document.getElementById('rev-type').innerText = currentAsset;
+            document.getElementById('review-screen').style.display = 'flex';
+        }
+        function showPin(){
+            document.getElementById('review-screen').style.display = 'none';
+            document.getElementById('pin-screen').style.display = 'flex';
+        }
+        function closeOverlays(){ document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none'); pin = ""; updateDots(); }
+        const pad = document.getElementById('pad');
+        [1,2,3,4,5,6,7,8,9,'C',0,'OK'].forEach(v => {
+            const k = document.createElement('div'); k.className='key'; k.innerText=v;
+            k.onclick = () => {
+                if(v==='C') pin=""; else if(v==='OK') submit(); else if(pin.length<6) pin+=v;
+                updateDots();
+            };
+            pad.appendChild(k);
+        });
+        function updateDots(){ document.querySelectorAll('.pin-dot').forEach((d,i) => d.className = i < pin.length ? 'pin-dot filled' : 'pin-dot'); }
+        function submit(){
+            if(pin.length >= 4){ alert("TRANSACTION BROADCASTED"); location.reload(); }
+            else { alert("PIN 4-6 digits required"); }
+        }
+    </script>
+</body>
+</html>

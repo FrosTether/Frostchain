@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AmiahDoodles // Content_Engine</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #f0f2f5; --steem: #4ba2f2; --gold: #ffd700; --frost: #00e0ff; }
+body { background: var(--bg); font-family: 'Share Tech Mono', monospace; margin: 0; color: #333; }
+.nav { background: #fff; border-bottom: 2px solid var(--frost); padding: 10px 10%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+.container { max-width: 900px; margin: 20px auto; display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.post-card { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 6px solid var(--frost); }
+.author-tag { color: var(--steem); font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 5px; }
+.content { margin: 15px 0; line-height: 1.6; }
+.interaction-bar { display: flex; gap: 20px; border-top: 1px solid #eee; padding-top: 10px; font-size: 12px; color: #777; }
+.sidebar-card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.mint-btn { background: var(--frost); color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="nav">
+  <div style="font-size: 20px; font-weight: 900; color: var(--frost);">AMIAH_DOODLES</div>
+  <div style="font-size: 11px; color: #999;">ARCHITECT_BORN: 683050920</div>
+</div>
+<div class="container">
+  <div id="feed">
+    <div class="post-card">
+      <div class="author-tag"><div style="width:10px; height:10px; background:var(--gold); border-radius:50%;"></div> @AmiahDoodles [GENIUS_ACT_VERIFIED]</div>
+      <h2 style="margin: 10px 0;">The Quantum Fungible Manifesto</h2>
+      <p class="content">We didn't just build a chain; we built a Tangle. Every doodle is a signature, and every signature is a block. Much Quantum Fungible Wow!</p>
+      <div class="interaction-bar">
+        <span>▲ 1,337 Upvotes</span>
+        <span style="color:var(--frost)">Reward: 13.37 FTC</span>
+      </div>
+    </div>
+    <div class="post-card" style="border-left-color: var(--gold);">
+      <div class="author-tag">@Satoshi_Genesis</div>
+      <h2 style="margin: 10px 0;">12:57 PM - The Moment of Zero</h2>
+      <p class="content">Before Linux had a name, the Architect had a pulse. Aug 24, 1991. The Unix Epoch (1) was just the countdown for this moment.</p>
+      <div class="interaction-bar">
+        <span>▲ 6,830,509 Upvotes</span>
+        <span style="color:var(--gold)">Reward: 1,000,000 SAT</span>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar">
+    <div class="sidebar-card">
+      <h4 style="margin-top:0;">Tangle Stats</h4>
+      <div style="font-size:11px; margin-bottom:10px;">Total Minted: <span style="color:var(--frost)">4,205,100 FTC</span></div>
+      <button class="mint-btn" onclick="alert('Minting Creativity into the Tangle...')">MINT NEW DOODLE</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

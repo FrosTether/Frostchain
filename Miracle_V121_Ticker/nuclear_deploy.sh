@@ -1,0 +1,165 @@
+#!/bin/bash
+echo "🚀 DEPLOYING V139_HARDENED_STAY_ALIVE..."
+
+mkdir -p miracle-node
+
+cat << 'INNER' > miracle-node/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+    <title>MIRACLE // V139_HARDENED</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#000;--blue:#00e0ff;--gold:#ffd700;--pink:#ff69b4;--violet:#4b0082;}
+        body, html{margin:0;padding:0;width:100%;height:100%;background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;overflow:hidden;touch-action:none;}
+        canvas#tangleViz{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
+        canvas#strobeLock{position:absolute;bottom:0;right:0;width:4px;height:4px;z-index:100;background:#000;}
+        .hud{position:absolute;top:20px;right:20px;text-align:right;font-size:10px;color:var(--blue);z-index:11;}
+        .ticker-box{background:rgba(0,0,0,0.9);border:1px solid #222;padding:12px;border-radius:10px;margin-top:8px;text-align:left;border-left:3px solid var(--gold);}
+        #master-ui{position:absolute;z-index:10;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;pointer-events:none;gap:15px;}
+        .btn{padding:20px;background:rgba(0,0,0,0.95);border:2px solid var(--blue);border-radius:100px;text-align:center;cursor:pointer;pointer-events:auto;transition:0.4s;width:260px;letter-spacing:5px;}
+        .btn-tuning{border-color:var(--gold);color:var(--gold);font-size:10px;margin-bottom:20px;}
+        .btn-alpha{border-color:var(--pink);color:var(--pink);}
+        .btn-alpha.active{background:var(--pink);color:#000;box-shadow:0 0 50px var(--pink);}
+        .btn-delta{border-color:var(--violet);color:var(--violet);}
+        .btn-delta.active{background:var(--violet);color:#fff;box-shadow:0 0 50px var(--violet);}
+    </style>
+</head>
+<body>
+    <canvas id="tangleViz"></canvas>
+    <canvas id="strobeLock"></canvas>
+    
+    <div class="hud">
+        <div style="color:var(--gold);">HARDENED_V139</div>
+        <div class="ticker-box">
+            FTC: 12,370,000 | FNR: 4,412,100<br>
+            LOCAL_HS: <span id="hs">1136.3</span> H/s | SYNC: 13.37%<br>
+            TUNE: <span id="currentA">432</span>Hz | <span id="timer">45:00</span>
+        </div>
+    </div>
+
+    <div id="master-ui">
+        <div id="tuneBtn" class="btn btn-tuning" onclick="toggleTuning()">TUNING: 432Hz</div>
+        <div id="aB" class="btn btn-alpha" onclick="eng('alpha')">ALPHA_FOCUS</div>
+        <div id="dB" class="btn btn-delta" onclick="eng('delta')">DELTA_SLEEP</div>
+    </div>
+
+    <script>
+        let aC, gN, oL, oR, oSchumann, oMode, pN, isE = false, mode = null, mouse = {x:-1000, y:-1000};
+        let masterTuning = 432; let timeLeft = 45 * 60;
+        const ennead = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        const canvas = document.getElementById('tangleViz'); const ctx = canvas.getContext('2d');
+        const sCanvas = document.getElementById('strobeLock'); const sCtx = sCanvas.getContext('2d');
+
+        // FORCE SCREEN ACTIVE VIA STROBE
+        function runStrobe() {
+            sCtx.fillStyle = (Math.random() > 0.5) ? "#010101" : "#000000";
+            sCtx.fillRect(0,0,4,4);
+            requestAnimationFrame(runStrobe);
+        }
+        runStrobe();
+
+        function toggleTuning() {
+            masterTuning = (masterTuning === 432) ? 528 : 432;
+            document.getElementById('tuneBtn').innerText = `TUNING: ${masterTuning}Hz`;
+            document.getElementById('currentA').innerText = masterTuning;
+            if(isE) updateFrequencies();
+        }
+
+        function updateFrequencies() {
+            const ratio = masterTuning / 440;
+            const base = ennead[Math.floor(Math.random()*ennead.length)] * ratio;
+            oL.frequency.setTargetAtTime(base, aC.currentTime, 1);
+            oR.frequency.setTargetAtTime(base + (Math.random() > 0.5 ? 11.11 : Math.PI) * ratio, aC.currentTime, 1);
+        }
+
+        async function init() {
+            aC = new (window.AudioContext || window.webkitAudioContext)();
+            if (aC.state === 'suspended') await aC.resume();
+            gN = aC.createGain(); gN.gain.value = 0.22; gN.connect(aC.destination);
+            
+            const bS = 4096; let b0=b1=b2=b3=0;
+            pN = aC.createScriptProcessor(bS, 1, 1);
+            pN.onaudioprocess = (e) => {
+                let out = e.outputBuffer.getChannelData(0);
+                for (let i=0; i<bS; i++) {
+                    let w = Math.random()*2-1;
+                    b0=0.9988*b0+w*0.055; b1=0.993*b1+w*0.075; b2=0.969*b2+w*0.153; b3=0.8665*b3+w*0.31;
+                    out[i] = (b0+b1+b2+b3+w*0.536)*0.012;
+                }
+            };
+
+            oL = aC.createOscillator(); oR = aC.createOscillator();
+            oSchumann = aC.createOscillator(); oSchumann.frequency.value = 7.83;
+            oMode = aC.createOscillator();
+            const m = aC.createChannelMerger(2);
+            oL.connect(m,0,0); oR.connect(m,0,1);
+            m.connect(gN); oSchumann.connect(gN); oMode.connect(gN); pN.connect(gN);
+
+            updateFrequencies();
+            [oL, oR, oSchumann, oMode].forEach(o => o.start());
+            
+            if ('wakeLock' in navigator) await navigator.wakeLock.request('screen').catch(()=>{});
+            isE = true; startTimer();
+        }
+
+        function startTimer() {
+            setInterval(() => {
+                if(timeLeft > 0) {
+                    timeLeft--;
+                    let mi = Math.floor(timeLeft/60); let s = timeLeft%60;
+                    document.getElementById('timer').innerText = `${mi}:${s < 10 ? '0' : ''}${s}`;
+                    // Jitter the HS to keep CPU priority high
+                    const baseHS = mode === 'alpha' ? 1136.3 : 441.2;
+                    document.getElementById('hs').innerText = (baseHS + (Math.random()*10)).toFixed(1);
+                }
+            }, 1000);
+        }
+
+        async function eng(m) {
+            if(!isE) await init();
+            mode = m;
+            document.getElementById('aB').classList.toggle('active', m === 'alpha');
+            document.getElementById('dB').classList.toggle('active', m === 'delta');
+            oMode.frequency.setTargetAtTime(m === 'alpha' ? 40 : 3.14, aC.currentTime, 0.5);
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+        }
+
+        let nodes = [];
+        window.onmousemove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY; };
+        window.ontouchmove = (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; };
+
+        function setup() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            nodes = []; for(let i=0; i<110; i++) nodes.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5)*0.5, vy:(Math.random()-0.5)*0.5});
+        }
+        function draw() {
+            let s = mode === 'alpha' ? 4.5 : (mode === 'delta' ? 0.35 : 0.9);
+            ctx.fillStyle = mode === 'alpha' ? "rgba(20,0,30,0.35)" : "rgba(0,0,0,0.3)";
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+            nodes.forEach((n, i) => {
+                let dx = mouse.x - n.x; let dy = mouse.y - n.y; let d = Math.hypot(dx, dy);
+                if(d < 200) { n.x += dx * 0.08; n.y += dy * 0.08; } 
+                n.x += n.vx * s; n.y += n.vy * s;
+                if(n.x<0 || n.x>canvas.width) n.vx*=-1; if(n.y<0 || n.y>canvas.height) n.vy*=-1;
+                nodes.forEach((n2, j) => {
+                    if(i === j) return;
+                    let dist = Math.hypot(n.x - n2.x, n.y - n2.y);
+                    if(dist < 150) {
+                        ctx.strokeStyle = mode === 'alpha' ? `rgba(255,105,180,${0.45*(1-dist/150)})` : `rgba(0,224,255,0.1)`;
+                        ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n2.x, n2.y); ctx.stroke();
+                    }
+                });
+                ctx.fillStyle = mode === 'alpha' ? "var(--pink)" : "var(--blue)";
+                ctx.beginPath(); ctx.arc(n.x, n.y, 1.2, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        window.onresize = setup; setup(); draw();
+    </script>
+</body></html>
+INNER
+
+surge miracle-node miracle-node.surge.sh

@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# ======================================================
+# PROTOCOL: FSP-FROSTOS-UNIX-DEPLOY-V26000
+# TARGET: FrostOSunix.surge.sh
+# LOGIC: ROOT_LINKER_ESTABLISHED
+# ======================================================
+
+echo "🖥️  BOOTING FROST_OS UNIX KERNEL..."
+
+# 1. CREATE SYSTEM ROOT
+mkdir -p ~/FrostOS_Unix
+cd ~/FrostOS_Unix
+
+# 2. WRITE KERNEL (INDEX.HTML)
+# (Injecting the code derived above)
+cat << 'EOF' > index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FROST_OS // UNIX_GATEWAY</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        :root { --bg: #050505; --term-green: #0f0; --term-red: #ff0000; --term-gold: #ffd700; --term-blue: #00e0ff; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); font-family: 'Share Tech Mono', monospace; color: #ccc; overflow: hidden; }
+        body::before { content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none; }
+        .terminal { padding: 40px; max-width: 900px; margin: 0 auto; position: relative; z-index: 10; }
+        h1 { color: var(--term-red); text-shadow: 0 0 10px var(--term-red); margin-bottom: 5px; font-size: 24px; }
+        .sub-header { color: #666; font-size: 12px; margin-bottom: 40px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .link-row { display: flex; align-items: center; margin-bottom: 15px; padding: 10px; border: 1px solid transparent; transition: 0.2s; cursor: pointer; text-decoration: none; }
+        .link-row:hover { border-color: var(--term-gold); background: rgba(255, 215, 0, 0.05); }
+        .link-row:hover .mount-point { color: var(--term-gold); text-shadow: 0 0 8px var(--term-gold); }
+        .link-row:hover .arrow { transform: translateX(5px); color: var(--term-red); }
+        .mount-id { color: #444; width: 50px; }
+        .mount-point { color: var(--term-blue); width: 200px; font-weight: bold; }
+        .mount-target { color: #888; flex-grow: 1; text-align: right; }
+        .status { color: var(--term-green); margin-left: 20px; font-size: 10px; border: 1px solid var(--term-green); padding: 2px 6px; }
+        .arrow { color: #333; margin-left: 15px; transition: 0.2s; }
+        .sys-log { margin-top: 50px; font-size: 11px; color: #444; line-height: 1.6; }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+        .ascii-art { font-size: 10px; color: var(--term-gold); white-space: pre; margin-bottom: 20px; opacity: 0.8; }
+    </style>
+</head>
+<body>
+<div class="terminal">
+    <div class="ascii-art">
+  _____ ____   ___  ____ _____     ___  ____  
+ |  ___|  _ \ / _ \/ ___|_   _|   / _ \/ ___| 
+ | |_  | |_) | | | \___ \ | |____| | | \___ \ 
+ |  _| |  _ <| |_| |___) || |____| |_| |___) |
+ |_|   |_| \_\\___/|____/ |_|     \___/|____/ v26000.0 (UNIX)
+    </div>
+    <h1>ROOT_ACCESS // LINKER_HUB</h1>
+    <div class="sub-header">KERNEL: PROTOCOL_88 // ARCHITECT: SATOSHI_FROST // UPTIME: 82 MONTHS</div>
+    <a href="https://graysonswallet.surge.sh" class="link-row"><span class="mount-id">[01]</span><span class="mount-point">/mnt/vault</span><span class="mount-target">graysonswallet.surge.sh</span><span class="status">MOUNTED</span><span class="arrow">>></span></a>
+    <a href="https://frostscan.surge.sh" class="link-row"><span class="mount-id">[02]</span><span class="mount-point">/mnt/explorer</span><span class="mount-target">frostscan.surge.sh</span><span class="status">ACTIVE</span><span class="arrow">>></span></a>
+    <a href="https://maryfrost.surge.sh" class="link-row"><span class="mount-id">[03]</span><span class="mount-point">/mnt/node_01</span><span class="mount-target">maryfrost.surge.sh</span><span class="status">SYNCED</span><span class="arrow">>></span></a>
+    <div class="sys-log">
+        <div>root@frostos:~# init_sequence --force</div>
+        <div>> MOUNTING FILESYSTEMS... <span style="color:var(--term-green)">OK</span></div>
+        <div>> CHECKING JOEY_QUORUM... <span style="color:var(--term-gold)">x1.05 DETECTED</span></div>
+        <div>> 82_MONTH_ARCHIVE... <span style="color:var(--term-red)">VERIFIED</span></div>
+        <div>> LISTENING ON PORT 88...</div>
+        <div>root@frostos:~# <span class="blink">_</span></div>
+    </div>
+</div>
+</body>
+</html>
+EOF
+
+# 3. DEPLOY TO SURGE
+echo "🚀 EXECUTING ROOT DEPLOYMENT..."
+npx surge . FrostOSunix.surge.sh

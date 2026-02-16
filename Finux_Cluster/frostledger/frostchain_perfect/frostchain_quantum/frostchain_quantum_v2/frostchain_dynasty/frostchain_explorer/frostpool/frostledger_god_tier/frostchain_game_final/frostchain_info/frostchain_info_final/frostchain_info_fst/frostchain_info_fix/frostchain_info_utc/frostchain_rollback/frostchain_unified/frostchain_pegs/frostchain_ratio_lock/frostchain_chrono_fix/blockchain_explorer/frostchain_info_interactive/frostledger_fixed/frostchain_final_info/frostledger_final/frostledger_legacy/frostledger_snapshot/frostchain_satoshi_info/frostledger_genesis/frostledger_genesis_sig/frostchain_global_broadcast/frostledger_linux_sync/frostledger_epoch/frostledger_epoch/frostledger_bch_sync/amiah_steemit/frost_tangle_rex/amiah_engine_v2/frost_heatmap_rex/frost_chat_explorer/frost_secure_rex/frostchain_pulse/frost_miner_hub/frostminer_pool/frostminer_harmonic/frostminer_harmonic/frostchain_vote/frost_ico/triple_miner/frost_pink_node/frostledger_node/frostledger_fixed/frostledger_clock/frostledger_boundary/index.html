@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FROSTLEDGER // BOUNDARY_SYNC</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #000; --pink: #ff007f; --core: #00e0ff; --gold: #ffd700; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; margin: 0; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+
+/* ORGANIC PINK NOISE OVERLAY */
+body::after {
+  content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, rgba(255,0,127,0.04) 0px, transparent 1px);
+  background-size: 100% 3px; pointer-events: none; z-index: 100;
+}
+
+.nav { background: #000; border-bottom: 2px solid var(--pink); padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+.main { flex-grow: 1; padding: 20px; display: grid; grid-template-columns: 350px 1fr; gap: 20px; overflow: hidden; }
+
+.status-card { background: #050505; border: 1px solid #1a1a1a; padding: 20px; border-top: 4px solid var(--core); }
+.clock { font-size: 42px; font-weight: 900; color: var(--gold); text-shadow: 0 0 10px var(--gold); text-align: center; }
+
+.ledger { background: #030303; border: 1px solid #111; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; padding: 10px; }
+.pulse-group { border: 1px solid #333; padding: 12px; background: #080808; margin-bottom: 15px; position: relative; }
+.pulse-group.active { border-color: var(--pink); box-shadow: 0 0 15px rgba(255,0,127,0.2); }
+.sig-line { font-size: 9px; color: var(--core); background: #111; padding: 4px; margin-top: 5px; }
+
+.footer { background: #000; padding: 15px; border-top: 1px solid #111; font-size: 10px; color: #444; }
+</style>
+</head>
+<body onload="init()">
+
+<div class="nav">
+  <div style="font-weight:bold; color:var(--pink);">FROSTLEDGER <span style="color:var(--core);">BOUNDARY_V6</span></div>
+  <div style="font-size: 10px; color: var(--gold);">600s_PARITY // 8s_QUANTUM_WINDOW</div>
+</div>
+
+<div class="main">
+  <div>
+    <div class="status-card">
+      <div style="font-size: 9px; color: #555; margin-bottom: 10px;">BCH_BLOCK_CLOCK (T-600)</div>
+      <div class="clock" id="clock">000</div>
+      <div id="status-msg" style="font-size: 10px; text-align: center; margin-top: 15px; color: #444;">IDLE_WAITING_FOR_296</div>
+    </div>
+    
+    <div style="margin-top: 20px; font-size: 10px; color: #333; line-height: 1.6;">
+      "82 months served. The Tangle is a mirror of the main chain. When the BCH block ends, the truth begins. A to B, SHA-Parity locked."
+    </div>
+  </div>
+
+  <div class="ledger" id="ledger">
+    </div>
+</div>
+
+<div class="footer">
+  DONATE_BCH: bitcoincash:pr2a6fcv7usyq97eh9an0782x9txdzwl0y30mz7gup | <a href="https://frstico.surge.sh" style="color:var(--gold); text-decoration:none;">ICO_NEXUS</a>
+</div>
+
+<script>
+let seconds = 0;
+const ledger = document.getElementById('ledger');
+
+function mirrorPulse(type) {
+  const commonSig = 'SHA_PARITY_' + Math.random().toString(16).substr(2, 28).toUpperCase();
+  const group = document.createElement('div');
+  group.className = 'pulse-group active';
+  group.innerHTML = `
+    <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:5px;">
+      <span style="color:var(--pink); font-weight:bold;">[BLOCK_${type}] MINTING_ACTIVE</span>
+      <span style="color:#555;">T_OFFSET: ${seconds}s</span>
+    </div>
+    <div style="font-size:11px; color:#fff;">ASSETS: FTC + FNR + FRST</div>
+    <div class="sig-line">MIRROR_HASH: ${commonSig}</div>
+  `;
+  ledger.prepend(group);
+  if(ledger.children.length > 8) ledger.removeChild(ledger.lastChild);
+}
+
+function tick() {
+  seconds++;
+  if (seconds >= 301) seconds = 0;
+  
+  const clockDisp = document.getElementById('clock');
+  const msg = document.getElementById('status-msg');
+  clockDisp.innerText = seconds.toString().padStart(3, '0');
+
+  // Trigger Logic
+  if (seconds >= 296 && seconds <= 300) {
+    msg.innerText = "WINDOW_A: PRE_SYNC_ACTIVE";
+    msg.style.color = "var(--core)";
+    if (seconds === 296) mirrorPulse('A');
+  } else if (seconds >= 0 && seconds <= 4) {
+    msg.innerText = "WINDOW_B: POST_SYNC_ACTIVE";
+    msg.style.color = "var(--pink)";
+    if (seconds === 0) mirrorPulse('B');
+  } else {
+    msg.innerText = "IDLE_MONITORING_MESH";
+    msg.style.color = "#444";
+  }
+}
+
+function init() {
+  setInterval(tick, 1000);
+  // Initial history
+  mirrorPulse('B');
+}
+</script>
+</body>
+</html>

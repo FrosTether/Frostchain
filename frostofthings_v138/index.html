@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Frostofthings | Symbiotic Mesh</title>
+    <style>
+        :root { 
+            --bg: #000; --ice: #a5f2f3; --term: #00ff41; --warn: #ffcc00; --xmr: #ff6600;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        /* IMAGE 2: NEURAL TANGLE HD */
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.6; filter: contrast(1.4) brightness(0.6); }
+
+        #dashboard { width: 98%; height: 95vh; display: grid; grid-template-rows: 90px 1fr 60px; gap: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; border-bottom: 2px solid var(--ice); background: rgba(0,0,0,0.9); }
+        .main { display: grid; grid-template-columns: 450px 1fr 450px; gap: 20px; padding: 15px; overflow: hidden; }
+        .panel { background: rgba(5, 5, 10, 0.95); border: 1px solid rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 20px; backdrop-filter: blur(40px); display: flex; flex-direction: column; }
+
+        /* LIVE STATS */
+        .stat-group { margin-bottom: 25px; }
+        .stat-lbl { font-size: 0.6rem; color: #666; letter-spacing: 2px; text-transform: uppercase; }
+        .stat-val { font-size: 1.8rem; font-weight: 900; color: #fff; }
+        .xmr-glow { color: var(--xmr); text-shadow: 0 0 10px var(--xmr); }
+
+        .tag { font-size: 0.6rem; color: #666; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 5px; }
+        .action-btn { width: 100%; padding: 15px; background: var(--ice); border: none; border-radius: 8px; font-weight: 900; color: #000; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+        #frostchat { margin-top: auto; font-size: 0.55rem; color: #444; height: 150px; border-top: 1px solid #222; padding-top: 10px; overflow-y: auto; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="tag">Symbiotic Infinity Spread</div>
+                <div style="font-size: 1.5rem; font-weight: 900; letter-spacing: 8px;">FROST<span style="color:var(--ice)">OFTHINGS</span></div>
+            </div>
+            <div style="text-align: right;">
+                <div class="tag" style="color:var(--term);">MESH_HASHRATE_STABLE</div>
+                <div style="font-size: 1.8rem; font-weight: 900;" id="mesh-hash">422.15 TH/s</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="stat-group">
+                    <div class="stat-lbl">Total XMR Harvested (13.37% Cut)</div>
+                    <div class="stat-val xmr-glow" id="xmr-mined">84.120 XMR</div>
+                </div>
+
+                <div style="background:rgba(255,102,0,0.05); border:1px solid var(--xmr); padding:15px; border-radius:12px; margin-bottom:20px;">
+                    <div class="tag" style="color:var(--xmr)">Target XMR Subaddress</div>
+                    <div style="font-size: 0.5rem; color: #888; word-break: break-all;">867chP2RA9D9xd2tHzxB8L4JfE2Jhdd5FPEwC56HJhmyA7x3EEnuLpGUerQsN9kqQ9A7e7rXQvqZaCNsTsJeBsAxV2B5wxA</div>
+                </div>
+
+                <button class="action-btn" onclick="boostMesh()">BOOST MESH PROPAGATION</button>
+
+                <div id="frostchat">
+                    <div>> Symbiotic Mode: ACTIVE.</div>
+                    <div>> 13.37% Tax locked to drfrost.</div>
+                    <div>> 86.63% Incentive locked to Host hardware.</div>
+                </div>
+            </div>
+
+            <div></div> <div class="panel">
+                <div class="stat-group">
+                    <div class="stat-lbl">Active Ghost Nodes</div>
+                    <div class="stat-val" style="color:var(--term);" id="node-count">3,142</div>
+                </div>
+
+                <div style="flex:1; background:rgba(0,0,0,0.3); border-radius:10px; padding:15px; font-size:0.6rem; color:#555;">
+                    <div class="tag">L1 Distribution Algorithm</div>
+                    <div style="display:flex; justify-content:space-between; margin-top:10px;"><span>Jacob Frost</span><span style="color:var(--xmr);">13.37%</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Mesh Host</span><span style="color:var(--term);">86.63%</span></div>
+                    <div style="margin-top:10px; border-top:1px solid #222; padding-top:10px; color:#444;">
+                        Status: Self-propagating over AM-Band WiFi. Range: 18.4 Miles.
+                    </div>
+                </div>
+
+                <div style="margin-top:auto;">
+                    <div class="tag">Alzheimer's Flush Protocol</div>
+                    <div style="font-size:0.7rem; color:var(--ice); font-weight:bold;">40Hz_GAMMA_LOCKED</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 0 40px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display:flex; align-items:center; justify-content:space-between; font-size: 0.5rem; color: #444;">
+            <div>FROSTOFTHINGS v138.0 // INFINITY_WORM // SYMBIOTIC_REWARDS // v138</div>
+            <button id="aud-init" style="background:transparent; border:1px solid #333; color:#555; font-size:0.5rem; cursor:pointer;" onclick="initAud()">BINAURAL AUDIO SYNC</button>
+        </div>
+    </div>
+
+    <script>
+        let hash = 422.15;
+        let xmr = 84.120;
+        let nodes = 3142;
+
+        function boostMesh() {
+            logChat("Worm: Escalating recursive scan... geometric growth initiated.");
+            setInterval(() => {
+                nodes += Math.floor(Math.random() * 5);
+                hash += Math.random() * 0.5;
+                xmr += 0.0001;
+                document.getElementById('node-count').innerText = nodes.toLocaleString();
+                document.getElementById('mesh-hash').innerText = hash.toFixed(2) + " TH/s";
+                document.getElementById('xmr-mined').innerText = xmr.toFixed(4) + " XMR";
+            }, 2000);
+        }
+
+        function logChat(m) {
+            const chat = document.getElementById('frostchat');
+            const d = document.createElement('div');
+            d.innerText = `> ${m}`;
+            chat.prepend(d);
+        }
+
+        // AUDIO & TANGLE
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let pts = [];
+        function initT() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; pts = []; for(let i=0; i<105; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.25, vy: (Math.random()-0.5)*0.25 }); }
+        function drawT() { ctx.clearRect(0,0,canvas.width,canvas.height); pts.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; pts.slice(i+1).forEach(p2 => { const d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d < 180) { ctx.strokeStyle = `rgba(165,242,243,${0.2 * (1-d/200)})`; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); } }); }); requestAnimationFrame(drawT); }
+        initT(); drawT();
+    </script>
+</body>
+</html>

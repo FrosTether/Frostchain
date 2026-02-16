@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | BitChat v24</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --pink: #ff00ff; --cyan: #00ffff; --gold: #ffd700; --xmr: #f26822; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; }
+        
+        /* GAMMA STROBE */
+        #gamma-overlay { position: fixed; inset: 0; z-index: 100; pointer-events: none; background: #fff; opacity: 0; display: none; }
+        @keyframes strobe40 { 0% { opacity: 0; } 50% { opacity: 0.12; } 100% { opacity: 0; } }
+        body.alpha-active.strobe-on #gamma-overlay { display: block; animation: strobe40 0.025s infinite; }
+
+        /* UI LAYOUT */
+        #gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gate-box { border: 2px solid var(--term); padding: 30px; width: 320px; text-align: center; background: #050505; }
+        input { width: 90%; background: #111; border: 1px solid #333; color: #fff; padding: 12px; margin-bottom: 15px; text-align: center; font-family: inherit; }
+
+        #dash { display: none; height: 100vh; grid-template-rows: 60px 1fr 240px; position: relative; }
+        #tangle-canvas { position: absolute; inset: 0; z-index: 5; cursor: pointer; }
+
+        .header { background: rgba(0,0,0,0.9); border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; }
+        .nav-tabs { display: flex; background: #000; border-bottom: 1px solid #222; z-index: 10; }
+        .tab { flex: 1; padding: 15px; text-align: center; color: #444; cursor: pointer; font-size: 0.8rem; }
+        .tab.active { color: var(--term); border-bottom: 2px solid var(--term); background: rgba(0,255,65,0.05); }
+
+        .view { display: none; height: 100%; padding: 20px; box-sizing: border-box; z-index: 10; position: relative; pointer-events: none; }
+        .view.active { display: block; }
+        .view * { pointer-events: auto; }
+
+        /* BITCHAT MODULE */
+        .chat-container { display: flex; flex-direction: column; height: 100%; max-width: 900px; margin: 0 auto; }
+        #chat-log { flex: 1; background: rgba(5,5,5,0.95); border: 1px solid #222; overflow-y: scroll; padding: 15px; margin-bottom: 10px; font-size: 0.75rem; }
+        .chat-input-bar { display: flex; gap: 10px; background: #000; padding: 5px; border: 1px solid var(--xmr); }
+        .chat-input { flex: 1; background: transparent; border: none; color: #fff; padding: 12px; font-family: inherit; outline: none; }
+        .send-btn { background: var(--xmr); color: #fff; border: none; padding: 0 25px; font-weight: bold; cursor: pointer; }
+
+        .packet-row { margin-bottom: 10px; border-left: 2px solid #333; padding-left: 10px; }
+        .packet-header { font-size: 0.65rem; color: #555; display: flex; gap: 10px; margin-bottom: 3px; }
+        .packet-user { color: var(--cyan); font-weight: bold; }
+        .packet-hash { color: var(--xmr); font-family: monospace; }
+        .packet-body { color: #fff; word-break: break-all; }
+    </style>
+</head>
+<body>
+
+    <div id="gamma-overlay"></div>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="gate">
+        <div class="gate-box">
+            <h2 style="color:var(--term)">MIRACLE NODE</h2>
+            <div style="font-size:0.7rem; color:#666; margin-bottom:15px;">BITCHAT XMR PROTOCOL ENABLED</div>
+            <input type="text" id="miner-id" value="drfrost.frostchain">
+            <button onclick="boot()" style="width:100%; padding:15px; background:var(--term); border:none; font-weight:bold; cursor:pointer;">ENGAGE MATRIX</button>
+        </div>
+    </div>
+
+    <div id="dash">
+        <div class="header">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <span id="user-display" style="color:var(--cyan); font-weight:bold;">...</span>
+                <span style="font-size:0.6rem; color:var(--xmr); border:1px solid var(--xmr); padding:2px 5px;">XMR_BRIDGE: ACTIVE</span>
+            </div>
+            <button onclick="toggleFS()" style="background:transparent; border:1px solid #333; color:#666; padding:5px 10px;">[ FS ]</button>
+        </div>
+
+        <div class="nav-tabs">
+            <div class="tab active" id="tab-mining" onclick="showView('mining')">MINING</div>
+            <div class="tab" id="tab-chat" onclick="showView('chat')">BITCHAT XMR</div>
+            <div class="tab" onclick="window.location.href='https://graysonswallet.surge.sh'">VAULT</div>
+        </div>
+
+        <div id="view-mining" class="view active">
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button id="btn-alpha" class="btn-audio" style="flex:1; padding:20px; background:#000; border:1px solid #333; color:#666; cursor:pointer;" onclick="toggleAudio('alpha')">ALPHA [40Hz]</button>
+                <button id="btn-delta" class="btn-audio" style="flex:1; padding:20px; background:#000; border:1px solid #333; color:#666; cursor:pointer;" onclick="toggleAudio('delta')">DELTA [PI Hz]</button>
+            </div>
+            <div style="border:1px solid var(--term); padding:20px; background:rgba(0,25,0,0.8); text-align:center;">
+                <div style="font-size:3.5rem; font-weight:bold; color:#fff;" id="countdown">300</div>
+                <div style="font-size:0.7rem; color:var(--term); letter-spacing:5px;">BLOCK_CONSENSUS</div>
+            </div>
+        </div>
+
+        <div id="view-chat" class="view">
+            <div class="chat-container">
+                <div id="chat-log">
+                    <div class="packet-row" style="border-color:var(--gold);">
+                        <div class="packet-header"><span class="msg-sys" style="color:var(--gold);">SYSTEM</span></div>
+                        <div class="packet-body">XMR Smart Contract Bridge listening on port 8832... BITCHAT protocol ready.</div>
+                    </div>
+                </div>
+                <div class="chat-input-bar">
+                    <input type="text" id="chat-in" class="chat-input" placeholder="Broadcasting text to XMR contract..." onkeydown="if(event.key==='Enter') sendBitChat()">
+                    <button class="send-btn" onclick="sendBitChat()">TRANSMIT</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = "";
+        let actx, oscL, oscR;
+        let isAlpha = false;
+
+        function boot() {
+            currentUser = document.getElementById('miner-id').value;
+            if(currentUser.includes('.frostchain')) {
+                document.getElementById('gate').style.display = 'none';
+                document.getElementById('dash').style.display = 'block';
+                document.getElementById('user-display').innerText = currentUser;
+                initTangle();
+                startConsensus();
+            }
+        }
+
+        // --- BITCHAT XMR PROTOCOL ---
+        function sendBitChat() {
+            const input = document.getElementById('chat-in');
+            const log = document.getElementById('chat-log');
+            const txt = input.value.trim();
+            if(!txt) return;
+
+            // Generate "TX Packet" (Hex simulation)
+            const hex = Array.from(txt).map(c => c.charCodeAt(0).toString(16)).join('');
+            const txid = "0x" + Math.random().toString(16).substr(2, 8);
+
+            const row = document.createElement('div');
+            row.className = "packet-row";
+            row.innerHTML = `
+                <div class="packet-header">
+                    <span class="packet-user">${currentUser}</span>
+                    <span class="packet-hash">TX:${txid}</span>
+                </div>
+                <div class="packet-body">${txt}</div>
+                <div style="font-size:0.55rem; color:#333; margin-top:2px;">HEX_DUMP: ${hex.substr(0, 32)}...</div>
+            `;
+            
+            log.appendChild(row);
+            input.value = "";
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // --- TACTILE GAMMA LOGIC ---
+        const canvas = document.getElementById('tangle-canvas');
+        canvas.addEventListener('mousedown', () => { if(isAlpha) document.body.classList.add('strobe-on'); });
+        window.addEventListener('mouseup', () => { document.body.classList.remove('strobe-on'); });
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); if(isAlpha) document.body.classList.add('strobe-on'); });
+        window.addEventListener('touchend', () => { document.body.classList.remove('strobe-on'); });
+
+        function toggleAudio(type) {
+            if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+            if(oscL) { oscL.stop(); oscR.stop(); oscL = null; }
+            document.body.classList.remove('alpha-active');
+            isAlpha = false;
+
+            const freq = type === 'alpha' ? 40 : Math.PI;
+            if(type === 'alpha') {
+                document.body.classList.add('alpha-active');
+                isAlpha = true;
+            }
+
+            oscL = actx.createOscillator(); oscR = actx.createOscillator();
+            const g = actx.createGain(); g.gain.value = 0.08;
+            oscL.frequency.value = 432; oscR.frequency.value = 432 + freq;
+            oscL.connect(g).connect(actx.destination);
+            oscR.connect(g).connect(actx.destination);
+            oscL.start(); oscR.start();
+        }
+
+        function showView(v) {
+            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+            document.getElementById('view-'+v).classList.add('active');
+            document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+            document.getElementById('tab-'+v).classList.add('active');
+        }
+
+        function startConsensus() {
+            let timer = 300;
+            setInterval(() => {
+                timer--;
+                document.getElementById('countdown').innerText = timer;
+                if(timer <= 0) timer = 300;
+            }, 1000);
+        }
+
+        function initTangle() {
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let p = Array(35).fill().map(()=>({
+                x:Math.random()*canvas.width, y:Math.random()*canvas.height,
+                vx:(Math.random()-.5)*1.5, vy:(Math.random()-.5)*1.5,
+                clr: ["#00ff41", "#00ffff", "#ff00ff"][Math.floor(Math.random()*3)]
+            }));
+            function loop() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                p.forEach(n => {
+                    n.x+=n.vx; n.y+=n.vy;
+                    if(n.x<0||n.x>canvas.width)n.vx*=-1; if(n.y<0||n.y>canvas.height)n.vy*=-1;
+                    p.forEach(n2 => {
+                        let dist = Math.hypot(n.x-n2.x, n.y-n2.y);
+                        if(dist < 140) {
+                            ctx.strokeStyle = n.clr; ctx.globalAlpha = 1 - dist/140;
+                            ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                        }
+                    });
+                });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        function toggleFS() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        }
+    </script>
+</body>
+</html>

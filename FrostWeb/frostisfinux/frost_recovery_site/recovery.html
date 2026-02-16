@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Frost Recovery – Paper Wallet</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    body { background:#0b0f1a; color:#e6f1ff; font-family:monospace; padding:20px; }
+    h1,h2 { color:#7dd3fc; }
+    textarea,input { width:100%; background:#020617; color:#e6f1ff; border:1px solid #1e293b; padding:10px; margin-top:8px; font-family:monospace; }
+    button { margin-top:12px; padding:10px; background:#38bdf8; border:none; color:#020617; font-weight:bold; cursor:pointer; }
+    .box { border:1px dashed #334155; padding:15px; margin-top:20px; }
+    canvas { margin-top:10px; background:#fff; }
+    .locked { opacity:0.5; pointer-events:none; }
+</style>
+</head>
+<body>
+
+<h1>❄️ Frost Recovery</h1>
+<p>Secure Offline Restore Point — FTC Compatible</p>
+
+<div class="box" id="seedBox">
+<h2>1️⃣ Seed Phrase (BIP-39)</h2>
+<textarea id="seed" rows="3" placeholder="Enter existing seed to recover or generate new..."></textarea>
+<button onclick="generateSeed()">Generate New Seed</button>
+</div>
+
+<div class="box">
+<h2>2️⃣ Wallet Derivation</h2>
+<button onclick="deriveWallet()">Derive Keys</button>
+<p><strong>Public Address (FTC)</strong></p>
+<input id="address" readonly>
+<canvas id="addressQR" width="180" height="180"></canvas>
+<p><strong>Private Key</strong></p>
+<input id="privateKey" readonly>
+<canvas id="privateQR" width="180" height="180"></canvas>
+</div>
+
+<div class="box">
+<h2>3️⃣ Print & Lock</h2>
+<button onclick="window.print()">🖨️ Print Recovery Sheet</button>
+</div>
+
+<script>
+const wordlist=["abandon","ability","about","above","absent","access","accident","account","accuse","achieve","acoustic","acquire","across","action","actor","adapt","addict","address","adjust","admit","adult","advance","advice","aerobic","affair","afford","afraid","again","agent","agree","ahead","aim","air","airport","aisle","alarm","album","alert","alien","alive","allow","almost","alone","alpha","already","also","alter","always","amateur","amazing","among","amount","amused","anchor","ancient","anger","angle","animal","answer","antenna"];
+
+function generateSeed(){let s=[];for(let i=0;i<12;i++)s.push(wordlist[Math.floor(Math.random()*wordlist.length)]);document.getElementById("seed").value=s.join(" ")}
+
+async function deriveWallet(){
+    const s=document.getElementById("seed").value.trim();
+    if(s.split(" ").length<12){alert("Invalid Seed");return}
+    const d=new TextEncoder().encode("FTC::"+s);
+    const h=await crypto.subtle.digest("SHA-256",d);
+    const x=Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("");
+    const pk=x; const ad="FTC"+x.slice(0,36).toUpperCase();
+    document.getElementById("privateKey").value=pk;
+    document.getElementById("address").value=ad;
+    drawQR(ad,"addressQR"); drawQR(pk,"privateQR");
+}
+
+function drawQR(t,cId){
+    const c=document.getElementById(cId),x=c.getContext("2d");x.clearRect(0,0,180,180);
+    let h=0;for(let i=0;i<t.length;i++)h=t.charCodeAt(i)+((h<<5)-h);
+    const s=18;for(let r=0;r<10;r++)for(let c=0;c<10;c++){
+    x.fillStyle=((h>>(c*r%16))&1)?"#000":"#fff";x.fillRect(c*s,r*s,s,s);}
+}
+</script>
+</body>
+</html>

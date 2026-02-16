@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frostscan | Merged Ledger</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --pink: #ff00ff; --cyan: #00ffff; --gold: #ffd700; --thermal: #ff4500; --btc: #f7931a; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; transition: 0.5s; }
+        
+        #tangle-bg { position: fixed; inset: 0; z-index: 1; opacity: 0.15; filter: contrast(1.5) blur(2px); pointer-events: none; }
+        
+        #dash { display: grid; grid-template-rows: 60px 100px 1fr; height: 100vh; position: relative; z-index: 10; padding: 0 20px; transition: transform 0.5s, opacity 0.5s; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
+        
+        /* SEARCH & STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 15px 0; }
+        .stat-card { background: rgba(10,10,10,0.9); border: 1px solid #222; padding: 10px; border-left: 3px solid var(--term); }
+        .stat-val { font-size: 1.2rem; font-weight: bold; color: #fff; }
+        .stat-lbl { font-size: 0.6rem; color: #666; text-transform: uppercase; }
+
+        /* LEDGER TABLE */
+        .ledger-container { background: rgba(5,5,5,0.95); border: 1px solid #222; overflow-y: auto; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        th { text-align: left; padding: 12px; background: #111; color: var(--cyan); sticky top: 0; }
+        td { padding: 12px; border-bottom: 1px solid #111; color: #ccc; }
+        .potw-sig { color: var(--thermal); font-weight: bold; }
+        .asset-tag { padding: 2px 5px; border-radius: 3px; font-size: 0.6rem; font-weight: bold; color: #000; }
+
+        /* IMMERSIVE MODE */
+        body.is-pretty #dash { transform: scale(0.95); opacity: 0; pointer-events: none; }
+        #pretty-overlay { display: none; position: fixed; inset: 0; z-index: 100; padding: 50px; flex-direction: column; justify-content: flex-end; pointer-events: none; }
+        body.is-pretty #pretty-overlay { display: flex; }
+        .pretty-stat { font-size: 4rem; font-weight: bold; color: var(--term); text-shadow: 0 0 20px var(--term); }
+
+        .btn-fs { position: fixed; bottom: 20px; right: 20px; z-index: 200; background: rgba(0,0,0,0.8); border: 1px solid #333; color: #666; padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-bg"></canvas>
+
+    <div id="pretty-overlay">
+        <div class="pretty-stat" id="pretty-hash">42.8 EH/s</div>
+        <div style="color:var(--cyan); font-size:1.5rem; letter-spacing:5px;">FROSTCHAIN_LEDGER_ACTIVE</div>
+    </div>
+
+    <button class="btn-fs" onclick="togglePretty()">[ TOGGLE PRETTY SCAN ]</button>
+
+    <div id="dash">
+        <div class="header">
+            <div style="font-weight:bold; font-size:1.2rem;">FROSTSCAN <span style="color:var(--gold)">v1.5</span></div>
+            <div style="font-size:0.7rem; color:#444;">SYNCED WITH: <span style="color:var(--term)">FROSTOISE KERNEL v42</span></div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card" style="border-left-color: var(--btc);">
+                <div class="stat-lbl">Merged BTC Hash</div>
+                <div class="stat-val" id="hash-val">42.8 EH/s</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--gold);">
+                <div class="stat-lbl">FTC Supply</div>
+                <div class="stat-val">1,241,337</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--cyan);">
+                <div class="stat-lbl">Global Nodes</div>
+                <div class="stat-val">8,421</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--thermal);">
+                <div class="stat-lbl">PoTW Thermal Avg</div>
+                <div class="stat-val">38.4°C</div>
+            </div>
+        </div>
+
+        <div class="ledger-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Height</th>
+                        <th>Hash / TXID</th>
+                        <th>Type</th>
+                        <th>Assets</th>
+                        <th>PoTW Sig</th>
+                    </tr>
+                </thead>
+                <tbody id="ledger-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let height = 948221;
+
+        function togglePretty() {
+            document.body.classList.toggle('is-pretty');
+            if(document.body.classList.contains('is-pretty')) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if(document.fullscreenElement) document.exitFullscreen();
+            }
+        }
+
+        function addBlock() {
+            const body = document.getElementById('ledger-body');
+            const row = document.createElement('tr');
+            const txid = "0x" + Math.random().toString(16).substr(2, 12).toUpperCase();
+            const temp = (37 + Math.random() * 3).toFixed(1);
+            
+            row.innerHTML = `
+                <td>${height--}</td>
+                <td><span style="color:#555">${txid}...</span></td>
+                <td><span style="color:var(--btc)">MERGED_SHA256</span></td>
+                <td>
+                    <span class="asset-tag" style="background:var(--pink)">FRST</span>
+                    <span class="asset-tag" style="background:var(--gold)">FTC</span>
+                </td>
+                <td class="potw-sig">${temp}°C</td>
+            `;
+            body.prepend(row);
+            if(body.children.length > 15) body.removeChild(body.lastChild);
+            
+            // Sync Pretty View
+            const h = (42 + Math.random()).toFixed(1) + " EH/s";
+            document.getElementById('hash-val').innerText = h;
+            document.getElementById('pretty-hash').innerText = h;
+        }
+
+        setInterval(addBlock, 3000);
+        for(let i=0; i<10; i++) addBlock();
+
+        // Background Tangle
+        const canvas = document.getElementById('tangle-bg');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let p = Array(40).fill().map(()=>({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-.5), vy:(Math.random()-.5)}));
+        function loop() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            p.forEach(n => {
+                n.x+=n.vx; n.y+=n.vy;
+                if(n.x<0||n.x>canvas.width)n.vx*=-1; if(n.y<0||n.y>canvas.height)n.vy*=-1;
+                p.forEach(n2 => {
+                    let d = Math.hypot(n.x-n2.x, n.y-n2.y);
+                    if(d < 150) { ctx.strokeStyle = "#00ff41"; ctx.globalAlpha = 0.1; ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke(); }
+                });
+            });
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+</html>

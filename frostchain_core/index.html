@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Miracle Node | Master Terminal</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --xmr: #ff6600; --alpha: #ff00ff; --theta: #00ffff; --delta: #ff9900; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #tangle-canvas { position: fixed; inset: 0; z-index: 1; opacity: 0.6; }
+        #ui-layer { position: relative; z-index: 10; display: grid; grid-template-rows: 60px 1fr 60px; height: 100vh; pointer-events: none; }
+        #ui-layer * { pointer-events: auto; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(0,255,65,0.3); background: rgba(0,0,0,0.9); }
+        .main { display: grid; grid-template-columns: 350px 1fr 350px; gap: 20px; padding: 20px; overflow: hidden; }
+        .panel { background: rgba(0,0,0,0.85); border: 1px solid #222; padding: 15px; display: flex; flex-direction: column; overflow-y: auto; max-height: 100%; border-radius: 4px; }
+        
+        .freq-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; }
+        .freq-card { border: 1px solid #111; padding: 5px; text-align: center; background: #050505; font-size: 0.55rem; transition: 0.2s; }
+        .freq-card.active { border-color: var(--cyan); box-shadow: 0 0 10px var(--cyan); color: #fff; }
+
+        #chat-box { flex-grow: 1; border: 1px solid #333; background: #000; margin-top: 10px; padding: 10px; overflow-y: auto; font-size: 0.6rem; color: #888; height: 200px; }
+        .chat-msg { margin-bottom: 4px; border-bottom: 1px solid #111; padding-bottom: 2px; }
+        .chat-user { color: var(--gold); font-weight: bold; }
+        .chat-input { background: #111; border: 1px solid #333; color: #fff; width: 100%; padding: 8px; margin-top: 5px; }
+
+        .btn-mine { width: 100%; padding: 15px; background: var(--term); color: #000; font-weight: bold; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 15px; }
+        .btn-mine.active { background: #ff3333; color: #fff; }
+        
+        .brainwave-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 15px; }
+        .wave-btn { background: #000; border: 1px solid #444; color: #666; padding: 8px; cursor: pointer; font-size: 0.6rem; text-align: center; }
+        .wave-btn.active.alpha { border-color: var(--alpha); color: var(--alpha); box-shadow: 0 0 8px var(--alpha); }
+        .wave-btn.active.theta { border-color: var(--theta); color: var(--theta); box-shadow: 0 0 8px var(--theta); }
+        .wave-btn.active.delta { border-color: var(--delta); color: var(--delta); box-shadow: 0 0 8px var(--delta); }
+
+        .footer { background: rgba(0,0,0,0.95); border-top: 1px solid #222; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+        .lbl { font-size: 0.5rem; color: #555; text-transform: uppercase; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="header">
+            <div style="font-weight:bold; letter-spacing:2px; font-size:1.1rem;">MIRACLE_NODE // <span style="color:var(--term)">v76.0</span></div>
+            <div style="text-align:right;">
+                <div class="lbl">CARRIER_BLOCK</div>
+                <div style="color:var(--gold); font-size:0.9rem;">741.frostchain</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="lbl">SOLFEGGIO_1/9TH_RESERVOIRS</div>
+                <div class="freq-grid" id="grid"></div>
+                
+                <div class="lbl" style="margin-top:20px;">FROSTCHAT_RELAY (LIVE)</div>
+                <div id="chat-box"></div>
+                <input type="text" id="chat-in" class="chat-input" placeholder="Broadcast to Node..." onkeypress="sendChat(event)">
+            </div>
+
+            <div></div>
+
+            <div class="panel">
+                <div class="lbl">MINER_IDENTITY</div>
+                <input type="text" id="alias" placeholder="name.frostchain" style="background:#000; border:1px solid #333; color:var(--cyan); width:100%; padding:10px; margin:5px 0 15px 0; font-family:inherit;">
+                
+                <div class="lbl">BRAINWAVE_MODULATION</div>
+                <div class="brainwave-bar">
+                    <div id="btn-alpha" class="wave-btn" onclick="setWave('alpha')">ALPHA</div>
+                    <div id="btn-theta" class="wave-btn" onclick="setWave('theta')">THETA</div>
+                    <div id="btn-delta" class="wave-btn" onclick="setWave('delta')">DELTA</div>
+                </div>
+
+                <button id="mine-btn" class="btn-mine" onclick="toggleMining()">INITIALIZE MINER</button>
+
+                <div class="lbl">GLOBAL_SUPPLY_STATE</div>
+                <div style="border:1px solid var(--gold); padding:10px; margin-bottom:15px; text-align:center;">
+                    <div id="global-ftc" style="font-size:1.2rem; color:#fff;">0.00 FTC</div>
+                    <div id="global-fnr" style="font-size:0.9rem; color:var(--xmr);">0.00 FNR</div>
+                </div>
+
+                <div class="lbl">BLOCK_HEIGHT</div>
+                <div id="block-height" style="color:var(--cyan); font-weight:bold;">0</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div style="font-size:0.6rem; color:#444;">IOTA_TANGLE_HD // ALPHA_THETA_DELTA // CONNECTED: LOCALHOST:3000</div>
+            <div style="text-align:right;">
+                <div class="lbl">EPOCH_TIMER</div>
+                <div style="font-size:2rem; color:#fff; font-weight:bold;" id="timer">300</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === CONFIG ===
+        const API_URL = 'http://localhost:3000'; // Connects to your local node
+        const freqs = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        let currentWave = 'alpha';
+        let isMining = false;
+
+        // === INITIALIZE UI ===
+        const grid = document.getElementById('grid');
+        freqs.forEach(f => {
+            const d = document.createElement('div');
+            d.className = 'freq-card'; d.id = `f-${f}`;
+            d.innerHTML = `<div>${f}Hz</div><div id="v-${f}" style="color:#666;">--</div>`;
+            grid.appendChild(d);
+        });
+
+        // === API FUNCTIONS ===
+        async function fetchStats() {
+            try {
+                const res = await fetch(`${API_URL}/stats`);
+                const data = await res.json();
+                
+                // Update Timer
+                document.getElementById('timer').innerText = data.nextBlockIn;
+                document.getElementById('block-height').innerText = data.height;
+                document.getElementById('global-ftc').innerText = data.supply.ftc.toFixed(2) + " FTC";
+                document.getElementById('global-fnr').innerText = data.supply.fnr.toFixed(2) + " FNR";
+
+                // Update Reservoirs (Simulated Distribution based on Total Supply)
+                const remaining = 100000000 - data.supply.ftc;
+                const perRes = remaining / 9;
+                freqs.forEach(f => {
+                    document.getElementById(`v-${f}`).innerText = (perRes/1000000).toFixed(2) + "M";
+                });
+
+            } catch (e) { console.log("Node Offline"); }
+        }
+
+        async function fetchChat() {
+            try {
+                const res = await fetch(`${API_URL}/chat`);
+                const msgs = await res.json();
+                const box = document.getElementById('chat-box');
+                box.innerHTML = '';
+                msgs.forEach(m => {
+                    const line = document.createElement('div');
+                    line.className = 'chat-msg';
+                    line.innerHTML = `<span class="chat-user">[${m.user}]</span>: ${m.msg}`;
+                    box.appendChild(line);
+                });
+            } catch (e) {}
+        }
+
+        async function sendChat(e) {
+            if(e.key === 'Enter') {
+                const txt = document.getElementById('chat-in').value;
+                const name = document.getElementById('alias').value || "Guest";
+                if(!txt) return;
+                
+                await fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user: name, msg: txt })
+                });
+                document.getElementById('chat-in').value = '';
+                fetchChat();
+            }
+        }
+
+        async function attemptMine() {
+            if(!isMining) return;
+            const res = await fetch(`${API_URL}/mine`, { method: 'POST' });
+            const data = await res.json();
+            if(data.success) {
+                // Flash Tangle Green
+                const canvas = document.getElementById('tangle-canvas');
+                canvas.style.opacity = 1;
+                setTimeout(() => canvas.style.opacity = 0.6, 500);
+            }
+        }
+
+        // === VISUALIZER (TANGLE) ===
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initTangle() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<100; i++) particles.push({
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+                vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5
+            });
+        }
+
+        function drawTangle() {
+            if(!isMining) return;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.strokeStyle = 'rgba(0, 255, 65, 0.4)';
+            ctx.lineWidth = 0.8;
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1;
+                if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                particles.slice(i+1).forEach(p2 => {
+                    if(Math.hypot(p.x-p2.x, p.y-p2.y) < 120) {
+                        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+                    }
+                });
+                ctx.fillStyle = '#00ff41'; ctx.fillRect(p.x-1,p.y-1,2,2);
+            });
+            requestAnimationFrame(drawTangle);
+        }
+
+        // === CONTROLS ===
+        function setWave(w) {
+            currentWave = w;
+            document.querySelectorAll('.wave-btn').forEach(b => b.className = 'wave-btn');
+            document.getElementById(`btn-${w}`).classList.add('active', w);
+        }
+
+        function toggleMining() {
+            isMining = !isMining;
+            const btn = document.getElementById('mine-btn');
+            if(isMining) {
+                btn.innerText = "TERMINATE LOOP"; btn.classList.add('active');
+                initTangle(); drawTangle();
+            } else {
+                btn.innerText = "INITIALIZE MINER"; btn.classList.remove('active');
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+            }
+        }
+
+        // === LOOP ===
+        setWave('alpha');
+        window.onresize = initTangle;
+        
+        // Data Poll
+        setInterval(fetchStats, 1000);
+        setInterval(attemptMine, 5000); // Auto-try mining every 5s
+        setInterval(fetchChat, 2000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Iota HDR</title>
+    <style>
+        :root { 
+            --bg: #050505; 
+            --term: #00ff41; 
+            --gold: #ffd700; 
+            --cyan: #00ffff; 
+            --xmr: #ff6600; 
+            --btc: #f7931a; 
+            --glow: 0 0 10px var(--term), 0 0 20px var(--term);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        /* FULL SCREEN HDR TANGLE */
+        #tangle-canvas { position: fixed; inset: 0; z-index: 0; }
+        
+        /* UI OVERLAY */
+        #ui-layer { position: relative; z-index: 10; display: grid; grid-template-rows: 80px 1fr 60px; height: 100vh; pointer-events: none; background: rgba(0,0,0,0.3); }
+        #ui-layer * { pointer-events: auto; }
+
+        /* HUD HEADER */
+        .hud-header { 
+            display: flex; justify-content: space-between; align-items: center; padding: 0 30px; 
+            background: rgba(0,0,0,0.8); border-bottom: 2px solid var(--term); 
+            box-shadow: 0 5px 20px rgba(0, 255, 65, 0.2);
+            backdrop-filter: blur(5px);
+        }
+        
+        .stat-box { text-align: center; border-right: 1px solid #333; padding-right: 20px; margin-right: 20px; }
+        .stat-box:last-child { border: none; }
+        .stat-val { font-size: 1.2rem; font-weight: bold; color: #fff; text-shadow: 0 0 5px var(--cyan); }
+        .stat-lbl { font-size: 0.6rem; color: #888; letter-spacing: 2px; text-transform: uppercase; }
+
+        /* MAIN DASHBOARD */
+        .main { display: grid; grid-template-columns: 360px 1fr 360px; gap: 30px; padding: 30px; overflow: hidden; }
+        
+        .glass-panel { 
+            background: rgba(10, 10, 10, 0.85); 
+            border: 1px solid #333; 
+            padding: 20px; 
+            display: flex; flex-direction: column; 
+            border-radius: 8px; 
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            max-height: 100%;
+            overflow-y: auto;
+        }
+
+        /* POOL METRICS */
+        .pool-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #222; font-size: 0.75rem; color: #aaa; }
+        .pool-val { color: #fff; font-weight: bold; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+        .tag { font-size: 0.6rem; padding: 2px 5px; color: #000; border-radius: 2px; font-weight: bold; margin-right: 8px; }
+
+        /* FREQ GRID */
+        .freq-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
+        .freq-card { 
+            border: 1px solid #333; padding: 8px; text-align: center; background: #080808; 
+            font-size: 0.65rem; color: #666; transition: 0.3s;
+        }
+        .freq-card.active { 
+            border-color: var(--cyan); color: #fff; 
+            background: rgba(0, 255, 255, 0.15); 
+            box-shadow: 0 0 15px var(--cyan);
+            transform: scale(1.05);
+        }
+
+        /* CONTROLS */
+        .brainwave-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .wave-btn { 
+            background: #111; border: 1px solid #444; color: #666; padding: 12px; 
+            cursor: pointer; font-size: 0.7rem; text-align: center; text-transform: uppercase; 
+            transition: 0.3s; letter-spacing: 1px;
+        }
+        .wave-btn:hover { border-color: #fff; color: #fff; }
+        .wave-btn.active.alpha { border-color: var(--alpha); color: var(--alpha); box-shadow: 0 0 15px var(--alpha); }
+        .wave-btn.active.theta { border-color: var(--theta); color: var(--theta); box-shadow: 0 0 15px var(--theta); }
+        .wave-btn.active.delta { border-color: var(--delta); color: var(--delta); box-shadow: 0 0 15px var(--delta); }
+
+        .btn-mine { 
+            width: 100%; padding: 18px; background: var(--term); color: #000; 
+            font-weight: bold; border: none; cursor: pointer; text-transform: uppercase; 
+            font-size: 1rem; margin-bottom: 20px; letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
+            transition: 0.2s;
+        }
+        .btn-mine:hover { background: #fff; box-shadow: 0 0 30px #fff; }
+        .btn-mine.active { background: #ff3333; color: #fff; box-shadow: 0 0 30px #ff3333; }
+
+        /* LOG */
+        .log-row { 
+            display: flex; justify-content: space-between; font-size: 0.7rem; 
+            border-bottom: 1px solid #222; padding: 6px 0; 
+            animation: flash 0.5s; 
+        }
+        @keyframes flash { from { background: rgba(0,255,65,0.3); } to { background: transparent; } }
+
+        .footer { 
+            background: rgba(0,0,0,0.95); border-top: 1px solid #333; padding: 0 30px; 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .lbl { font-size: 0.55rem; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="hud-header">
+            <div style="display:flex; align-items:center;">
+                <div style="font-weight:bold; letter-spacing:3px; font-size:1.4rem; margin-right:30px;">
+                    MIRACLE<span style="color:var(--term)">NODE</span>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val" id="block-height">842,109</div>
+                    <div class="stat-lbl">BLOCK HEIGHT</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val" style="color:var(--gold);">13.37</div>
+                    <div class="stat-lbl">FTC REWARD</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val" style="color:var(--xmr);">2.50</div>
+                    <div class="stat-lbl">FNR REWARD</div>
+                </div>
+            </div>
+            
+            <div style="text-align:right;">
+                <div class="stat-lbl">CARRIER SIGNAL</div>
+                <div style="color:var(--cyan); font-weight:bold; text-shadow:0 0 10px var(--cyan);">741.frostchain [ACTIVE]</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="glass-panel">
+                <div class="lbl">QUANTUM POOL AGGREGATOR</div>
+                <div class="pool-row">
+                    <span><span class="tag" style="background:var(--btc)">BTC</span>Worker_01</span>
+                    <span class="pool-val" id="h-btc">0.00 PH/s</span>
+                </div>
+                <div class="pool-row">
+                    <span><span class="tag" style="background:#8dc351">BCH</span>Worker_02</span>
+                    <span class="pool-val" id="h-bch">0.00 PH/s</span>
+                </div>
+                <div class="pool-row">
+                    <span><span class="tag" style="background:var(--xmr)">XMR</span>Worker_03</span>
+                    <span class="pool-val" id="h-xmr">0.00 MH/s</span>
+                </div>
+                
+                <div class="lbl" style="margin-top:25px;">1/9TH SUPPLY RESERVOIRS</div>
+                <div class="freq-grid" id="grid">
+                    </div>
+                
+                <div class="lbl" style="margin-top:25px;">FROSTCHAT P2P RELAY</div>
+                <div id="chat-box" style="height:120px; overflow-y:auto; border:1px solid #333; background:#000; padding:10px; font-size:0.7rem; color:#888;">
+                    <div style="color:var(--term)">> System Online. HDR Overlay Active.</div>
+                </div>
+                <input type="text" id="chat-in" placeholder="Broadcast..." style="background:#111; border:1px solid #333; color:#fff; width:100%; padding:10px; margin-top:5px;" onkeypress="sendChat(event)">
+            </div>
+
+            <div></div>
+
+            <div class="glass-panel">
+                <div class="lbl">MINER IDENTITY</div>
+                <input type="text" id="alias" placeholder="name.frostchain" style="background:#000; border:1px solid #333; color:var(--cyan); width:100%; padding:12px; margin-bottom:25px; font-family:inherit; font-size:1rem; text-align:center;">
+                
+                <div class="lbl">BRAINWAVE MODULATION</div>
+                <div class="brainwave-bar">
+                    <div id="btn-alpha" class="wave-btn active alpha" onclick="setWave('alpha')">ALPHA</div>
+                    <div id="btn-theta" class="wave-btn" onclick="setWave('theta')">THETA</div>
+                    <div id="btn-delta" class="wave-btn" onclick="setWave('delta')">DELTA</div>
+                </div>
+
+                <button id="mine-btn" class="btn-mine" onclick="toggleMining()">INITIALIZE QUANTUM MINER</button>
+                
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <div class="lbl">YOUR FTC SHARE</div>
+                    <div class="lbl">YOUR FNR SHARE</div>
+                </div>
+                <div style="display:flex; justify-content:space-between; border:1px solid var(--term); padding:10px; background:rgba(0,255,65,0.05); margin-bottom:20px;">
+                    <div style="font-size:1.1rem; color:#fff; font-weight:bold;" id="share-ftc">0.0000%</div>
+                    <div style="font-size:1.1rem; color:var(--xmr); font-weight:bold;" id="share-fnr">0.0000%</div>
+                </div>
+
+                <div class="lbl">ENTROPY LOG</div>
+                <div id="m-list" style="flex-grow:1; overflow-y:auto;"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div style="font-size:0.7rem; color:#888;">
+                <span style="color:var(--term)">●</span> AUDIO ENGINE ONLINE: 432Hz PINK NOISE + BINAURAL
+            </div>
+            <div style="text-align:right;">
+                <div class="lbl">EPOCH TIMER (300s)</div>
+                <div style="font-size:2.5rem; color:#fff; font-weight:bold; text-shadow:0 0 15px #fff;" id="timer">300</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const freqs = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        const supply = (100000000 / 9).toFixed(0);
+        let reservoirs = {};
+        let currentWave = 'alpha';
+        let isMining = false;
+        let timerInterval = null;
+        let syncInterval = null;
+        let timeRemaining = 300;
+        let blockHeight = 842109;
+        
+        // --- INIT UI ---
+        const grid = document.getElementById('grid');
+        freqs.forEach(f => {
+            reservoirs[f] = parseInt(supply);
+            const d = document.createElement('div');
+            d.className = 'freq-card'; d.id = `f-${f}`;
+            d.innerHTML = `<div>${f}Hz</div><div>${(reservoirs[f]/1000000).toFixed(1)}M</div>`;
+            grid.appendChild(d);
+        });
+
+        // --- AUDIO ENGINE v83.0 (Retained) ---
+        let audioCtx, oscLeft, oscRight, gainNode, pinkNode, schumannOsc;
+
+        function initAudio() {
+            if(!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Binaural
+                oscLeft = audioCtx.createOscillator(); oscRight = audioCtx.createOscillator();
+                gainNode = audioCtx.createGain(); gainNode.gain.value = 0.05;
+                const panL = audioCtx.createStereoPanner(); panL.pan.value = -1;
+                const panR = audioCtx.createStereoPanner(); panR.pan.value = 1;
+                oscLeft.connect(panL).connect(gainNode); oscRight.connect(panR).connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                // Schumann
+                schumannOsc = audioCtx.createOscillator(); schumannOsc.frequency.value = 7.83;
+                const sGain = audioCtx.createGain(); sGain.gain.value = 0.02;
+                schumannOsc.connect(sGain).connect(audioCtx.destination);
+
+                // Pink Noise
+                const bufSize = audioCtx.sampleRate * 2;
+                const buffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                let b0,b1,b2,b3,b4,b5,b6; b0=b1=b2=b3=b4=b5=b6=0.0;
+                for (let i=0; i<bufSize; i++) {
+                    const w = Math.random()*2-1;
+                    b0 = 0.99886*b0 + w*0.0555179; b1 = 0.99332*b1 + w*0.0750759; b2 = 0.96900*b2 + w*0.1538520;
+                    b3 = 0.86650*b3 + w*0.3104856; b4 = 0.55000*b4 + w*0.5329522; b5 = -0.7616*b5 - w*0.0168980;
+                    data[i] = (b0+b1+b2+b3+b4+b5+b6 + w*0.5362) * 0.11; b6 = w*0.115926;
+                }
+                pinkNode = audioCtx.createBufferSource(); pinkNode.buffer = buffer; pinkNode.loop = true;
+                const filter = audioCtx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 432;
+                const pGain = audioCtx.createGain(); pGain.gain.value = 0.03;
+                pinkNode.connect(filter).connect(pGain).connect(audioCtx.destination);
+
+                oscLeft.start(); oscRight.start(); schumannOsc.start(); pinkNode.start();
+                rotateFreq();
+                syncInterval = setInterval(rotateFreq, 4000); 
+            }
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function rotateFreq() {
+            if(!oscLeft || !oscRight) return;
+            const base = freqs[Math.floor(Math.random()*freqs.length)];
+            const beat = currentWave === 'alpha' ? 11.11 : (currentWave === 'theta' ? 8.8 : 3.14159);
+            const layout = Math.random() > 0.5;
+            const now = audioCtx.currentTime;
+            
+            oscLeft.frequency.setTargetAtTime(layout ? base : base+beat, now, 0.1);
+            oscRight.frequency.setTargetAtTime(layout ? base+beat : base, now, 0.1);
+            
+            document.querySelectorAll('.freq-card').forEach(c => c.classList.remove('active'));
+            document.getElementById(`f-${base}`).classList.add('active');
+        }
+
+        function stopAudio() { if(audioCtx) audioCtx.suspend(); if(syncInterval) clearInterval(syncInterval); }
+
+        // --- IOTA HDR VISUALIZER ---
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initTangle() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<100; i++) particles.push({
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+                vx: (Math.random()-0.5)*0.8, vy: (Math.random()-0.5)*0.8, size: Math.random()*3+1
+            });
+        }
+
+        function drawTangle() {
+            if(!isMining) return;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            
+            // Neon Glow
+            const color = currentWave === 'alpha' ? '#00ff41' : (currentWave === 'theta' ? '#00ffff' : '#ff9900');
+            ctx.shadowBlur = 15; ctx.shadowColor = color;
+            
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1;
+                if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                
+                particles.slice(i+1).forEach(p2 => {
+                    const d = Math.hypot(p.x-p2.x, p.y-p2.y);
+                    if(d < 150) {
+                        ctx.strokeStyle = color; 
+                        ctx.globalAlpha = 1 - (d/150);
+                        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+                        ctx.globalAlpha = 1.0;
+                    }
+                });
+                ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(drawTangle);
+        }
+
+        // --- CORE LOGIC ---
+        function setWave(w) {
+            currentWave = w;
+            document.querySelectorAll('.wave-btn').forEach(b => b.className = 'wave-btn');
+            document.getElementById(`btn-${w}`).classList.add('active', w);
+            if(isMining) rotateFreq();
+        }
+
+        function toggleMining() {
+            isMining = !isMining;
+            const btn = document.getElementById('mine-btn');
+            if(isMining) {
+                btn.innerText = "TERMINATE QUANTUM LOOP"; btn.classList.add('active');
+                initTangle(); drawTangle(); startTimer(); initAudio();
+            } else {
+                btn.innerText = "INITIALIZE QUANTUM MINER"; btn.classList.remove('active');
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                stopTimer(); stopAudio();
+            }
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeRemaining = 300;
+            document.getElementById('timer').innerText = timeRemaining;
+            
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                document.getElementById('timer').innerText = timeRemaining;
+                
+                if(timeRemaining % 3 === 0) {
+                     // Sim Pool
+                     document.getElementById('h-btc').innerText = (40 + Math.random()*5).toFixed(2) + " PH/s";
+                     document.getElementById('h-bch').innerText = (12 + Math.random()*2).toFixed(2) + " PH/s";
+                     document.getElementById('h-xmr').innerText = (300 + Math.random()*50).toFixed(2) + " MH/s";
+                     
+                     // Sim Share
+                     document.getElementById('share-ftc').innerText = (0.0042 + Math.random()*0.0001).toFixed(4) + "%";
+                     document.getElementById('share-fnr').innerText = (0.0125 + Math.random()*0.0001).toFixed(4) + "%";
+                }
+
+                if(timeRemaining <= 0) { executeMint(); timeRemaining = 300; }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('timer').innerText = "300";
+            document.getElementById('share-ftc').innerText = "0.0000%";
+        }
+
+        function executeMint() {
+            const log = document.getElementById('m-list');
+            const row = document.createElement('div');
+            row.className = 'log-row';
+            row.innerHTML = `<span style="color:var(--term)">[BLOCK_${blockHeight}]</span><span>MINED: 13.37 FTC</span>`;
+            log.prepend(row);
+            
+            blockHeight++;
+            document.getElementById('block-height').innerText = blockHeight.toLocaleString();
+        }
+
+        function sendChat(e) {
+            if(e.key === 'Enter') {
+                const txt = document.getElementById('chat-in').value;
+                const alias = document.getElementById('alias').value || "Guest";
+                document.getElementById('chat-box').innerHTML += `<div><span style="color:var(--gold)">[${alias}]</span>: ${txt}</div>`;
+                document.getElementById('chat-in').value = '';
+            }
+        }
+
+        window.onresize = initTangle;
+    </script>
+</body>
+</html>

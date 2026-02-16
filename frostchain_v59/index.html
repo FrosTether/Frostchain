@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frostchain | v59 Sonic</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --fnr: #00d2ff; --btc: #f7931a; --cyan: #00ffff; --sol: #9945ff; --poh: #14f195; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #tangle-canvas { position: fixed; inset: 0; z-index: 1; cursor: crosshair; }
+        
+        #dash { 
+            display: grid; 
+            grid-template-columns: 320px 1fr 320px; 
+            grid-template-rows: 60px 1fr;
+            height: 100vh; 
+            position: relative; 
+            z-index: 10; 
+            pointer-events: none; 
+        }
+        
+        .panel { 
+            background: rgba(10,10,10,0.92); 
+            border: 1px solid #222; 
+            padding: 15px; 
+            overflow-y: auto; 
+            pointer-events: auto; 
+            backdrop-filter: blur(5px);
+        }
+        
+        .header { 
+            grid-column: 1 / -1; 
+            background: #000; 
+            border-bottom: 2px solid var(--term); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0 20px; 
+            pointer-events: auto;
+        }
+
+        .stat-box { background: rgba(0,0,0,0.5); border: 1px solid #333; padding: 10px; margin-bottom: 8px; border-left: 3px solid var(--term); }
+        .val { font-size: 1.1rem; font-weight: bold; color: #fff; }
+        .lbl { font-size: 0.6rem; color: #888; text-transform: uppercase; }
+        
+        /* FREQUENCY BUTTONS */
+        .btn-mode { width: 100%; padding: 12px; margin-bottom: 5px; background: #000; border: 1px solid #333; color: #666; font-weight: bold; cursor: pointer; text-align: left; display: flex; justify-content: space-between; transition: 0.2s; }
+        .btn-mode:active { transform: scale(0.98); }
+        .btn-mode.active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 15px rgba(0,255,255,0.2); }
+
+        /* FULLSCREEN */
+        body.fs-active #dash { opacity: 0; pointer-events: none; }
+        .fs-toggle { position: fixed; bottom: 20px; right: 20px; z-index: 50; background: #000; border: 1px solid #444; color: #888; padding: 8px 15px; cursor: pointer; pointer-events: auto; }
+        .fs-stat { display: none; position: fixed; font-size: 4rem; font-weight: bold; color: rgba(255,255,255,0.15); pointer-events: none; z-index: 5; }
+        body.fs-active .fs-stat { display: block; }
+
+        #start-gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; }
+        #chat-panel { display: flex; flex-direction: column; background: rgba(0,0,0,0.6); pointer-events: auto; border-left: 1px solid #222; border-right: 1px solid #222; }
+
+        @media (max-width: 800px) {
+            #dash { grid-template-columns: 1fr; grid-template-rows: 50px 1fr 1fr 1fr; display: block; overflow-y: auto; }
+            .panel { margin-bottom: 10px; height: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+    
+    <input type="file" id="local-file" accept="audio/*" style="display:none" onchange="handleFile(this.files)">
+    <audio id="music-player" loop crossOrigin="anonymous"></audio>
+
+    <div class="fs-stat" style="bottom: 20px; left: 20px;" id="fs-hash">1.25 PH/s</div>
+    <div class="fs-stat" style="top: 20px; right: 20px;" id="fs-timer">300</div>
+
+    <div id="start-gate" onclick="engageSystem()">
+        <div style="text-align:center; border: 1px solid var(--term); padding: 40px; box-shadow: 0 0 50px rgba(0,255,65,0.2);">
+            <h1 style="color:var(--term); letter-spacing:4px; margin:0;">MIRACLE NODE v59</h1>
+            <p style="color:var(--gold); font-size:0.8rem; margin-top:15px;">[ TAP TO FORCE AUDIO DRIVERS ]</p>
+            <div style="font-size:0.6rem; color:#666; margin-top:10px;">ENSURE VOLUME IS UP</div>
+        </div>
+    </div>
+
+    <button class="fs-toggle" onclick="toggleFS()">[ IMMERSIVE MODE ]</button>
+
+    <div id="dash">
+        <div class="header">
+            <div style="font-weight:bold;">FROSTOISE <span style="color:var(--sol)">v59 SONIC</span></div>
+            <div style="font-size:0.7rem;">AUDIO_STATUS: <span id="audio-stat" style="color:var(--poh)">WAITING</span></div>
+        </div>
+
+        <div class="panel">
+            <div class="lbl" style="color:#fff; margin-bottom:5px;">NETWORK SHARE</div>
+            
+            <div class="stat-box" style="border-left-color: var(--term);">
+                <div class="lbl">YOUR HASHRATE</div>
+                <div class="val" id="my-h">1.25 PH/s</div>
+            </div>
+            
+            <div class="stat-box" style="border-left-color: var(--btc);">
+                <div class="lbl">GLOBAL HASH</div>
+                <div class="val" id="global-h">42.80 EH/s</div>
+            </div>
+
+            <div class="lbl" style="margin: 20px 0 5px 0;">OSCILLATOR DECK</div>
+            <button id="btn-alpha" class="btn-mode" onclick="toggleOsc('alpha')">ALPHA 40Hz</button>
+            <button id="btn-theta" class="btn-mode" onclick="toggleOsc('theta')">THETA 6.39Hz</button>
+            <button id="btn-delta" class="btn-mode" onclick="toggleOsc('delta')">DELTA PI Hz</button>
+
+            <div style="margin-top:15px; border-top:1px solid #333; padding-top:10px;">
+                <div id="track-title" style="font-size:0.6rem; color:var(--sol); margin-bottom:5px;">LOCAL AUDIO INJECTION</div>
+                <button onclick="document.getElementById('local-file').click()" style="width:100%; background:#111; color:#fff; border:1px solid #444; padding:10px; font-size:0.7rem; cursor:pointer;">LOAD MUSIC FILE</button>
+            </div>
+        </div>
+
+        <div id="chat-panel" class="panel">
+            <div id="chat-log" style="flex:1; font-size:0.7rem; overflow-y:auto; color:#ccc; min-height: 150px;">
+                <div style="color:var(--term)">> Audio Drivers Resumed.</div>
+            </div>
+            <input type="text" style="background:#000; border:none; border-top:1px solid #333; padding:15px; color:#fff; font-family:inherit; width:100%; box-sizing:border-box;" placeholder="Broadcast..." onkeydown="if(event.key==='Enter') send(this)">
+        </div>
+
+        <div class="panel">
+            <div class="stat-box" style="border-left-color: var(--gold);">
+                <div class="lbl">FTC REWARD (SHARE)</div>
+                <div class="val" id="ftc-cut" style="color:var(--gold)">0.000390 FTC</div>
+            </div>
+            
+            <div class="stat-box" style="border-left-color: var(--fnr);">
+                <div class="lbl">FNR REWARD (SHARE)</div>
+                <div class="val" id="fnr-cut" style="color:var(--fnr)">0.000073 FNR</div>
+            </div>
+
+            <div style="margin-top:20px; padding-top:20px; border-top:1px solid #333;">
+                <div class="lbl">TOTAL VAULT</div>
+                <div style="font-size:1.1rem; font-weight:bold; color:#fff; margin-bottom:5px;">
+                    <span id="ftc-bal">11,870,000.00</span> <span style="font-size:0.7rem; color:var(--gold)">FTC</span>
+                </div>
+                <div style="font-size:1.1rem; font-weight:bold; color:#fff;">
+                    <span id="fnr-bal">4,412,100.00</span> <span style="font-size:0.7rem; color:var(--fnr)">FNR</span>
+                </div>
+            </div>
+            
+            <div style="text-align:center; margin-top:20px;">
+                <div class="lbl">BLOCK TIMER</div>
+                <div style="font-size:2.5rem; color:#fff;" id="timer">300</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let actx, analyser, masterGain;
+        let oscL, oscR; // Oscillators
+        let musicNode;  // MediaElementSource
+        let isRunning = false;
+        
+        // --- SYSTEM BOOT ---
+        function engageSystem() {
+            document.getElementById('start-gate').style.display = 'none';
+            
+            // 1. Create Context
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            actx = new AudioContext();
+            
+            // 2. Force Resume (Critical for Mobile)
+            actx.resume().then(() => {
+                document.getElementById('audio-stat').innerText = "RUNNING";
+                console.log("Audio Context Force Resumed");
+            });
+
+            // 3. Setup Analyzer Graph
+            analyser = actx.createAnalyser();
+            analyser.fftSize = 256;
+            
+            masterGain = actx.createGain();
+            masterGain.gain.value = 0.5;
+            masterGain.connect(analyser);
+            analyser.connect(actx.destination);
+
+            isRunning = true;
+            initTangle();
+            startLoop();
+        }
+
+        // --- OSCILLATOR ENGINE (ALPHA/THETA/DELTA) ---
+        function toggleOsc(mode) {
+            if(!actx) return;
+            
+            // Stop existing
+            if(oscL) { try{ oscL.stop(); oscR.stop(); }catch(e){} oscL=null; }
+
+            // UI Reset
+            let btn = document.getElementById('btn-'+mode);
+            let isActive = btn.classList.contains('active');
+            document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+
+            if(isActive) return; // If clicking active, just turn off (toggle)
+
+            btn.classList.add('active');
+
+            let f = 432, diff = 0;
+            if(mode === 'alpha') diff = 40;
+            if(mode === 'theta') diff = 6.39;
+            if(mode === 'delta') diff = Math.PI;
+
+            oscL = actx.createOscillator();
+            oscR = actx.createOscillator();
+            
+            // Create a specific gain for tones so they aren't too loud
+            let toneGain = actx.createGain();
+            toneGain.gain.value = 0.2; 
+            
+            oscL.frequency.value = f; 
+            oscR.frequency.value = f + diff;
+            
+            oscL.connect(toneGain);
+            oscR.connect(toneGain);
+            
+            toneGain.connect(masterGain); // Route to master (and visualizer)
+            
+            oscL.start();
+            oscR.start();
+        }
+
+        // --- LOCAL FILE ENGINE ---
+        function handleFile(files) {
+            if(!files.length) return;
+            const file = files[0];
+            const player = document.getElementById('music-player');
+            const url = URL.createObjectURL(file);
+            
+            document.getElementById('track-title').innerText = file.name.substring(0,25).toUpperCase();
+            
+            player.src = url;
+            player.play().then(() => {
+                // Hook into Web Audio for Visuals ONLY after play starts
+                if(!musicNode) {
+                    musicNode = actx.createMediaElementSource(player);
+                    musicNode.connect(masterGain);
+                }
+            }).catch(e => console.log("Play failed:", e));
+        }
+
+        // --- TANGLE VISUALIZER ---
+        function initTangle() {
+            const canvas = document.getElementById('tangle-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            
+            let nodes = Array(50).fill().map(()=>({
+                x:Math.random()*canvas.width, y:Math.random()*canvas.height, 
+                vx:(Math.random()-.5), vy:(Math.random()-.5),
+                clr: ["#00ff41", "#00ffff", "#9945ff"][Math.floor(Math.random()*3)]
+            }));
+            
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+            function loop() {
+                if(!isRunning) return;
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                
+                let bass = 0;
+                if(analyser) { analyser.getByteFrequencyData(dataArray); bass = dataArray[10] || 0; }
+                const boost = bass / 255;
+                ctx.lineWidth = 1 + (boost * 3);
+                
+                for(let i=0; i<nodes.length; i++) {
+                    let n = nodes[i];
+                    n.x += n.vx * (1 + boost); n.y += n.vy * (1 + boost);
+                    if(n.x<0||n.x>canvas.width)n.vx*=-1; if(n.y<0||n.y>canvas.height)n.vy*=-1;
+                    
+                    for(let j=i+1; j<nodes.length; j++) {
+                        let n2 = nodes[j];
+                        let dx = n.x - n2.x; let dy = n.y - n2.y; 
+                        let d = Math.sqrt(dx*dx + dy*dy);
+                        
+                        if(d < 150 + (bass/2)) {
+                            ctx.strokeStyle = n.clr;
+                            ctx.globalAlpha = 1 - (d / (150 + bass/2));
+                            ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // --- STATS LOOP (Shared Rewards) ---
+        let ftcBal = 11870000.00;
+        let fnrBal = 4412100.00;
+        
+        function startLoop() {
+            setInterval(() => {
+                let t = parseInt(document.getElementById('timer').innerText) - 1;
+                
+                // Calc Share
+                let gHash = 42.8 + Math.random();
+                let mHash = 1.25 + (Math.random()*0.1);
+                let share = mHash / (gHash * 1000); // PH vs EH
+                
+                // Update UI
+                document.getElementById('global-h').innerText = gHash.toFixed(2) + " EH/s";
+                document.getElementById('my-h').innerText = mHash.toFixed(2) + " PH/s";
+                document.getElementById('fs-hash').innerText = mHash.toFixed(2) + " PH/s";
+                
+                let ftcCut = 13.37 * share;
+                let fnrCut = 2.50 * share;
+                
+                document.getElementById('ftc-cut').innerText = ftcCut.toFixed(7) + " FTC";
+                document.getElementById('fnr-cut').innerText = fnrCut.toFixed(7) + " FNR";
+
+                // Drip Balance
+                ftcBal += ftcCut / 5; // Drip faster for effect
+                fnrBal += fnrCut / 5;
+                
+                document.getElementById('ftc-bal').innerText = ftcBal.toLocaleString(undefined, {minimumFractionDigits: 7});
+                document.getElementById('fnr-bal').innerText = fnrBal.toLocaleString(undefined, {minimumFractionDigits: 7});
+
+                if(t < 0) t = 300;
+                document.getElementById('timer').innerText = t;
+                document.getElementById('fs-timer').innerText = t;
+            }, 1000);
+        }
+
+        function toggleFS() {
+            if(!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(e=>{}); document.body.classList.add('fs-active'); }
+            else { document.exitFullscreen().catch(e=>{}); document.body.classList.remove('fs-active'); }
+        }
+
+        function send(el) {
+            const d = document.createElement('div');
+            d.innerHTML = `<span style="color:var(--cyan)">drfrost</span>: ${el.value}`;
+            document.getElementById('chat-log').appendChild(d); el.value = "";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AmiahDoodles // Competitive_Quantum</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #f4f4f4; --frost: #00e0ff; --gold: #ffd700; --red: #ff0055; }
+body { background: var(--bg); font-family: 'Share Tech Mono', monospace; margin: 0; }
+.nav { background: #fff; border-bottom: 2px solid var(--frost); padding: 15px 10%; display: flex; justify-content: space-between; align-items: center; }
+.container { max-width: 900px; margin: 20px auto; display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.post { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid var(--frost); }
+
+/* COMPETITIVE MINER UI */
+.miner-box { background: #000; color: #fff; padding: 20px; border-radius: 8px; border-top: 3px solid var(--red); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+.switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--red); }
+input:checked + .slider:before { transform: translateX(26px); }
+
+.hash-rate { font-size: 1.5em; color: var(--gold); font-weight: bold; margin-top: 15px; display: none; }
+.comp-msg { font-size: 9px; color: #777; margin-top: 10px; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="nav">
+  <div style="font-size: 20px; font-weight: 900; color: var(--frost);">AMIAH_DOODLES</div>
+  <div style="font-size: 11px; color: #999;">GENESIS: 683050920</div>
+</div>
+<div class="container">
+  <div>
+    <div class="post">
+      <div style="color:var(--frost); font-weight:bold;">@AmiahDoodles</div>
+      <h3>Survival of the Strongest</h3>
+      <p>The 50/50 split is over. We are now in open competition with the BCH mining giants. Crank the engine to fight for the 13.37 FTC.</p>
+    </div>
+  </div>
+  <div class="sidebar">
+    <div class="miner-box">
+      <div style="font-size: 10px; color: #555; margin-bottom: 10px;">QUANTUM_COMPETITOR_V2</div>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span id="st">READY</span>
+        <label class="switch">
+          <input type="checkbox" id="mT" onchange="toggle()">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div id="rate" class="hash-rate">0.00 G-FORCE</div>
+      <div class="comp-msg" id="msg">AWAITING HASHRATE COMMAND...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggle() {
+  const check = document.getElementById('mT').checked;
+  const rate = document.getElementById('rate');
+  const msg = document.getElementById('msg');
+  const st = document.getElementById('st');
+
+  if(check) {
+    st.innerText = "COMPETING";
+    rate.style.display = "block";
+    msg.innerHTML = "<span style='color:var(--red)'>● FIGHTING FOR BLOCK 937,783...</span><br>Probability of Win: 0.00002%";
+    start();
+  } else {
+    st.innerText = "READY";
+    rate.style.display = "none";
+    msg.innerText = "AWAITING HASHRATE COMMAND...";
+    stop();
+  }
+}
+let int;
+function start() {
+  int = setInterval(() => {
+    const h = (Math.random() * 100).toFixed(2);
+    document.getElementById('rate').innerText = h + " G-FORCE";
+  }, 1000);
+}
+function stop() { clearInterval(int); }
+</script>
+</body>
+</html>

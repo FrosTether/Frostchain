@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grayson's Core</title>
+    <style>
+        :root { --bg: #000000; --card: #111111; --accent: #00ff41; --text: #ffffff; --nav: #0a0a0a; --btc: #f7931a; --bch: #8dc351; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; user-select: none; }
+
+        /* --- LOCK SCREEN --- */
+        #lock { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pin-dots { display: flex; gap: 15px; margin-bottom: 30px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--accent); transition: 0.2s; }
+        .dot.filled { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .numpad { display: grid; grid-template-columns: repeat(3, 80px); gap: 20px; }
+        .key { width: 80px; height: 80px; border-radius: 50%; background: #111; border: 1px solid #333; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; }
+        .key:active { background: var(--accent); color: #000; }
+
+        /* --- APP LAYOUT --- */
+        #app { display: none; flex-direction: column; height: 100%; }
+        
+        /* HEADER */
+        .header { padding: 15px 20px; background: rgba(10,10,10,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .identity { font-size: 0.8rem; font-weight: bold; color: var(--accent); letter-spacing: 1px; }
+        .net-status { font-size: 0.6rem; background: #222; padding: 4px 8px; border-radius: 4px; color: #888; }
+
+        /* CONTENT AREA */
+        .content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
+        .tab-view { display: none; animation: fadeIn 0.2s; }
+        .tab-view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ASSET CARDS (WALLET TAB) */
+        .total-bal { text-align: center; margin-bottom: 30px; }
+        .big-val { font-size: 2.5rem; font-weight: bold; letter-spacing: -1px; }
+        .sub-val { color: #888; font-size: 0.9rem; }
+        
+        .asset-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--card); border: 1px solid #222; margin-bottom: 10px; border-radius: 12px; }
+        .coin-icon { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; margin-right: 15px; color: #000; }
+        .coin-data { flex: 1; }
+        .coin-sym { font-weight: bold; font-size: 1rem; }
+        .coin-name { font-size: 0.7rem; color: #666; }
+        .coin-amt { text-align: right; font-size: 1rem; }
+
+        /* SEND TAB */
+        .input-group { margin-bottom: 20px; }
+        .label { font-size: 0.7rem; color: #888; margin-bottom: 8px; display: block; }
+        .input-field { width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 15px; font-family: inherit; font-size: 1rem; border-radius: 8px; outline: none; }
+        .input-field:focus { border-color: var(--accent); }
+        .action-btn { width: 100%; background: var(--accent); color: #000; padding: 18px; border: none; font-weight: bold; font-size: 1rem; border-radius: 8px; cursor: pointer; margin-top: 20px; }
+
+        /* RECEIVE TAB */
+        .qr-box { background: #fff; padding: 20px; border-radius: 15px; width: 200px; height: 200px; margin: 40px auto; display: flex; align-items: center; justify-content: center; }
+        .address-box { background: #111; padding: 15px; border-radius: 8px; text-align: center; font-size: 0.8rem; color: #888; word-break: break-all; border: 1px dashed #444; }
+
+        /* SWAP TAB (1inch Style) */
+        .swap-card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 20px; margin-top: 20px; }
+        .swap-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .token-sel { background: #222; padding: 8px 15px; border-radius: 20px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+
+        /* NAVIGATION BAR */
+        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 15px 0; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #555; font-size: 0.6rem; cursor: pointer; transition: 0.2s; }
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 1.4rem; margin-bottom: 4px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="lock">
+        <div style="font-size:0.8rem; color:#666; margin-bottom:20px; letter-spacing:2px;">SECURE ENCLAVE</div>
+        <div class="pin-dots" id="dots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="numpad">
+            <div class="key" onclick="press(1)">1</div><div class="key" onclick="press(2)">2</div><div class="key" onclick="press(3)">3</div>
+            <div class="key" onclick="press(4)">4</div><div class="key" onclick="press(5)">5</div><div class="key" onclick="press(6)">6</div>
+            <div class="key" onclick="press(7)">7</div><div class="key" onclick="press(8)">8</div><div class="key" onclick="press(9)">9</div>
+            <div class="key" style="color:red" onclick="clearPin()">C</div>
+            <div class="key" onclick="press(0)">0</div>
+            <div class="key" style="color:var(--accent)" onclick="unlock()">GO</div>
+        </div>
+    </div>
+
+    <div id="app">
+        <div class="header">
+            <div class="identity">drfrost.frostchain</div>
+            <div class="net-status">● MAINNET</div>
+        </div>
+
+        <div class="content">
+            
+            <div id="tab-wallet" class="tab-view active">
+                <div class="total-bal">
+                    <div class="sub-val">TOTAL BALANCE</div>
+                    <div class="big-val">2,842,069</div>
+                </div>
+
+                <div class="asset-row">
+                    <div class="coin-icon" style="background:#ff00ff;">F</div>
+                    <div class="coin-data"><div class="coin-sym">FRST</div><div class="coin-name">Frostcoin (Premine)</div></div>
+                    <div class="coin-amt">12,300,000</div>
+                </div>
+                <div class="asset-row">
+                    <div class="coin-icon" style="background:var(--accent);">T</div>
+                    <div class="coin-data"><div class="coin-sym">FTC</div><div class="coin-name">Frost Token</div></div>
+                    <div class="coin-amt">12,300,000</div>
+                </div>
+                 <div class="asset-row">
+                    <div class="coin-icon" style="background:#fff;">N</div>
+                    <div class="coin-data"><div class="coin-sym">FNR</div><div class="coin-name">Frost Node</div></div>
+                    <div class="coin-amt">4,000,000</div>
+                </div>
+                <div class="asset-row">
+                    <div class="coin-icon" style="background:var(--btc);">B</div>
+                    <div class="coin-data"><div class="coin-sym">BTC</div><div class="coin-name">Bitcoin</div></div>
+                    <div class="coin-amt">30.3370</div>
+                </div>
+                <div class="asset-row">
+                    <div class="coin-icon" style="background:var(--bch);">C</div>
+                    <div class="coin-data"><div class="coin-sym">BCH</div><div class="coin-name">Bitcoin Cash</div></div>
+                    <div class="coin-amt">133.7000</div>
+                </div>
+                 <div class="asset-row">
+                    <div class="coin-icon" style="background:#3b99fc;">W</div>
+                    <div class="coin-data"><div class="coin-sym">WCT</div><div class="coin-name">WalletConnect</div></div>
+                    <div class="coin-amt" style="font-size:0.7rem; color:#888;">READY</div>
+                </div>
+            </div>
+
+            <div id="tab-send" class="tab-view">
+                <h2 style="color:var(--accent)">SEND ASSETS</h2>
+                <div class="input-group">
+                    <span class="label">SELECT ASSET</span>
+                    <select class="input-field" style="height:50px;">
+                        <option>FRST - Frostcoin</option>
+                        <option>BTC - Bitcoin</option>
+                        <option>BCH - Bitcoin Cash</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <span class="label">DESTINATION ADDRESS</span>
+                    <input type="text" class="input-field" placeholder="0x... or name.frostchain">
+                </div>
+                <div class="input-group">
+                    <span class="label">AMOUNT</span>
+                    <input type="number" class="input-field" placeholder="0.00">
+                </div>
+                <button class="action-btn" onclick="alert('TRANSACTION BROADCASTED TO MEMPOOL')">CONFIRM SEND</button>
+            </div>
+
+            <div id="tab-receive" class="tab-view">
+                <h2 style="text-align:center; color:var(--accent);">RECEIVE</h2>
+                <div style="text-align:center; color:#888; font-size:0.8rem;">SCAN TO DEPOSIT ASSETS</div>
+                
+                <div class="qr-box">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=0xFrostChainWalletAddress777" style="width:100%;">
+                </div>
+                
+                <div class="address-box" onclick="alert('COPIED TO CLIPBOARD')">
+                    0xFrost...WalletAddress777<br>
+                    <span style="color:var(--accent); font-size:0.7rem;">[TAP TO COPY]</span>
+                </div>
+            </div>
+
+            <div id="tab-swap" class="tab-view">
+                <h2 style="color:var(--accent)">1INCH SWAP</h2>
+                <div class="swap-card">
+                    <div class="swap-row">
+                        <span class="label">YOU PAY</span>
+                        <span class="label">BALANCE: 30.337</span>
+                    </div>
+                    <div class="swap-row">
+                        <input type="number" class="input-field" placeholder="1.0" style="width:60%; margin:0;">
+                        <div class="token-sel">BTC ▾</div>
+                    </div>
+                </div>
+
+                <div style="text-align:center; font-size:1.5rem; margin:10px;">↓</div>
+
+                <div class="swap-card">
+                    <div class="swap-row">
+                        <span class="label">YOU RECEIVE</span>
+                        <span class="label">EST: 1,240,000</span>
+                    </div>
+                    <div class="swap-row">
+                        <input type="number" class="input-field" placeholder="0.0" style="width:60%; margin:0;" readonly>
+                        <div class="token-sel">FRST ▾</div>
+                    </div>
+                </div>
+
+                <button class="action-btn" style="background:#3b99fc; color:#fff;">SWAP NOW</button>
+            </div>
+
+        </div>
+
+        <div class="nav-bar">
+            <div class="nav-item active" onclick="switchTab('wallet', this)">
+                <div class="nav-icon">▤</div>
+                <div>WALLET</div>
+            </div>
+            <div class="nav-item" onclick="switchTab('send', this)">
+                <div class="nav-icon">↑</div>
+                <div>SEND</div>
+            </div>
+            <div class="nav-item" onclick="switchTab('receive', this)">
+                <div class="nav-icon">↓</div>
+                <div>RECEIVE</div>
+            </div>
+            <div class="nav-item" onclick="switchTab('swap', this)">
+                <div class="nav-icon">⇄</div>
+                <div>SWAP</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // LOCK LOGIC
+        let pin = "";
+        const savedPin = localStorage.getItem('frost_pin') || "0000";
+        
+        function press(n) { if(pin.length < 4) { pin += n; updateDots(); } }
+        function clearPin() { pin = ""; updateDots(); }
+        
+        function updateDots() {
+            document.querySelectorAll('.dot').forEach((d, i) => {
+                i < pin.length ? d.classList.add('filled') : d.classList.remove('filled');
+            });
+        }
+        
+        function unlock() {
+            if(pin === savedPin) {
+                document.getElementById('lock').style.display = 'none';
+                document.getElementById('app').style.display = 'flex';
+            } else {
+                alert("INVALID PIN");
+                clearPin();
+            }
+        }
+
+        // TAB LOGIC
+        function switchTab(tabId, navElement) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
+            // Show selected
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            // Update Nav
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            navElement.classList.add('active');
+        }
+    </script>
+</body>
+</html>

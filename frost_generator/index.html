@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frost Identity Forge</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --panel: #111; }
+        body { background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; padding: 20px; text-align: center; }
+        
+        .container { max-width: 600px; margin: 0 auto; border: 2px solid var(--term); padding: 20px; box-shadow: 0 0 20px var(--term); background: #050505; }
+        .logo { font-size: 2rem; font-weight: bold; margin-bottom: 10px; }
+        
+        .field-group { margin: 20px 0; text-align: left; }
+        .label { font-size: 0.8rem; color: #888; margin-bottom: 5px; display: block; }
+        .output { width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 10px; font-family: inherit; box-sizing: border-box; word-break: break-all; }
+        
+        .btn { background: var(--term); color: #000; border: none; padding: 15px 30px; font-size: 1.2rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; }
+        .btn:hover { background: #fff; }
+
+        .save-msg { color: #fff; margin-top: 10px; font-size: 0.8rem; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="logo">FROST IDENTITY FORGE</div>
+        <div style="font-size: 0.8rem; color: #888;">SECURE KEY GENERATION PROTOCOL</div>
+        
+        <hr style="border-color: #333; margin: 20px 0;">
+
+        <div class="field-group">
+            <span class="label">FROST ID</span>
+            <div id="out-id" class="output">PENDING...</div>
+        </div>
+
+        <div class="field-group">
+            <span class="label">12-WORD MNEMONIC SEED</span>
+            <div id="out-seed" class="output">PENDING...</div>
+        </div>
+
+        <div class="field-group">
+            <span class="label">PRIVATE KEY (HEX)</span>
+            <div id="out-key" class="output">PENDING...</div>
+        </div>
+
+        <button class="btn" onclick="generate()">GENERATE & SAVE</button>
+        <div id="save-msg" class="save-msg">✓ CREDENTIALS SAVED TO DEVICE</div>
+    </div>
+
+    <script>
+        const WORDLIST = ["alpha", "bravo", "frost", "delta", "echo", "quantum", "node", "miner", "orbit", "pulse", "core", "link", "matrix", "cipher", "block", "chain", "token", "asset", "vault", "secure", "key", "access", "grant", "denied"];
+
+        function generate() {
+            // 1. Generate ID
+            const r1 = Math.floor(Math.random() * 9999);
+            const id = "user" + r1 + ".frostchain";
+            
+            // 2. Generate Seed
+            let seed = [];
+            for(let i=0; i<12; i++) seed.push(WORDLIST[Math.floor(Math.random() * WORDLIST.length)]);
+            
+            // 3. Generate Key
+            let key = "0x";
+            const chars = "0123456789ABCDEF";
+            for(let i=0; i<64; i++) key += chars[Math.floor(Math.random() * 16)];
+
+            // Display
+            document.getElementById('out-id').innerText = id;
+            document.getElementById('out-seed').innerText = seed.join(" ");
+            document.getElementById('out-key').innerText = key;
+
+            // Auto-Save Logic
+            const content = "FROST PROTOCOL CREDENTIALS\n==========================\nID: " + id + "\nSEED: " + seed.join(" ") + "\nPRIVATE KEY: " + key + "\n\nKEEP THIS FILE SAFE.";
+            const blob = new Blob([content], { type: "text/plain" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = id + "_credentials.txt";
+            a.click();
+
+            document.getElementById('save-msg').style.display = "block";
+        }
+    </script>
+</body>
+</html>

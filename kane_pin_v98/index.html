@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kane Frostchain | PIN Enclave</title>
+    <style>
+        :root { --bg: #010105; --ice: #a5f2f3; --term: #00ff41; --fail: #ff3333; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--ice); font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
+
+        /* PIN GATE */
+        #pin-gate {
+            position: fixed; inset: 0; z-index: 999; background: #000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .pin-box { background: #0a0a0a; border: 2px solid var(--ice); padding: 40px; border-radius: 8px; text-align: center; width: 320px; }
+        .pin-display { font-size: 2rem; letter-spacing: 10px; margin-bottom: 20px; color: #fff; height: 40px; }
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .num-btn { background: #111; border: 1px solid #333; color: #fff; padding: 15px; cursor: pointer; font-size: 1.2rem; }
+        .num-btn:hover { border-color: var(--ice); }
+        .btn-action { grid-column: span 3; background: var(--ice); color: #000; border: none; padding: 10px; font-weight: bold; margin-top: 10px; }
+
+        /* DASHBOARD */
+        #dashboard { display: none; padding: 25px; height: 100vh; grid-template-rows: auto 1fr auto; gap: 20px; }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--ice); padding-bottom: 15px; }
+        .main { display: grid; grid-template-columns: 400px 1fr 400px; gap: 20px; overflow: hidden; }
+        .panel { background: rgba(10, 20, 30, 0.8); border: 1px solid #333; padding: 20px; border-radius: 8px; display: flex; flex-direction: column; }
+
+        /* LIQUIDITY UI */
+        .liq-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #222; }
+        .liq-input { background: #000; border: 1px solid #444; color: #fff; padding: 5px; width: 80px; text-align: right; }
+        .btn-add { background: var(--term); color: #000; border: none; padding: 5px 10px; font-weight: bold; cursor: pointer; font-size: 0.7rem; }
+        .tag { font-size: 0.6rem; padding: 2px 5px; color: #000; font-weight: bold; border-radius: 2px; }
+
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.3; }
+    </style>
+</head>
+<body>
+
+    <div id="pin-gate">
+        <div class="pin-box">
+            <div id="gate-title" style="font-size: 0.8rem; margin-bottom: 10px; letter-spacing: 2px;">SECURE_ENCLAVE</div>
+            <div class="pin-display" id="pin-dots">••••••</div>
+            <div class="numpad" id="numpad">
+                </div>
+            <button class="btn-action" id="gate-btn" onclick="submitPIN()">ACCESS VAULT</button>
+            <div id="pin-status" style="margin-top: 10px; font-size: 0.6rem; color: #666;">Enter 6-digit access code</div>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <canvas id="tangle-canvas"></canvas>
+        <div class="header">
+            <div style="font-size: 1.5rem; font-weight: bold; letter-spacing: 5px;">KANE<span style="color:var(--term)">FROSTCHAIN</span></div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.6rem; color: #888;">TOTAL ETF AUM</div>
+                <div style="font-size: 1.2rem; font-weight: bold;" id="aum-val">$102,450,200</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div style="font-size: 0.7rem; color: var(--ice); letter-spacing: 2px; margin-bottom: 15px;">LIQUIDITY_INJECTOR</div>
+                <div class="liq-row">
+                    <span><span class="tag" style="background:#f7931a">wBTC</span> NEWKIRK</span>
+                    <input type="number" class="liq-input" value="1.0" id="in-wbtc">
+                    <button class="btn-add" onclick="addLiq('wBTC')">INJECT</button>
+                </div>
+                <div class="liq-row">
+                    <span><span class="tag" style="background:#8dc351">wBCH</span> NEWKIRK</span>
+                    <input type="number" class="liq-input" value="10.0" id="in-wbch">
+                    <button class="btn-add" onclick="addLiq('wBCH')">INJECT</button>
+                </div>
+                <div class="liq-row">
+                    <span><span class="tag" style="background:#00ffff">FTC</span> LIQUID</span>
+                    <input type="number" class="liq-input" value="1000" id="in-ftc">
+                    <button class="btn-add" onclick="addLiq('FTC')">INJECT</button>
+                </div>
+                <div class="liq-row">
+                    <span><span class="tag" style="background:#fff">FRST</span> LIQUID</span>
+                    <input type="number" class="liq-input" value="5000" id="in-frst">
+                    <button class="btn-add" onclick="addLiq('FRST')">INJECT</button>
+                </div>
+                
+                <div style="margin-top:auto; font-size: 0.6rem; color: #444;">* PIN AUTH REQUIRED FOR ALL WITHDRAWALS</div>
+            </div>
+
+            <div></div>
+
+            <div class="panel">
+                <div style="font-size: 0.7rem; color: #e5e4e2; letter-spacing: 2px; margin-bottom: 15px;">ETF_DISTRIBUTION</div>
+                <div style="border: 1px solid #333; padding: 15px; text-align: center; margin-bottom: 10px;">
+                    <div style="font-size: 1.5rem; font-weight: bold;">5,000,000</div>
+                    <div style="font-size: 0.6rem; color: #888;">fszUSD (Sub Zero Tether)</div>
+                </div>
+                <div style="border: 1px solid #333; padding: 15px; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #e5e4e2;">$1,842.10</div>
+                    <div style="font-size: 0.6rem; color: #888;">fPLAT (Platinum Governance)</div>
+                </div>
+                
+                <div style="margin-top: 20px; font-size: 0.7rem;">LOGS:</div>
+                <div id="liq-log" style="font-size: 0.6rem; color: #666; margin-top: 5px; height: 100px; overflow-y: auto;">
+                    <div>> System Online. Enclave Unlocked.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div>FROSTCHAIN v98.0 // HARDWARE PIN ENFORCED // NO_API_DEPENDENCY</div>
+            <div style="color:var(--term)">CARRIER: 741.frostchain</div>
+        </div>
+    </div>
+
+    <script>
+        // --- PIN LOGIC ---
+        let currentPin = "";
+        let masterPin = localStorage.getItem('frost_pin');
+        
+        const dots = document.getElementById('pin-dots');
+        const status = document.getElementById('pin-status');
+        const gateTitle = document.getElementById('gate-title');
+
+        if (!masterPin) {
+            gateTitle.innerText = "SETUP_REQUIRED";
+            status.innerText = "Set your 6-digit Master PIN";
+            document.getElementById('gate-btn').innerText = "SET PIN";
+        }
+
+        function initNumpad() {
+            const pad = document.getElementById('numpad');
+            for(let i=1; i<=9; i++) {
+                const b = document.createElement('button');
+                b.className = 'num-btn'; b.innerText = i;
+                b.onclick = () => press(i);
+                pad.appendChild(b);
+            }
+            const c = document.createElement('button');
+            c.className = 'num-btn'; c.innerText = 'C'; c.onclick = clear;
+            pad.appendChild(c);
+            const z = document.createElement('button');
+            z.className = 'num-btn'; z.innerText = '0'; z.onclick = () => press(0);
+            pad.appendChild(z);
+        }
+
+        function press(n) {
+            if(currentPin.length < 6) {
+                currentPin += n;
+                updateDots();
+            }
+        }
+        function clear() { currentPin = ""; updateDots(); }
+        function updateDots() {
+            dots.innerText = "•".repeat(currentPin.length).padEnd(6, ' ');
+        }
+
+        function submitPIN() {
+            if (currentPin.length < 6) return;
+
+            if (!masterPin) {
+                localStorage.setItem('frost_pin', currentPin);
+                masterPin = currentPin;
+                alert("Master PIN set! Use this to unlock the enclave.");
+                location.reload();
+            } else {
+                if (currentPin === masterPin) {
+                    unlock();
+                } else {
+                    status.innerText = "ACCESS_DENIED: WRONG PIN";
+                    status.style.color = "var(--fail)";
+                    clear();
+                }
+            }
+        }
+
+        function unlock() {
+            document.getElementById('pin-gate').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'grid';
+            initTangle(); drawTangle();
+        }
+
+        // --- LIQUIDITY LOGIC ---
+        let totalAUM = 102450200;
+
+        function addLiq(type) {
+            const val = parseFloat(document.getElementById('in-' + type.toLowerCase()).value);
+            const log = document.getElementById('liq-log');
+            
+            // Sim Value Calc
+            const prices = {'wBTC': 95000, 'wBCH': 450, 'FTC': 31, 'FRST': 0.29};
+            const usd = val * (prices[type] || 1);
+            totalAUM += usd;
+
+            document.getElementById('aum-val').innerText = "$" + totalAUM.toLocaleString();
+            
+            const entry = document.createElement('div');
+            entry.innerText = `> Injected ${val} ${type} (+$${usd.toLocaleString()})`;
+            log.prepend(entry);
+        }
+
+        // --- VISUALIZER ---
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function initTangle() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            for(let i=0; i<80; i++) particles.push({
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+                vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5, size: 2
+            });
+        }
+        function drawTangle() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1;
+                if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                particles.slice(i+1).forEach(p2 => {
+                    if(Math.hypot(p.x-p2.x, p.y-p2.y) < 150) {
+                        ctx.strokeStyle = 'rgba(165, 242, 243, 0.2)';
+                        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+                    }
+                });
+                ctx.fillStyle = '#a5f2f3'; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(drawTangle);
+        }
+
+        initNumpad();
+        window.onresize = initTangle;
+    </script>
+</body>
+</html>

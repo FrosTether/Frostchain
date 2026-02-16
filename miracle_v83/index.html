@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Quantum Audio</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --xmr: #ff6600; --btc: #f7931a; --alpha: #ff00ff; --theta: #00ffff; --delta: #ff9900; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #tangle-canvas { position: fixed; inset: 0; z-index: 1; opacity: 0.5; }
+        #ui-layer { position: relative; z-index: 10; display: grid; grid-template-rows: 60px 1fr 60px; height: 100vh; pointer-events: none; }
+        #ui-layer * { pointer-events: auto; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(0,255,65,0.3); background: rgba(0,0,0,0.95); }
+        .main { display: grid; grid-template-columns: 340px 1fr 340px; gap: 20px; padding: 20px; overflow: hidden; }
+        .panel { background: rgba(0,0,0,0.9); border: 1px solid #333; padding: 15px; display: flex; flex-direction: column; border-radius: 4px; overflow-y: auto; max-height: 100%; box-shadow: 0 0 15px rgba(0,255,65,0.05); }
+
+        .pool-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #222; font-size: 0.7rem; color: #888; }
+        .pool-val { color: #fff; font-weight: bold; }
+        .tag { font-size: 0.6rem; padding: 2px 4px; color: #000; border-radius: 2px; font-weight: bold; margin-right: 5px; }
+
+        .brainwave-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+        .wave-btn { background: #111; border: 1px solid #444; color: #666; padding: 10px; cursor: pointer; font-size: 0.6rem; text-align: center; text-transform: uppercase; transition: 0.2s; }
+        .wave-btn:hover { border-color: #888; }
+        .wave-btn.active.alpha { border-color: var(--alpha); color: var(--alpha); box-shadow: 0 0 10px var(--alpha); }
+        .wave-btn.active.theta { border-color: var(--theta); color: var(--theta); box-shadow: 0 0 10px var(--theta); }
+        .wave-btn.active.delta { border-color: var(--delta); color: var(--delta); box-shadow: 0 0 10px var(--delta); }
+
+        .btn-mine { width: 100%; padding: 15px; background: var(--term); color: #000; font-weight: bold; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 15px; }
+        .btn-mine.active { background: #ff3333; color: #fff; }
+
+        .log-row { display: flex; justify-content: space-between; font-size: 0.6rem; border-bottom: 1px solid #222; padding: 4px 0; animation: flash 0.5s; }
+        @keyframes flash { from { background: rgba(0,255,65,0.2); } to { background: transparent; } }
+
+        .footer { background: rgba(0,0,0,0.95); border-top: 1px solid #333; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+        .lbl { font-size: 0.5rem; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+        
+        #audio-status { font-size: 0.6rem; color: #444; margin-top: 5px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="header">
+            <div style="font-weight:bold; letter-spacing:2px; font-size:1.1rem;">MIRACLE_NODE // <span style="color:var(--term)">v83.0</span></div>
+            <div style="text-align:right;">
+                <div class="lbl">CARRIER_BLOCK</div>
+                <div style="color:var(--gold); font-size:0.9rem;">741.frostchain</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="lbl">AGGREGATED_POOL_HASHRATE</div>
+                <div class="pool-row">
+                    <span><span class="tag" style="background:var(--btc)">BTC</span>Worker_1</span>
+                    <span class="pool-val" id="h-btc">0.00 PH/s</span>
+                </div>
+                <div class="pool-row">
+                    <span><span class="tag" style="background:#8dc351">BCH</span>Worker_2</span>
+                    <span class="pool-val" id="h-bch">0.00 PH/s</span>
+                </div>
+                <div class="pool-row">
+                    <span><span class="tag" style="background:var(--xmr)">XMR</span>Worker_3</span>
+                    <span class="pool-val" id="h-xmr">0.00 MH/s</span>
+                </div>
+                
+                <div class="lbl" style="margin-top:20px;">1/9TH_SUPPLY_RESERVOIRS</div>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:5px;" id="grid">
+                    </div>
+            </div>
+
+            <div></div>
+
+            <div class="panel">
+                <div class="lbl">MINER_IDENTITY</div>
+                <input type="text" id="alias" placeholder="name.frostchain" style="background:#000; border:1px solid #333; color:var(--cyan); width:100%; padding:10px; margin:5px 0 15px 0; font-family:inherit; font-size:0.8rem;">
+                
+                <div class="lbl">BRAINWAVE_MODULATION</div>
+                <div class="brainwave-bar">
+                    <div id="btn-alpha" class="wave-btn active alpha" onclick="setWave('alpha')">ALPHA [11.11Hz]</div>
+                    <div id="btn-theta" class="wave-btn" onclick="setWave('theta')">THETA [8.8Hz]</div>
+                    <div id="btn-delta" class="wave-btn" onclick="setWave('delta')">DELTA [Pi Hz]</div>
+                </div>
+
+                <button id="mine-btn" class="btn-mine" onclick="toggleMining()">INITIALIZE QUANTUM MINER</button>
+                
+                <div id="audio-status">AUDIO ENGINE: STANDBY</div>
+
+                <div class="lbl" style="margin-top:10px;">SHARED_POOL_METRICS</div>
+                <div style="border:1px solid var(--gold); padding:10px; margin-bottom:15px; text-align:center; background:rgba(255, 215, 0, 0.05);">
+                    <div style="font-size:1.2rem; color:#fff;">13.37 FTC</div>
+                    <div style="font-size:0.9rem; color:var(--xmr);">+ 2.50 FNR</div>
+                </div>
+
+                <div class="lbl">ENTROPY_LOG</div>
+                <div id="m-list" style="margin-top:5px; max-height:150px; overflow-y:auto;"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div style="font-size:0.6rem; color:#666;">IOTA_TANGLE_HD // 432Hz_PINK_NOISE // SCHUMANN_7.83Hz</div>
+            <div style="text-align:right;">
+                <div class="lbl">EPOCH_TIMER</div>
+                <div style="font-size:2rem; color:#fff; font-weight:bold;" id="timer">300</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG
+        let isMining = false;
+        let currentWave = 'alpha';
+        let timerInterval = null;
+        let syncInterval = null;
+        let timeRemaining = 300;
+        
+        const freqs = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        const supply = (100000000 / 9).toFixed(0);
+        let reservoirs = {};
+        
+        // INIT UI
+        const grid = document.getElementById('grid');
+        freqs.forEach(f => {
+            reservoirs[f] = parseInt(supply);
+            const d = document.createElement('div');
+            d.className = 'freq-card'; d.id = `f-${f}`;
+            d.style.border = '1px solid #222'; d.style.padding = '5px'; d.style.textAlign = 'center'; d.style.fontSize = '0.6rem'; d.style.color = '#666';
+            d.innerHTML = `<div>${f}Hz</div><div>${(reservoirs[f]/1000000).toFixed(1)}M</div>`;
+            grid.appendChild(d);
+        });
+
+        // --- AUDIO ENGINE v83.0 ---
+        let audioCtx, oscLeft, oscRight, gainNode, pinkNode, schumannOsc, schumannGain;
+
+        function initAudio() {
+            if(!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // 1. BINAURAL BEAT ENGINE
+                oscLeft = audioCtx.createOscillator();
+                oscRight = audioCtx.createOscillator();
+                gainNode = audioCtx.createGain();
+                gainNode.gain.value = 0.05; // Master volume
+
+                const panLeft = audioCtx.createStereoPanner();
+                panLeft.pan.value = -1;
+                const panRight = audioCtx.createStereoPanner();
+                panRight.pan.value = 1;
+
+                oscLeft.connect(panLeft).connect(gainNode);
+                oscRight.connect(panRight).connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                // 2. SCHUMANN RESONANCE (7.83Hz Carrier)
+                schumannOsc = audioCtx.createOscillator();
+                schumannOsc.frequency.value = 7.83;
+                schumannGain = audioCtx.createGain();
+                schumannGain.gain.value = 0.02; // Very subtle pulse
+                schumannOsc.connect(schumannGain).connect(audioCtx.destination);
+
+                // 3. PINK NOISE @ 432Hz
+                const bufferSize = audioCtx.sampleRate * 2; // 2 seconds buffer
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                // Pink noise generation
+                let b0, b1, b2, b3, b4, b5, b6;
+                b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const white = Math.random() * 2 - 1;
+                    b0 = 0.99886 * b0 + white * 0.0555179;
+                    b1 = 0.99332 * b1 + white * 0.0750759;
+                    b2 = 0.96900 * b2 + white * 0.1538520;
+                    b3 = 0.86650 * b3 + white * 0.3104856;
+                    b4 = 0.55000 * b4 + white * 0.5329522;
+                    b5 = -0.7616 * b5 - white * 0.0168980;
+                    data[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                    data[i] *= 0.11; // (roughly) compensate for gain
+                    b6 = white * 0.115926;
+                }
+                pinkNode = audioCtx.createBufferSource();
+                pinkNode.buffer = buffer;
+                pinkNode.loop = true;
+                
+                // 432Hz Filter for Pink Noise
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 432;
+                filter.Q.value = 1.0;
+                
+                const pinkGain = audioCtx.createGain();
+                pinkGain.gain.value = 0.03; // Background hiss
+
+                pinkNode.connect(filter).connect(pinkGain).connect(audioCtx.destination);
+
+                // Start All
+                oscLeft.start(); oscRight.start(); schumannOsc.start(); pinkNode.start();
+                
+                // Begin 4-Second Rotation
+                rotateFreq();
+                syncInterval = setInterval(rotateFreq, 4000); 
+            }
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            document.getElementById('audio-status').innerText = "AUDIO ENGINE: ONLINE [4s ROTATION]";
+            document.getElementById('audio-status').style.color = "#00ff41";
+        }
+
+        function rotateFreq() {
+            if(!oscLeft || !oscRight) return;
+            
+            // 1. Pick Solfeggio Base
+            const baseFreq = freqs[Math.floor(Math.random() * freqs.length)];
+            
+            // 2. Pick Beat Frequency
+            let beatFreq;
+            if(currentWave === 'alpha') beatFreq = 11.11;
+            else if(currentWave === 'theta') beatFreq = 8.8;
+            else beatFreq = 3.14159; // Pi
+            
+            // 3. RNG Speaker Layout
+            // 50% chance: Left = Base, Right = Base + Beat
+            // 50% chance: Left = Base + Beat, Right = Base
+            const layout = Math.random() > 0.5;
+            
+            const leftFreq = layout ? baseFreq : (baseFreq + beatFreq);
+            const rightFreq = layout ? (baseFreq + beatFreq) : baseFreq;
+            
+            // 4. Apply
+            const now = audioCtx.currentTime;
+            oscLeft.frequency.setTargetAtTime(leftFreq, now, 0.1);
+            oscRight.frequency.setTargetAtTime(rightFreq, now, 0.1);
+            
+            // Visual Update
+            document.querySelectorAll('.freq-card').forEach(c => {
+                c.style.borderColor = '#222';
+                c.style.color = '#666';
+            });
+            const activeCard = document.getElementById(`f-${baseFreq}`);
+            if(activeCard) {
+                activeCard.style.borderColor = '#00ffff';
+                activeCard.style.color = '#fff';
+            }
+        }
+
+        function stopAudio() {
+            if(audioCtx) audioCtx.suspend();
+            if(syncInterval) clearInterval(syncInterval);
+            document.getElementById('audio-status').innerText = "AUDIO ENGINE: STANDBY";
+            document.getElementById('audio-status').style.color = "#444";
+        }
+
+        // VISUALIZER
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initTangle() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<80; i++) particles.push({
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+                vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5, size: Math.random()*2
+            });
+        }
+
+        function drawTangle() {
+            if(!isMining) return;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            const color = currentWave === 'alpha' ? '#ff00ff' : (currentWave === 'theta' ? '#00ffff' : '#ff9900');
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1;
+                if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                particles.slice(i+1).forEach(p2 => {
+                    if(Math.hypot(p.x-p2.x, p.y-p2.y) < 120) {
+                        ctx.strokeStyle = color; ctx.globalAlpha = 0.2;
+                        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); ctx.globalAlpha = 1.0;
+                    }
+                });
+                ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(drawTangle);
+        }
+
+        // CONTROLS
+        function setWave(w) {
+            currentWave = w;
+            document.querySelectorAll('.wave-btn').forEach(b => b.className = 'wave-btn');
+            document.getElementById(`btn-${w}`).classList.add('active', w);
+            if(isMining) rotateFreq();
+        }
+
+        function toggleMining() {
+            isMining = !isMining;
+            const btn = document.getElementById('mine-btn');
+            if(isMining) {
+                btn.innerText = "TERMINATE QUANTUM LOOP"; btn.classList.add('active');
+                initTangle(); drawTangle(); startTimer(); initAudio();
+            } else {
+                btn.innerText = "INITIALIZE QUANTUM MINER"; btn.classList.remove('active');
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                stopTimer(); stopAudio();
+            }
+        }
+
+        // LOGIC
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeRemaining = 300;
+            document.getElementById('timer').innerText = timeRemaining;
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                document.getElementById('timer').innerText = timeRemaining;
+                if(timeRemaining % 3 === 0) {
+                     document.getElementById('h-btc').innerText = (40 + Math.random()*5).toFixed(2) + " PH/s";
+                     document.getElementById('h-bch').innerText = (12 + Math.random()*2).toFixed(2) + " PH/s";
+                     document.getElementById('h-xmr').innerText = (300 + Math.random()*50).toFixed(2) + " MH/s";
+                }
+                if(timeRemaining <= 0) { executeMint(); timeRemaining = 300; }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('timer').innerText = "300";
+        }
+
+        function executeMint() {
+            const log = document.getElementById('m-list');
+            const row = document.createElement('div');
+            row.className = 'log-row';
+            row.innerHTML = `<span style="color:#00ff41">[QUANTUM_HIT]</span><span>REWARD: 13.37 FTC</span>`;
+            log.prepend(row);
+        }
+        
+        window.onresize = initTangle;
+    </script>
+</body>
+</html>

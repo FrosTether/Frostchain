@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grayson's Wallet | Secure</title>
+    <style>
+        :root { --bg: #000; --accent: #00ff41; --text: #fff; --panel: rgba(10,10,10,0.95); --gold: #ffd700; --blue: #00d4ff; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; user-select: none; }
+
+        /* SCREENS */
+        .screen { position: fixed; inset: 0; z-index: 10; display: none; flex-direction: column; align-items: center; justify-content: center; background: #000; }
+        .screen.active { display: flex; }
+
+        /* UI ELEMENTS */
+        .logo { font-size: 2rem; font-weight: bold; margin-bottom: 20px; color: var(--accent); text-shadow: 0 0 10px rgba(0,255,65,0.4); }
+        .input-box { background: #111; border: 1px solid #333; color: #fff; padding: 15px; width: 250px; text-align: center; font-family: inherit; font-size: 1rem; margin-bottom: 10px; outline: none; }
+        .input-box:focus { border-color: var(--accent); }
+        .btn { background: var(--accent); color: #000; border: none; padding: 15px 30px; font-weight: bold; cursor: pointer; width: 280px; margin-top: 10px; text-transform: uppercase; }
+        .btn-outline { background: transparent; border: 1px solid #333; color: #888; margin-top: 10px; font-size: 0.8rem; padding: 10px; width: 280px; cursor: pointer; }
+
+        /* DASHBOARD */
+        #screen-app { display: none; flex-direction: column; height: 100%; }
+        .header { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; background: #0a0a0a; }
+        .user-badge { color: var(--accent); font-weight: bold; }
+
+        .tab-bar { display: flex; border-bottom: 1px solid #333; background: #0a0a0a; }
+        .tab { flex: 1; padding: 15px; text-align: center; color: #666; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { color: var(--accent); border-color: var(--accent); background: rgba(0,255,65,0.05); }
+
+        .content { flex: 1; overflow-y: auto; padding: 20px; }
+        .asset-card { background: #111; border: 1px solid #333; padding: 15px; margin-bottom: 10px; border-left: 4px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
+
+        /* CHAT */
+        .chat-box { height: 100%; display: flex; flex-direction: column; }
+        .chat-log { flex: 1; border: 1px solid #333; background: #050505; padding: 10px; margin-bottom: 10px; overflow-y: auto; }
+        .msg { margin-bottom: 5px; font-size: 0.8rem; }
+        .msg.sys { color: var(--gold); }
+    </style>
+</head>
+<body>
+
+    <div id="screen-setup" class="screen">
+        <div class="logo">SECURE SETUP</div>
+        <div style="color:#888; margin-bottom:20px; font-size:0.8rem;">CLAIM IDENTITY: DRFROST.FROSTCHAIN</div>
+        
+        <input type="text" value="drfrost.frostchain" class="input-box" disabled style="color:#666;">
+        <input type="password" id="new-pin" class="input-box" placeholder="SET NEW PIN (4-6 Digits)" maxlength="6">
+        
+        <button class="btn" onclick="setupIdentity()">SECURE WALLET</button>
+    </div>
+
+    <div id="screen-login" class="screen">
+        <div class="logo">GRAYSON'S VAULT</div>
+        <div style="color:#888; margin-bottom:20px; font-size:0.8rem;">IDENTITY LOCKED</div>
+        
+        <input type="text" id="login-user" class="input-box" placeholder="username.frostchain">
+        <input type="password" id="login-pin" class="input-box" placeholder="ENTER PIN" maxlength="6">
+        
+        <button class="btn" onclick="login()">UNLOCK</button>
+        <button class="btn-outline" onclick="resetWallet()">[ RESET DEVICE ]</button>
+    </div>
+
+    <div id="screen-app">
+        <div class="header">
+            <span id="app-username" class="user-badge">user.frostchain</span> <button onclick="syncNode()" style="background:#111; border:1px solid var(--accent); color:var(--accent); font-size:0.6rem; margin-left:10px; cursor:pointer;">[ SYNC NODE ]</button>
+            <span style="font-size:0.7rem; border:1px solid var(--accent); padding:2px 6px;">ONLINE</span>
+        </div>
+
+        <div class="tab-bar">
+            <div class="tab active" onclick="switchTab('assets')">ASSETS</div>
+            <div class="tab" onclick="switchTab('chat')">FROSTCHAT</div>
+        </div>
+
+        <div id="view-assets" class="content" style="display:block;">
+            <div style="text-align:center; margin-bottom:20px;">
+                <div style="font-size:2rem; font-weight:bold;" id="total-val">$0.00</div>
+                <div style="color:#888; font-size:0.8rem;">PORTFOLIO VALUE</div>
+            </div>
+            <div id="asset-list"></div>
+        </div>
+
+        <div id="view-chat" class="content" style="display:none;">
+            <div class="chat-box">
+                <div class="chat-log" id="chat-log">
+                    <div class="msg sys">> SECURE CHANNEL ESTABLISHED.</div>
+                </div>
+                <input type="text" id="chat-in" class="input-box" style="width:100%;box-sizing:border-box;" placeholder="Message...">
+                <button class="btn" style="width:100%; margin-top:5px;" onclick="sendMsg()">SEND</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- INIT ---
+        // Check if Master Identity exists
+        const storedPin = localStorage.getItem('drfrost_pin');
+        
+        if (!storedPin) {
+            document.getElementById('screen-setup').classList.add('active');
+        } else {
+            document.getElementById('screen-login').classList.add('active');
+            // Auto-fill user for convenience
+            document.getElementById('login-user').value = "drfrost.frostchain";
+        }
+
+        // --- SETUP ---
+        function setupIdentity() {
+            const p = document.getElementById('new-pin').value;
+            if (p.length < 4 || p.length > 6) return alert("PIN MUST BE 4-6 DIGITS");
+            
+            localStorage.setItem('drfrost_pin', p);
+            alert("IDENTITY SECURED. PLEASE LOGIN.");
+            location.reload();
+        }
+
+        // --- LOGIN ---
+        function login() {
+            const user = document.getElementById('login-user').value.toLowerCase().trim();
+            const pin = document.getElementById('login-pin').value;
+
+            // 1. Studer Boys (Hardcoded Legacy)
+            if (pin === "2007") {
+                launchApp("studer_boys.frostchain", { ftc: 200000, fnr: 10000, frst: 0, btc: 0 });
+                return;
+            }
+
+            // 2. Dr Frost (Secure LocalStorage Check)
+            if (user === "drfrost.frostchain") {
+                const saved = localStorage.getItem('drfrost_pin');
+                if (saved && pin === saved) {
+                    launchApp(user, {
+                        frst: 31415900,
+                        ftc: 3100000,
+                        fnr: 40000,
+                        btc: 30.337,
+                        bch: 133.70,
+                        xmr: 13.37
+                    });
+                } else {
+                    alert("INVALID PIN");
+                }
+            } else {
+                alert("USER NOT RECOGNIZED");
+            }
+        }
+
+        function resetWallet() {
+            if(confirm("FACTORY RESET? This will wipe your custom PIN.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // --- APP LOGIC ---
+        function launchApp(user, assets) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-app').style.display = 'flex';
+            document.getElementById('app-username').innerText = user;
+
+            const list = document.getElementById('asset-list');
+            list.innerHTML = "";
+            
+            addCard(list, "FRST", "Frost Token", assets.frst, "#ff00ff");
+            addCard(list, "FTC", "Frostcoin", assets.ftc, "gold");
+            addCard(list, "FNR", "Frost Node", assets.fnr, "#00d4ff");
+            addCard(list, "BTC", "Bitcoin", assets.btc, "#f7931a");
+            
+            if(assets.bch) addCard(list, "BCH", "Bitcoin Cash", assets.bch, "#8dc351");
+
+            let total = (assets.frst * 0.4) + (assets.ftc * 1.5) + (assets.fnr * 100) + (assets.btc * 95000);
+            document.getElementById('total-val').innerText = "$" + total.toLocaleString(undefined, {maximumFractionDigits:0});
+        }
+
+        function addCard(container, sym, name, bal, color) {
+            if(bal > 0) {
+                container.innerHTML += `
+                    <div class="asset-card" style="border-left-color: ${color};">
+                        <div>
+                            <div style="font-weight:bold;">${sym}</div>
+                            <div style="font-size:0.7rem; color:#aaa;">${name}</div>
+                        </div>
+                        <div style="font-size:1.2rem; font-weight:bold;">${bal.toLocaleString()}</div>
+                    </div>`;
+            }
+        }
+
+        function switchTab(t) {
+            document.getElementById('view-assets').style.display = t==='assets'?'block':'none';
+            document.getElementById('view-chat').style.display = t==='chat'?'block':'none';
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function sendMsg() {
+            const i = document.getElementById('chat-in');
+            const log = document.getElementById('chat-log');
+            if(i.value) {
+                log.innerHTML += `<div class="msg">> ${i.value}</div>`;
+                i.value = "";
+            }
+        }
+    </script>
+</body>
+</html>
+<script>
+    function syncNode() {
+        const user = document.getElementById('app-username').innerText;
+        const btn = event.target;
+        btn.innerText = "[ CONTACTING NODE... ]";
+        
+        setTimeout(() => {
+            btn.innerText = "[ SYNC SUCCESSFUL ]";
+            btn.style.borderColor = "gold";
+            btn.style.color = "gold";
+            
+            // Logic to simulate pulling data from Miracle Node
+            alert("API Handshake Complete.\nIdentity: " + user + "\nRewards Imported: +13.37 FTC detected in mempool.");
+            
+            // Logic to update local display
+            location.reload(); 
+        }, 2000);
+    }
+</script>

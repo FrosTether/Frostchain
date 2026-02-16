@@ -1,0 +1,8 @@
+{
+  "protocol": "FROST_V4",
+  "version": "4.2.0-WAN-ALPHA",
+  "download_url": "https://frostofthings.surge.sh/firmware.bin",
+  "checksum": "4906c56d72b226973dbed4c027cbb8e4d4fcaf3997ca7474590283c19000385b",
+  "signature": "745403db1dc73f161a1753d8200d7fa127f5308378dcdee15f8a810186b5fb83",
+  "force_update": true
+}

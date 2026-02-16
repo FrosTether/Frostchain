@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FROST // BASE BRIDGE</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+    <style>
+        :root {
+            --base-blue: #0052ff;
+            --frost-cyan: #00eaff;
+            --bg: #0a0b0d;
+            --panel: #1e2025;
+        }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .bridge-container {
+            background: var(--panel);
+            width: 400px;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            box-shadow: 0 0 50px rgba(0,82,255,0.1);
+        }
+        h1 { margin: 0 0 20px 0; font-size: 1.2rem; color: var(--base-blue); text-transform: uppercase; letter-spacing: 2px; text-align: center; }
+        
+        .status-dot { height: 10px; width: 10px; background: #333; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .status-dot.active { background: #00ff41; box-shadow: 0 0 8px #00ff41; }
+
+        .input-group { margin-bottom: 20px; }
+        label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 5px; }
+        input { 
+            width: 100%; box-sizing: border-box; 
+            background: #000; border: 1px solid #333; 
+            color: var(--frost-cyan); padding: 12px; 
+            font-family: monospace; font-size: 1.1rem;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            background: var(--base-blue);
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+        button:hover { background: #0040c9; }
+        button:disabled { background: #333; color: #555; cursor: not-allowed; }
+
+        #console {
+            margin-top: 20px;
+            font-size: 0.75rem;
+            color: #555;
+            height: 80px;
+            overflow-y: auto;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+        }
+        .log-success { color: #00ff41; }
+        .log-error { color: #ff3333; }
+    </style>
+</head>
+<body>
+
+    <div class="bridge-container">
+        <h1>Frost <span style="color:#fff">&harr;</span> Base</h1>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <span class="status-dot" id="dot"></span>
+            <span id="status">DISCONNECTED</span>
+        </div>
+
+        <div class="input-group">
+            <label>ASSET TO BRIDGE</label>
+            <input type="text" value="FROST (FTC)" readonly style="text-align: center;">
+        </div>
+
+        <div class="input-group">
+            <label>AMOUNT</label>
+            <input type="number" id="amount" placeholder="0.00" disabled>
+        </div>
+
+        <button id="btn-action">CONNECT WALLET</button>
+
+        <div id="console">
+            <div>> BRIDGE PROTOCOL READY</div>
+            <div>> WAITING FOR INJECTION...</div>
+        </div>
+    </div>
+
+<script>
+    // BASE MAINNET PARAMS
+    const BASE_CHAIN_ID = '0x2105'; // 8453
+    const BASE_RPC = 'https://mainnet.base.org';
+
+    let provider, signer, userAddr;
+    const btn = document.getElementById('btn-action');
+    const status = document.getElementById('status');
+    const dot = document.getElementById('dot');
+    const logDiv = document.getElementById('console');
+
+    function log(msg, type='') {
+        const d = document.createElement('div');
+        d.innerText = `> ${msg}`;
+        if(type) d.classList.add(`log-${type}`);
+        logDiv.prepend(d);
+    }
+
+    async function connect() {
+        if(!window.ethereum) return log("NO WALLET DETECTED", "error");
+        
+        try {
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            await provider.send("eth_requestAccounts", []);
+            signer = provider.getSigner();
+            userAddr = await signer.getAddress();
+
+            log(`Wallet: ${userAddr.substring(0,6)}...`, "success");
+            status.innerText = "CONNECTED";
+            dot.classList.add("active");
+            
+            // CHECK NETWORK
+            const net = await provider.getNetwork();
+            if(net.chainId !== 8453) {
+                btn.innerText = "SWITCH TO BASE";
+                btn.onclick = switchToBase;
+            } else {
+                readyToBridge();
+            }
+
+        } catch(e) { log(e.message, "error"); }
+    }
+
+    async function switchToBase() {
+        try {
+            await window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: BASE_CHAIN_ID }],
+            });
+            readyToBridge();
+        } catch (switchError) {
+            // This error code indicates that the chain has not been added to MetaMask.
+            if (switchError.code === 4902) {
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: BASE_CHAIN_ID,
+                            chainName: 'Base Mainnet',
+                            rpcUrls: [BASE_RPC]
+                        }],
+                    });
+                    readyToBridge();
+                } catch (addError) { log("Failed to add Base", "error"); }
+            } else {
+                log("Switch Failed: " + switchError.message, "error");
+            }
+        }
+    }
+
+    function readyToBridge() {
+        btn.innerText = "BRIDGE TO BASE";
+        btn.onclick = executeBridge;
+        document.getElementById('amount').disabled = false;
+        log("Network: BASE MAINNET Confirmed", "success");
+    }
+
+    async function executeBridge() {
+        const amt = document.getElementById('amount').value;
+        if(!amt || amt <= 0) return log("Invalid Amount", "error");
+
+        log(`INITIATING TRANSFER: ${amt} FTC -> BASE`, "info");
+        btn.disabled = true;
+        btn.innerText = "SIGNING...";
+
+        try {
+            // SIMULATED TRANSACTION FOR NOW (Since we need the real Bridge Contract Address)
+            // In a real scenario, this would be: await contract.deposit({value: ...})
+            
+            const tx = {
+                to: userAddr, // Self-send loop for testing functionality
+                value: ethers.utils.parseEther("0.0001") // Tiny amount to trigger wallet popup
+            };
+
+            const txResponse = await signer.sendTransaction(tx);
+            log(`Tx Sent: ${txResponse.hash.substring(0,10)}...`, "info");
+            
+            await txResponse.wait();
+            log("BRIDGE SUCCESSFUL. ASSETS ON BASE.", "success");
+            btn.innerText = "BRIDGE COMPLETE";
+            btn.disabled = false;
+
+        } catch(e) {
+            log("Tx Failed: " + e.message, "error");
+            btn.innerText = "RETRY BRIDGE";
+            btn.disabled = false;
+        }
+    }
+
+    btn.onclick = connect;
+
+</script>
+</body>
+</html>

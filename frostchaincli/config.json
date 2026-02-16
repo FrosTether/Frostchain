@@ -1,0 +1,18 @@
+cd ~/xmrig/build
+cat <<EOF > config.json
+{
+    "autosave": true,
+    "cpu": true,
+    "opencl": false,
+    "cuda": false,
+    "pools": [
+        {
+            "url": "gulf.moneroocean.stream:10128",
+            "user": "46Afkm5fTCRWkAj4bw1jNH23L2bFJPMDV7BQ6oMcYostYB7EnWPgcAs63KGg26VPvVCNMMpRKGXDfdp64VLr88qR9CwNJyF",
+            "pass": "Frost-Node",
+            "keepalive": true,
+            "tls": true
+        }
+    ]
+}
+EOF

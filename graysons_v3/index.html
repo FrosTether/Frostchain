@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Graysons | Identity Hub</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --kane: #d400ff; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; }
+        
+        #gate { height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-box { width: 100%; max-width: 400px; border: 1px solid #222; padding: 30px; border-radius: 15px; background: #080808; text-align: center; }
+
+        input { background: #000; border: 1px solid #333; color: var(--term); width: 100%; padding: 15px; margin: 10px 0; font-family: inherit; font-size: 1.1rem; border-radius: 8px; text-align: center; }
+        .btn { background: var(--term); color: #000; border: none; width: 100%; padding: 18px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+        
+        /* DASHBOARD (Hidden until Auth) */
+        #dash { display: none; max-width: 500px; margin: 0 auto; min-height: 100vh; flex-direction: column; border-left: 1px solid #222; border-right: 1px solid #222; }
+        .header { padding: 20px; border-bottom: 2px solid var(--term); display: flex; justify-content: space-between; align-items: center; }
+        .asset-card { background: #0a0a0a; border: 1px solid #222; padding: 15px; border-radius: 12px; margin: 15px; border-left: 4px solid #333; }
+        .lbl { font-size: 0.6rem; color: #666; text-transform: uppercase; }
+        .val { font-size: 1.5rem; font-weight: bold; }
+
+        /* PAPER WALLET VIEW */
+        #paper-gen { display: none; padding: 20px; text-align: center; border: 2px dashed var(--gold); margin: 20px; }
+    </style>
+</head>
+<body>
+
+    <div id="gate">
+        <div class="auth-box">
+            <h2 style="color:var(--term)">FROST ID</h2>
+            <div style="font-size:0.6rem; color:#444; margin-bottom:20px;">ACCESSING GRAYSONSWALLET ENGINE</div>
+            
+            <input type="text" id="id-input" placeholder="name.frostchain">
+            <input type="password" id="pin-input" maxlength="6" placeholder="ENTER 4-6 DIGIT PIN">
+            
+            <button class="btn" onclick="authenticate()">INITIALIZE SESSION</button>
+            <div style="font-size:0.6rem; color:#333; margin-top:15px;">If name is unregistered, a Paper Wallet will be generated.</div>
+        </div>
+    </div>
+
+    <div id="dash">
+        <div class="header">
+            <div><div class="lbl">IDENTITY</div><div id="id-tag" style="color:var(--cyan)">-</div></div>
+            <div style="text-align:right;"><div class="lbl">VAULT</div><div style="color:var(--term)">ONLINE</div></div>
+        </div>
+
+        <div id="paper-gen">
+            <h3 style="color:var(--gold)">NEW IDENTITY CREATED</h3>
+            <div style="font-size:0.7rem; color:#fff; margin-bottom:10px;">SAVE YOUR ENCRYPTED PRIVATE KEY:</div>
+            <div id="priv-key" style="font-size:0.6rem; background:#000; padding:10px; word-break:break-all; border:1px solid #333;"></div>
+            <button class="btn" style="background:var(--gold)" onclick="closePaper()">I HAVE SAVED IT</button>
+        </div>
+
+        <div id="wallet-ui">
+            <div class="asset-card" style="border-color:var(--kane);"><div class="lbl">Governance (FRST)</div><div class="val">3,145,900.00</div></div>
+            <div class="asset-card" style="border-color:var(--term);"><div class="lbl">Frostcoin (FTC)</div><div class="val">11,870,000.01</div></div>
+            <div class="asset-card" style="border-color:var(--cyan);"><div class="lbl">Reserve (FNR)</div><div class="val">400,000.00</div></div>
+            
+            <div style="padding:20px;">
+                <button class="btn" style="background:#111; color:var(--term); border:1px solid var(--term)" onclick="alert('PrivateSend Enabled')">PRIVATESEND MIXER</button>
+                <button class="btn" style="margin-top:10px; background:#000; border:1px solid #333" onclick="alert('WalletConnect: Awaiting Signal')">WALLETCONNECT</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function authenticate() {
+            const name = document.getElementById('id-input').value;
+            const pin = document.getElementById('pin-input').value;
+
+            if(!name || (pin.length !== 4 && pin.length !== 6)) {
+                alert("Invalid Identity or PIN."); return;
+            }
+
+            // SIMULATED REGISTRY CHECK
+            const isRegistered = name.toLowerCase() === "kane.frostchain";
+
+            document.getElementById('gate').style.display = 'none';
+            document.getElementById('dash').style.display = 'flex';
+            document.getElementById('id-tag').innerText = name.includes('.frostchain') ? name : name + ".frostchain";
+
+            if(!isRegistered) {
+                // Trigger Paper Wallet Gen (The "frostscan" merge)
+                document.getElementById('paper-gen').style.display = 'block';
+                document.getElementById('wallet-ui').style.display = 'none';
+                document.getElementById('priv-key').innerText = "FROST_SECURE_ENC_" + btoa(name + pin + Math.random());
+            }
+        }
+
+        function closePaper() {
+            document.getElementById('paper-gen').style.display = 'none';
+            document.getElementById('wallet-ui').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

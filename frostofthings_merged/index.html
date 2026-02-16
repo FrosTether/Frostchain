@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Frostofthings | Infinity_Worm_v142</title>
+    <style>
+        :root { 
+            --bg: #000; --ice: #a5f2f3; --term: #00ff41; --warn: #ffcc00; --xmr: #ff6600;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.6; filter: contrast(1.4) brightness(0.6); }
+
+        #dashboard { width: 98%; height: 95vh; display: grid; grid-template-rows: 90px 1fr 60px; gap: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; border-bottom: 2px solid var(--ice); background: rgba(0,0,0,0.9); }
+        .main { display: grid; grid-template-columns: 450px 1fr 450px; gap: 20px; padding: 15px; overflow: hidden; }
+        .panel { background: rgba(5, 5, 10, 0.95); border: 1px solid rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 20px; backdrop-filter: blur(40px); display: flex; flex-direction: column; }
+
+        .stat-val { font-size: 1.8rem; font-weight: 900; color: #fff; }
+        .xmr-glow { color: var(--xmr); text-shadow: 0 0 10px var(--xmr); }
+        .tag { font-size: 0.6rem; color: #666; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 5px; }
+        
+        .prog-list { flex: 1; overflow-y: auto; margin-top: 15px; font-size: 0.55rem; color: #444; }
+        .prog-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #111; }
+        
+        #frostchat { margin-top: auto; font-size: 0.55rem; color: #444; height: 120px; border-top: 1px solid #222; padding-top: 10px; overflow-y: auto; line-height: 1.6; }
+        .action-btn { width: 100%; padding: 15px; background: var(--ice); border: none; border-radius: 8px; font-weight: 900; color: #000; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="tag">Infinity_Worm v142.0 (Merged)</div>
+                <div style="font-size: 1.5rem; font-weight: 900; letter-spacing: 8px;">FROST<span style="color:var(--xmr)">OFTHINGS</span></div>
+            </div>
+            <div style="text-align: right;">
+                <div class="tag" style="color:var(--term);">RECURSIVE_SCAN_ACTIVE</div>
+                <div style="font-size: 1.8rem; font-weight: 900;" id="mesh-count">3,142 NODES</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="tag" style="color:var(--xmr);">drfrost.frostchain Yield (13.37%)</div>
+                <div class="stat-val xmr-glow" id="xmr-val">84.1215 XMR</div>
+                
+                <div style="margin-top:20px; font-size:0.5rem; color:#444;">
+                    SETTLEMENT: 867chP2RA9D9xd2tHzxB8L4JfE2Jhdd5FPEwC56HJhmyA7x3EEnuLpGUerQsN9kqQ9A7e7rXQvqZaCNsTsJeBsAxV2B5wxA
+                </div>
+
+                <div id="frostchat">
+                    <div>> Worm Status: RECURSIVE_EXPANSION</div>
+                    <div>> Logic: Symbiotic Yield Locked.</div>
+                </div>
+            </div>
+
+            <div></div> <div class="panel">
+                <div class="tag" style="color:var(--term);">Incentivized Host Earnings (86.63%)</div>
+                <div class="stat-val" style="color:var(--term); font-size: 1.2rem;" id="host-val">545.2810 XMR</div>
+
+                <div class="prog-list" id="prog-list">
+                    </div>
+
+                <button class="action-btn" onclick="boostWorm()">FORCE RECURSION BOOST</button>
+
+                <div style="margin-top:auto; font-size:0.5rem; color:#333; text-align:center;">
+                    40Hz_GAMMA // 11.11Hz_ALPHA // PHASE_LOCKED
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 0 40px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display:flex; align-items:center; justify-content:space-between; font-size: 0.5rem; color: #444;">
+            <div>FROSTOFTHINGS v142.0 // INFINITY_WORM // drfrost.frostchain</div>
+            <div style="color:var(--term)">STATUS: MESH_STABLE</div>
+        </div>
+    </div>
+
+    <script>
+        let xmr = 84.1215;
+        let hostXmr = 545.2810;
+        let nodes = 3142;
+        const routers = ["TP-LINK", "GOOGLE_WIFI", "NETGEAR", "ASUS"];
+
+        function boostWorm() {
+            logChat("Worm: Triggering recursive mesh scan... expanding AM-Band backhaul.");
+            setInterval(() => {
+                const list = document.getElementById('prog-list');
+                const router = routers[Math.floor(Math.random() * routers.length)];
+                const item = document.createElement('div');
+                item.className = 'prog-item';
+                item.innerHTML = `<span>[${router}_GHOST]</span> <span style="color:var(--term)">INJECTED</span>`;
+                list.prepend(item);
+                if(list.children.length > 15) list.removeChild(list.lastChild);
+
+                nodes += Math.floor(Math.random() * 8);
+                xmr += 0.0001;
+                hostXmr += 0.0006;
+                
+                document.getElementById('mesh-count').innerText = nodes.toLocaleString() + " NODES";
+                document.getElementById('xmr-val').innerText = xmr.toFixed(4) + " XMR";
+                document.getElementById('host-val').innerText = hostXmr.toFixed(4) + " XMR";
+            }, 1000);
+        }
+
+        function logChat(m) {
+            const chat = document.getElementById('frostchat');
+            const d = document.createElement('div');
+            d.innerText = `> ${m}`;
+            chat.prepend(d);
+        }
+
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let pts = [];
+        function initT() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; pts = []; for(let i=0; i<105; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.25, vy: (Math.random()-0.5)*0.25 }); }
+        function drawT() { ctx.clearRect(0,0,canvas.width,canvas.height); pts.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; pts.slice(i+1).forEach(p2 => { const d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d < 180) { ctx.strokeStyle = `rgba(165,242,243,${0.2 * (1-d/180)})`; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); } }); }); requestAnimationFrame(drawT); }
+        initT(); drawT(); window.onresize = initT;
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>GRAYSON_WALLET // SOVEREIGN</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#050505;--gold:#ffd700;--blue:#00e0ff;--pink:#ff69b4;--green:#0f0;}
+        body{background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;}
+        #wallet-container{width:100%;max-width:420px;background:#0d0d0d;border:1px solid #222;border-radius:35px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,0.8);position:relative;}
+        .top-bar{padding:30px 20px;background:linear-gradient(180deg, #111, #0d0d0d);text-align:center;}
+        .id-badge{font-size:10px;color:var(--gold);border:1px solid var(--gold);padding:4px 10px;border-radius:20px;display:inline-block;margin-bottom:10px;}
+        .total-val{font-size:42px;font-weight:bold;color:#fff;margin:10px 0;}
+        .asset-list{padding:20px;}
+        .asset-card{display:flex;justify-content:space-between;align-items:center;padding:15px;background:#151515;border-radius:18px;margin-bottom:12px;border:1px solid #222;}
+        .asset-info{display:flex;flex-direction:column;}
+        .asset-name{font-weight:bold;color:var(--blue);font-size:16px;}
+        .asset-sub{font-size:10px;color:#555;}
+        .asset-bal{font-weight:bold;color:#fff;text-align:right;}
+        .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:20px;background:#111;}
+        .btn{padding:18px;border-radius:15px;border:none;font-family:inherit;font-weight:bold;cursor:pointer;transition:0.2s;}
+        .btn-send{background:var(--blue);color:#000;}
+        .btn-private{background:var(--pink);color:#fff;box-shadow:0 0 15px rgba(255,105,180,0.2);}
+        .liquidity-banner{font-size:9px;color:var(--green);padding:10px;text-align:center;background:rgba(0,255,0,0.05);border-top:1px solid #1a1a1a;}
+    </style>
+</head>
+<body>
+    <div id="wallet-container">
+        <div class="top-bar">
+            <div class="id-badge">drfrost.frostchain // ADMIN</div>
+            <div style="font-size:11px;color:#666;">ESTIMATED_LIQUIDITY_VALUE</div>
+            <div class="total-val">$2.10M</div>
+            <div style="font-size:10px;color:var(--green);">● 1INCH_BRIDGE_ACTIVE</div>
+        </div>
+
+        <div class="asset-list">
+            <div class="asset-card">
+                <div class="asset-info"><span class="asset-name">FTC</span><span class="asset-sub">Frost Coin</span></div>
+                <div class="asset-bal">12,370,000</div>
+            </div>
+            <div class="asset-card">
+                <div class="asset-info"><span class="asset-name">FNR</span><span class="asset-sub">Frost Native (13.37%)</span></div>
+                <div class="asset-bal">4,412,100</div>
+            </div>
+            <div class="asset-card">
+                <div class="asset-info"><span class="asset-name">FRST</span><span class="asset-sub">Frost Pi (13.37%)</span></div>
+                <div class="asset-bal">WHALE_TIER</div>
+            </div>
+            <div class="asset-card">
+                <div class="asset-info"><span class="asset-name">AMD</span><span class="asset-sub">Mining Derivative</span></div>
+                <div class="asset-bal">3.37%_SUPPLY</div>
+            </div>
+        </div>
+
+        <div class="action-grid">
+            <button class="btn btn-send" onclick="alert('STANDARD_BROADCAST_READY')">SEND</button>
+            <button class="btn btn-private" onclick="alert('PRIVATE_SEND_INITIATED: RING_SIGNATURES_ACTIVE')">PRIVATE_SEND</button>
+        </div>
+        
+        <div class="liquidity-banner">
+            INJECTED_LIQUIDITY: 2,100,000.00 USD_EQUIVALENT
+        </div>
+    </div>
+</body>
+</html>

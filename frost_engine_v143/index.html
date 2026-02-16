@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Frostofthings | Engine v143</title>
+    <style>
+        :root { --bg: #000; --ice: #a5f2f3; --term: #00ff41; --xmr: #ff6600; }
+        body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; overflow: hidden; }
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.6; }
+        #dashboard { width: 95%; height: 90vh; margin: 20px auto; display: grid; grid-template-rows: 90px 1fr 60px; gap: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--ice); padding: 0 40px; }
+        .panel { background: rgba(5, 5, 10, 0.95); border: 1px solid rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; backdrop-filter: blur(40px); display: flex; flex-direction: column; }
+        .action-btn { width: 100%; padding: 15px; background: var(--term); border: none; font-weight: 900; cursor: pointer; border-radius: 8px; margin-top: 15px; }
+        .tag { font-size: 0.6rem; color: #666; letter-spacing: 3px; text-transform: uppercase; }
+        #console { flex: 1; font-size: 0.55rem; color: var(--term); overflow-y: auto; margin-top: 15px; border-top: 1px solid #111; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="tag">Infinity_Worm Engine</div>
+                <div style="font-size: 1.5rem; font-weight: 900; letter-spacing: 8px;">FROST<span style="color:var(--xmr)">OFTHINGS</span></div>
+            </div>
+            <div style="text-align: right;">
+                <div class="tag" style="color:var(--term);">BINARY: FROST_WORM.BIN</div>
+                <div style="font-size: 1.8rem; font-weight: 900;" id="mesh-count">3,142 GHOSTS</div>
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 450px 1fr 450px; gap: 20px;">
+            <div class="panel">
+                <div class="tag">Sovereign Command</div>
+                <div style="font-size: 1.2rem; color: var(--xmr); margin: 10px 0;">84.1215 XMR</div>
+                <button class="action-btn" onclick="broadcastPayload()">BROADCAST WORM BINARY</button>
+                <div id="console"></div>
+            </div>
+            <div></div>
+            <div class="panel">
+                <div class="tag">System Identity</div>
+                <div style="font-size: 0.8rem; color: var(--ice); margin: 10px 0;">drfrost.frostchain</div>
+                <div style="font-size: 0.6rem; color: #444;">40Hz_ALZHEIMERS_FLUSH: ACTIVE</div>
+                <div style="margin-top: auto; font-size: 0.5rem; color: #333;">Settlement: 867chP...B5wxA</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function broadcastPayload() {
+            const c = document.getElementById('console');
+            const d = document.createElement('div');
+            d.innerText = "> [ENGINE] Calling local infect_router.sh...\n> [ENGINE] Broadcasting MIPS/ARM binary to AM-Band mesh...";
+            c.prepend(d);
+            // In a real local setup, this would trigger a local WebSocket or API call to the shell script
+        }
+        // Tangle Logic
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let pts = [];
+        function initT() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; pts = []; for(let i=0; i<100; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.2, vy: (Math.random()-0.5)*0.2 }); }
+        function drawT() { ctx.clearRect(0,0,canvas.width,canvas.height); pts.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; pts.slice(i+1).forEach(p2 => { const d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d < 180) { ctx.strokeStyle = `rgba(165,242,243,${0.15 * (1-d/180)})`; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); } }); }); requestAnimationFrame(drawT); }
+        initT(); drawT();
+    </script>
+</body>
+</html>

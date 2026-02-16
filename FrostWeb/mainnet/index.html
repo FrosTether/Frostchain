@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FROSTCHAIN | THE PLATINUM STANDARD</title>
+<style>
+  :root { 
+    --bg: #050505; --cyan: #00ffff; --iota: #00ff41; --gold: #ffd700; 
+    --panel: #0a0a0a; --border: #222; --plat: #e5e4e2; 
+  }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; margin: 0; padding: 0; overflow-x: hidden; }
+  
+  /* MAIN NAVIGATION */
+  nav { 
+    background: #000; border-bottom: 1px solid var(--border); 
+    padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; z-index: 1000;
+  }
+  .brand { color: var(--cyan); font-size: 1.5em; font-weight: 900; text-shadow: 0 0 10px var(--cyan); letter-spacing: 2px; }
+  .nav-links a { color: #888; text-decoration: none; margin-left: 20px; font-size: 0.8em; transition: 0.3s; }
+  .nav-links a:hover { color: var(--cyan); }
+
+  /* HERO SECTION */
+  .hero { 
+    padding: 60px 30px; background: radial-gradient(circle at top right, rgba(0,255,255,0.05), transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .ens-identity { font-size: 1.2em; color: var(--iota); font-weight: bold; margin-bottom: 10px; }
+  .hero-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px; }
+  .stat-card { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-top: 3px solid var(--cyan); }
+  .stat-label { font-size: 0.6em; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-val { font-size: 1.5em; font-weight: 900; margin-top: 5px; }
+
+  /* DASHBOARD GRID */
+  .dashboard { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; padding: 30px; }
+  .section-box { background: var(--panel); border: 1px solid var(--border); padding: 20px; }
+  .box-title { font-size: 0.8em; color: var(--cyan); margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 5px; }
+
+  /* TREASURY CERTIFICATE */
+  .cert { 
+    border: 2px dashed var(--plat); padding: 20px; border-radius: 12px;
+    background: linear-gradient(135deg, rgba(229,228,226,0.05), transparent);
+    text-align: center;
+  }
+
+  /* ECOSYSTEM LINKS */
+  .eco-btn { 
+    display: block; padding: 15px; background: #111; border: 1px solid var(--border); 
+    color: #fff; text-decoration: none; margin-bottom: 10px; font-weight: bold;
+    transition: 0.3s;
+  }
+  .eco-btn:hover { border-color: var(--iota); box-shadow: 0 0 10px rgba(0,255,65,0.1); }
+
+  canvas#tangle { width: 100%; height: 250px; background: #000; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">FROSTCHAIN</div>
+  <div class="nav-links">
+    <a href="http://frostcrush.surge.sh">FROSTCRUSH</a>
+    <a href="http://cryptodoku.surge.sh">CRYPTODOKU</a>
+    <a href="#explorer">EXPLORER</a>
+    <a href="#nodes">NODES</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="ens-identity">AUTHORITY: drfrost.frostchain ✔</div>
+  <div style="font-size: 0.8em; color: #444;">FROSTCHAIN MAINNET | GENESIS EPOCH 1</div>
+  
+  <div class="hero-stats">
+    <div class="stat-card">
+      <div class="stat-label">Frostcoin (FTC)</div>
+      <div class="stat-val" style="color:var(--cyan);">$283.00</div>
+    </div>
+    <div class="stat-card" style="border-color: var(--gold);">
+      <div class="stat-label">Market Cap</div>
+      <div class="stat-val" style="color:var(--gold);">$28.3B</div>
+    </div>
+    <div class="stat-card" style="border-color: var(--iota);">
+      <div class="stat-label">Network TPS</div>
+      <div class="stat-val" id="tps" style="color:var(--iota);">906.6</div>
+    </div>
+  </div>
+</div>
+
+<div class="dashboard">
+  <div class="main-col">
+    <div class="section-box">
+      <div class="box-title">LIVE TANGLE SETTLEMENT</div>
+      <canvas id="tangle"></canvas>
+    </div>
+  </div>
+
+  <div class="side-col">
+    <div class="section-box" style="margin-bottom: 20px;">
+      <div class="box-title">TREASURY CERTIFICATES</div>
+      <div class="cert">
+        <div style="font-size:0.6em; color:var(--plat);">PLATINUM CERTIFICATE #001</div>
+        <div style="font-size:1.2em; font-weight:900; margin:10px 0;">$283,000.00</div>
+        <div style="font-size:0.5em; color:var(--iota);">COLLATERAL: 1,000 FTC (LOCKED)</div>
+      </div>
+    </div>
+
+    <div class="section-box">
+      <div class="box-title">ECOSYSTEM PORTAL</div>
+      <a href="http://frostcrush.surge.sh" class="eco-btn">🎮 FROSTCRUSH SAGA</a>
+      <a href="http://cryptodoku.surge.sh" class="eco-btn">🧩 CRYPTODOKU VALIDATOR</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('tangle');
+const ctx = canvas.getContext('2d');
+function resize() { canvas.width=canvas.offsetWidth; canvas.height=canvas.offsetHeight; }
+window.onresize=resize; resize();
+
+let nodes = [];
+function loop() {
+  ctx.fillStyle='rgba(5,5,5,0.2)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  if(Math.random()>0.85) nodes.push({x:canvas.width, y:Math.random()*canvas.height, vx:-(2+Math.random()*4), t:Math.floor(Math.random()*3)});
+  nodes.forEach((n,i) => {
+    n.x += n.vx;
+    const colors = ['#00ffff', '#e5e4e2', '#00ff41'];
+    ctx.fillStyle = colors[n.t];
+    ctx.beginPath(); ctx.arc(n.x, n.y, 2, 0, Math.PI*2); ctx.fill();
+    if(n.x < -10) nodes.splice(i,1);
+  });
+  document.getElementById('tps').innerText = (900 + Math.random()*15).toFixed(1);
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

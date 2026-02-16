@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frostchain | Hive Mesh Miner</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; background-color: #000; overflow: hidden; font-family: 'Courier New', monospace; color: #00ff00; touch-action: none; }
+        canvas { display: block; width: 100%; height: 100%; position: absolute; z-index: 0; }
+        
+        #ping-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #00ffff; display: none; z-index: 2000; opacity: 0.2; pointer-events: none; }
+        #ledger-hud { position: absolute; top: 15px; right: 15px; text-align: right; z-index: 10; background: rgba(0, 5, 0, 0.9); padding: 12px; border-radius: 4px; border-right: 3px solid #00ffff; }
+        .hud-row { margin-bottom: 4px; font-size: 11px; letter-spacing: 1px; }
+        .val { color: #fff; font-weight: bold; }
+        .c-hive { color: #ffff00; text-shadow: 0 0 5px #ffff00; }
+
+        #frostchat-term { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 650px; height: 160px; background: rgba(0, 5, 0, 0.95); border: 1px solid #005500; display: flex; flex-direction: column; z-index: 30; border-radius: 6px; overflow: hidden; }
+        #chat-history { flex: 1; padding: 10px; overflow-y: auto; font-size: 10px; color: #aaa; }
+        
+        #controls { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,5,0,0.98); border-top: 1px solid #004400; display: flex; justify-content: space-evenly; align-items: center; padding: 18px 0; z-index: 40; }
+        .btn-ctrl { background: transparent; border: 1px solid #004400; color: #008800; padding: 10px 18px; border-radius: 20px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .btn-ctrl.active { border-color: #00ff00; color: #00ff00; }
+
+        #auth-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .card { background: #050505; border: 1px solid #00ff00; padding: 30px; border-radius: 8px; text-align: center; max-width: 320px; }
+        input { background: #111; border: 1px solid #00ff00; color: #fff; padding: 12px; margin-bottom: 15px; width: 240px; font-family: inherit; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="ping-flash"></div>
+
+    <div id="auth-overlay">
+        <div class="card">
+            <h2 style="color:#00ff00; margin-top:0;">HIVE INITIALIZE</h2>
+            <p style="font-size:10px; color:#666; margin-bottom:15px;">Enter shared Hive ID to pool hashrate</p>
+            <input type="text" id="reg-user" placeholder="Hive Identity (Jacob)">
+            <input type="password" id="reg-pin" placeholder="Master PIN">
+            <button onclick="startHive()" style="background:#004400; color:#fff; border:1px solid #00ff00; padding:12px; cursor:pointer; font-weight:bold; width:100%;">JOIN HIVE</button>
+        </div>
+    </div>
+
+    <canvas id="tangle"></canvas>
+
+    <div id="ledger-hud">
+        <div class="hud-row">HIVE: <span class="val c-hive" id="disp-user">...</span></div>
+        <div class="hud-row">SWARM: <span class="val" style="color:#00ffff;" id="node-count">12,481</span></div>
+        <div class="hud-row">----------------</div>
+        <div class="hud-row">HIVE FTC: <span class="val" style="color:#ff00ff;" id="bal-ftc">0.0000</span></div>
+        <div class="hud-row">HIVE FNR: <span class="val" style="color:#00ffff;" id="bal-fnr">0.0000</span></div>
+        <div class="hud-row">HIVE FRST:<span class="val" style="color:#ffd700;" id="bal-frst">0.0000</span></div>
+    </div>
+
+    <div id="frostchat-term">
+        <div id="chat-history"></div>
+        <div id="chat-input-line" style="display:flex; border-top:1px solid #004400; background:#001100;">
+            <input type="text" id="chat-input" placeholder="Hive comms..." style="flex:1; background:transparent; border:none; color:#fff; padding:12px; font-family:inherit; outline:none;">
+            <button onclick="sendChat()" style="background:#003300; color:#00ff00; border:none; padding:0 20px; cursor:pointer; font-weight:bold;">TX</button>
+        </div>
+    </div>
+
+    <div id="controls">
+        <div class="btn-ctrl active" onclick="setMode('alpha')">ALPHA</div>
+        <div class="btn-ctrl" onclick="setMode('delta')">DELTA</div>
+        <div class="btn-ctrl" style="border-color:#ffff00; color:#ffff00;" onclick="exportLedger()">EXPORT .DAT</div>
+        <div class="btn-ctrl" style="border-color:#ff9900; color:#ff9900;" onclick="alert('WITHDRAW: PIN REQ')">WITHDRAW</div>
+    </div>
+
+    <script>
+        const MQTT_BROKER = "wss://broker.emqx.io:8084/mqtt";
+        const HIVE_TOPIC_BASE = "frostchain/hive/";
+        const GLOBAL_TOPIC = "frostchain/mesh/global";
+        
+        let userIdentity = "", userPIN = "", balances = { ftc: 0, fnr: 0, frst: 0 };
+        let mqttClient, audioCtx, osc, lfo, amp, masterGain;
+
+        function startHive() {
+            const user = document.getElementById('reg-user').value.trim();
+            const pin = document.getElementById('reg-pin').value.trim();
+            if(!user || pin.length < 4) return alert("HIVE ID & PIN REQUIRED");
+            userIdentity = user.includes('.') ? user : user + ".frostchain";
+            userPIN = pin;
+            
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('disp-user').innerText = userIdentity;
+            
+            initAudio(); initMQTT(); animate(); startMining();
+        }
+
+        function initMQTT() {
+            mqttClient = mqtt.connect(MQTT_BROKER, { clientId: 'f_' + Math.random().toString(16).slice(2, 8) });
+            const hiveTopic = HIVE_TOPIC_BASE + userIdentity;
+
+            mqttClient.on('connect', () => {
+                mqttClient.subscribe(GLOBAL_TOPIC);
+                mqttClient.subscribe(hiveTopic);
+                addMsg("SYS", `HIVE SYNC ACTIVE: ${userIdentity}`, "sys");
+            });
+
+            mqttClient.on('message', (t, m) => {
+                const d = JSON.parse(m.toString());
+                if(t === hiveTopic && d.type === "REWARD") {
+                    // Sync rewards across hive devices
+                    balances.ftc += d.ftc; balances.fnr += d.fnr; balances.frst += d.frst;
+                    updateLedger();
+                    addMsg("HIVE", `REMOTE DEVICE MINED: +${d.ftc.toFixed(4)} FTC`, "sys");
+                } else if(t === GLOBAL_TOPIC && d.user !== userIdentity) {
+                    addMsg(d.user, d.text, 'peer');
+                }
+            });
+        }
+
+        function startMining() {
+            setInterval(() => {
+                if(Math.random() > 0.98) {
+                    const r = { ftc: 13.37, fnr: 2.5, frst: 3142.9 };
+                    balances.ftc += r.ftc; balances.fnr += r.fnr; balances.frst += r.frst;
+                    updateLedger();
+                    
+                    // Broadcast reward to other Hive devices
+                    mqttClient.publish(HIVE_TOPIC_BASE + userIdentity, JSON.stringify({
+                        type: "REWARD", ...r
+                    }));
+                    addMsg("ME", `LOCAL HIVE BLOCK MINED!`, "sys");
+                }
+            }, 5000);
+        }
+
+        function updateLedger() {
+            document.getElementById('bal-ftc').innerText = balances.ftc.toFixed(4);
+            document.getElementById('bal-fnr').innerText = balances.fnr.toFixed(4);
+            document.getElementById('bal-frst').innerText = balances.frst.toFixed(4);
+        }
+
+        function exportLedger() {
+            const blob = new Blob([JSON.stringify({vault: {user: userIdentity, pin: userPIN}, ledger: balances})], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = "wallet.dat"; a.click();
+        }
+
+        function addMsg(u, t, type) {
+            const h = document.getElementById('chat-history');
+            const m = document.createElement('div');
+            m.className = `msg ${type || ''}`;
+            m.innerText = `[${new Date().toLocaleTimeString()}] ${u}: ${t}`;
+            h.appendChild(m); h.scrollTop = h.scrollHeight;
+        }
+
+        window.sendChat = () => {
+            const i = document.getElementById('chat-input');
+            if(!i.value.trim()) return;
+            addMsg("ME", i.value, 'user');
+            mqttClient.publish(GLOBAL_TOPIC, JSON.stringify({user: userIdentity, text: i.value}));
+            i.value = "";
+        };
+
+        function initAudio() {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            osc=audioCtx.createOscillator(); lfo=audioCtx.createOscillator(); amp=audioCtx.createGain(); masterGain=audioCtx.createGain();
+            let lg=audioCtx.createGain(); lfo.connect(lg); lg.connect(amp.gain);
+            osc.connect(amp); amp.connect(masterGain); masterGain.connect(audioCtx.destination);
+            osc.frequency.setTargetAtTime(432, audioCtx.currentTime, 0.1);
+            lg.gain.setTargetAtTime(0.5, audioCtx.currentTime, 0.1);
+            masterGain.gain.setTargetAtTime(0.05, audioCtx.currentTime, 0.1);
+            osc.start(); lfo.start();
+        }
+
+        function setMode(m) {
+            if(!audioCtx) return;
+            lfo.frequency.setTargetAtTime(m === 'alpha' ? 11.11 : 3.14159, audioCtx.currentTime, 0.1);
+        }
+
+        const canvas = document.getElementById('tangle');
+        const ctx = canvas.getContext('2d');
+        let w, h, p=[];
+        function resize() { w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; p=Array.from({length:40}, ()=>({x:Math.random()*w, y:Math.random()*h, vx:Math.random()-0.5, vy:Math.random()-0.5})); }
+        window.addEventListener('resize', resize); resize();
+        function animate() {
+            ctx.fillStyle='rgba(0,0,0,0.1)'; ctx.fillRect(0,0,w,h);
+            ctx.fillStyle='#00ff00'; ctx.strokeStyle='rgba(0,255,0,0.1)';
+            p.forEach((i, idx)=>{
+                i.x+=i.vx; i.y+=i.vy;
+                if(i.x<0||i.x>w) i.vx*=-1; if(i.y<0||i.y>h) i.vy*=-1;
+                ctx.beginPath(); ctx.arc(i.x, i.y, 1.5, 0, Math.PI * 2); ctx.fill();
+                p.slice(idx+1).forEach(j=>{ if(Math.hypot(i.x-j.x, i.y-j.y)<100){ ctx.beginPath(); ctx.moveTo(i.x, i.y); ctx.lineTo(j.x, j.y); ctx.stroke(); } });
+            });
+            requestAnimationFrame(animate);
+        }
+    </script>
+</body>
+</html>

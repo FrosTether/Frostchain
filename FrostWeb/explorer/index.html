@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FROSTEXPLORER | LAZY AUTHORITY</title>
+<style>
+  :root { --bg: #000; --iota: #00ff41; --gold: #ffd700; --cyan: #00ffff; }
+  body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', monospace; color: #fff; position: fixed; width: 100%; height: 100%; }
+  #hud { position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.85); padding: 12px; border-left: 2px solid var(--gold); font-size: 0.6em; z-index: 100; pointer-events: none; }
+  #rez-canvas { width: 100vw; height: 100vh; transition: opacity 2s; }
+  .stat { color: var(--iota); font-weight: bold; }
+  #burn-in-shield { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 50; transition: opacity 5s; }
+</style>
+</head>
+<body onload="start()">
+
+<div id="burn-in-shield"></div>
+
+<div id="hud">
+  <div>[S25 AUTHORITY] LAZY_MODE: ACTIVE</div>
+  <div style="margin-top:5px;">MESH STATUS: <span class="stat">CONNECTED</span></div>
+  <div>PIXEL_YIELD: <span id="yield-sim" class="stat">SYNCING...</span></div>
+  <div style="margin-top:5px; color:var(--cyan);" id="timer">--:--</div>
+</div>
+
+<canvas id="rez-canvas"></canvas>
+
+<script>
+const canvas = document.getElementById('rez-canvas');
+const ctx = canvas.getContext('2d');
+let time = 0, zoom = 1, shift = 0;
+
+function start() {
+  window.addEventListener('resize', resize);
+  resize();
+  loop();
+}
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+function loop() {
+  const rem = 300 - (Math.floor(Date.now()/1000)%300);
+  document.getElementById('timer').innerText = `EPOCH_REM: ${Math.floor(rem/60)}:${(rem%60).toString().padStart(2,'0')}`;
+  
+  // Auto-Shuffling Logic
+  if(rem % 150 === 0) { shift = Math.random() * 1000; }
+  if(rem < 10) { document.getElementById('burn-in-shield').style.opacity = "0.6"; } 
+  else { document.getElementById('burn-in-shield').style.opacity = "0"; }
+
+  time += 0.005;
+  zoom = 1 + Math.sin(time * 0.1) * 0.5;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.1)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const cx = canvas.width/2;
+  const cy = canvas.height/2;
+
+  // REZ HD AUTO-ENGINE
+  for(let i=0; i<120; i++) {
+    const angle = i * 0.2 + time;
+    const dist = (i * 8 + shift % 100) * zoom;
+    const x = cx + Math.cos(angle) * dist;
+    const y = cy + Math.sin(angle) * dist;
+    
+    ctx.strokeStyle = `hsl(${(i * 3 + time * 30) % 360}, 80%, 50%)`;
+    ctx.beginPath();
+    ctx.arc(x, y, 1.2, 0, Math.PI*2);
+    ctx.stroke();
+
+    if(i % 40 === 0) {
+      ctx.strokeStyle = 'rgba(0, 255, 65, 0.1)';
+      ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
+    }
+  }
+  
+  document.getElementById('yield-sim').innerText = (50 + (time * 0.05)).toFixed(4) + " FTC";
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>

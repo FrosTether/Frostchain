@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Quantum Link</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --dim: #004400; --warn: #ff0055; --panel: rgba(5, 5, 5, 0.95); }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; user-select: none; }
+        
+        /* LOGIN GATE */
+        #gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gate-box { border: 2px solid var(--term); padding: 30px; width: 300px; text-align: center; box-shadow: 0 0 20px var(--dim); }
+        input { width: 90%; background: #111; border: 1px solid #333; color: #fff; padding: 12px; margin-bottom: 10px; font-family: inherit; text-align: center; outline: none; }
+        .btn-main { background: var(--term); color: #000; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+        
+        /* DASHBOARD */
+        #dash { display: none; height: 100vh; position: relative; flex-direction: column; }
+        #tangle { position: absolute; inset: 0; z-index: 0; opacity: 0.3; }
+        
+        /* HEADER / KEY OVERLAY */
+        .header { position: relative; z-index: 10; padding: 15px; border-bottom: 1px solid var(--dim); background: var(--panel); }
+        .key-label { font-size: 0.7rem; color: #888; margin-bottom: 5px; }
+        .master-key { font-size: 0.65rem; color: var(--term); word-break: break-all; font-family: monospace; border: 1px dashed var(--dim); padding: 5px; background: rgba(0,20,0,0.5); }
+        
+        /* CHAT INTERFACE */
+        .chat-zone { flex: 1; position: relative; z-index: 10; display: flex; flex-direction: column; justify-content: flex-end; padding: 15px; padding-bottom: 80px; }
+        .chat-log { height: 200px; overflow-y: auto; font-size: 0.75rem; text-shadow: 0 0 2px var(--term); mask-image: linear-gradient(to top, black 80%, transparent 100%); -webkit-mask-image: linear-gradient(to top, black 80%, transparent 100%); }
+        .msg { margin-bottom: 4px; }
+        .msg.sys { color: #888; font-style: italic; }
+        .msg.user { color: #fff; font-weight: bold; }
+        
+        .chat-input-bar { display: flex; border-top: 1px solid var(--dim); background: #000; }
+        .chat-input { flex: 1; background: transparent; border: none; color: #fff; padding: 15px; font-family: inherit; outline: none; }
+        .send-btn { background: var(--dim); color: var(--term); border: none; padding: 0 20px; font-weight: bold; cursor: pointer; border-left: 1px solid var(--term); }
+
+        /* AUDIO CONTROLS (Floating Bottom) */
+        .audio-dock { position: absolute; bottom: 80px; left: 0; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 20; pointer-events: none; }
+        .toggle-btn { pointer-events: auto; background: #000; border: 1px solid var(--term); color: var(--term); padding: 10px 20px; border-radius: 20px; cursor: pointer; font-size: 0.7rem; box-shadow: 0 0 10px rgba(0,0,0,0.5); transition: 0.2s; }
+        .toggle-btn.active { background: var(--term); color: #000; box-shadow: 0 0 20px var(--term); }
+
+    </style>
+</head>
+<body>
+
+    <div id="gate">
+        <div class="gate-box">
+            <div style="font-size:1.5rem; font-weight:bold; margin-bottom:10px;">MIRACLE NODE</div>
+            <div style="font-size:0.7rem; color:#888; margin-bottom:20px;">SECURE XMR BRIDGE</div>
+            <input type="text" id="id-in" placeholder="identity.frostchain">
+            <input type="password" id="pin-in" placeholder="PIN" maxlength="4">
+            <button class="btn-main" onclick="login()">CONNECT</button>
+            <div id="err" style="color:var(--warn); font-size:0.7rem; height:15px; margin-top:10px;"></div>
+        </div>
+    </div>
+
+    <div id="dash">
+        <canvas id="tangle"></canvas>
+
+        <div class="header">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <span id="user-display">GUEST</span>
+                <span style="color:var(--term);">ONLINE</span>
+            </div>
+            <div class="key-label">NEWKIRK MASTER KEY (BCH/XMR BRIDGE)</div>
+            <div class="master-key">4AEreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab</div>
+        </div>
+
+        <div class="chat-zone">
+            <div class="chat-log" id="log">
+                <div class="msg sys">> INITIALIZING SMART CONTRACT BRIDGE...</div>
+                <div class="msg sys">> CONNECTION ESTABLISHED: 4AEreX...</div>
+                <div class="msg sys">> LISTENING FOR FROSTCHAT PROTOCOL...</div>
+            </div>
+            
+            <div class="audio-dock">
+                <button class="toggle-btn" id="btn-alpha" onclick="toggleAudio('alpha')">ALPHA [11.11Hz]</button>
+                <button class="toggle-btn" id="btn-delta" onclick="toggleAudio('delta')">DELTA [3.14Hz]</button>
+            </div>
+        </div>
+
+        <div class="chat-input-bar">
+            <input type="text" id="msg-in" class="chat-input" placeholder="Broadcast to XMR Contract...">
+            <button class="send-btn" onclick="sendMsg()">SEND</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. LOGIN LOGIC ---
+        function login() {
+            const id = document.getElementById('id-in').value;
+            const pin = document.getElementById('pin-in').value;
+            
+            if(id.includes('.frostchain') && pin.length === 4) {
+                document.getElementById('gate').style.display = 'none';
+                document.getElementById('dash').style.display = 'flex';
+                document.getElementById('user-display').innerText = id;
+                initTangle();
+                initAudioCtx(); // Prep audio engine
+            } else {
+                document.getElementById('err').innerText = "INVALID IDENTITY OR PIN";
+            }
+        }
+
+        // --- 2. AUDIO ENGINE (Binaural) ---
+        let actx, oscAlpha, oscDelta;
+        
+        function initAudioCtx() {
+            if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function toggleAudio(type) {
+            initAudioCtx();
+            if(actx.state === 'suspended') actx.resume();
+
+            if(type === 'alpha') {
+                if(oscAlpha) {
+                    oscAlpha.stop(); oscAlpha = null;
+                    document.getElementById('btn-alpha').classList.remove('active');
+                } else {
+                    // Start Alpha (11.11Hz on 432Hz Base)
+                    oscAlpha = createBinaural(432, 11.11);
+                    document.getElementById('btn-alpha').classList.add('active');
+                    // Stop Delta if running (Exclusive toggle)
+                    if(oscDelta) toggleAudio('delta');
+                    logSys("AUDIO ENGINE: ALPHA STATE ENGAGED");
+                }
+            } else if(type === 'delta') {
+                if(oscDelta) {
+                    oscDelta.stop(); oscDelta = null;
+                    document.getElementById('btn-delta').classList.remove('active');
+                } else {
+                    // Start Delta (3.14Hz on 100Hz Base)
+                    oscDelta = createBinaural(100, 3.14);
+                    document.getElementById('btn-delta').classList.add('active');
+                    // Stop Alpha if running
+                    if(oscAlpha) toggleAudio('alpha');
+                    logSys("AUDIO ENGINE: DELTA STATE ENGAGED");
+                }
+            }
+        }
+
+        function createBinaural(baseFreq, beatFreq) {
+            const gainNode = actx.createGain();
+            gainNode.gain.value = 0.1; // Volume
+            gainNode.connect(actx.destination);
+
+            const oscL = actx.createOscillator();
+            const oscR = actx.createOscillator();
+            const panL = actx.createStereoPanner();
+            const panR = actx.createStereoPanner();
+
+            oscL.frequency.value = baseFreq;
+            oscR.frequency.value = baseFreq + beatFreq;
+            
+            panL.pan.value = -1; // Left
+            panR.pan.value = 1;  // Right
+
+            oscL.connect(panL).connect(gainNode);
+            oscR.connect(panR).connect(gainNode);
+
+            oscL.start(); oscR.start();
+
+            return { stop: () => { oscL.stop(); oscR.stop(); } };
+        }
+
+        // --- 3. CHAT PROTOCOL ---
+        function sendMsg() {
+            const input = document.getElementById('msg-in');
+            const txt = input.value.trim();
+            if(!txt) return;
+
+            const user = document.getElementById('user-display').innerText;
+            
+            // Add User Msg
+            const log = document.getElementById('log');
+            const div = document.createElement('div');
+            div.className = 'msg user';
+            div.innerText = `${user}: ${txt}`;
+            log.appendChild(div);
+            
+            // Simulated Response
+            setTimeout(() => {
+                const sysDiv = document.createElement('div');
+                sysDiv.className = 'msg sys';
+                sysDiv.innerText = "> XMR CONTRACT: HASH VERIFIED";
+                log.appendChild(sysDiv);
+                log.scrollTop = log.scrollHeight;
+            }, 600);
+
+            input.value = "";
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function logSys(txt) {
+            const log = document.getElementById('log');
+            const div = document.createElement('div');
+            div.className = 'msg sys';
+            div.innerText = "> " + txt;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // --- 4. TANGLE VISUALS ---
+        function initTangle() {
+            const c = document.getElementById('tangle');
+            const x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            
+            let pts = Array(40).fill().map(() => ({
+                x: Math.random()*c.width, y: Math.random()*c.height,
+                vx: (Math.random()-.5)*2, vy: (Math.random()-.5)*2
+            }));
+
+            function loop() {
+                x.fillStyle = 'rgba(0,0,0,0.1)'; x.fillRect(0,0,c.width,c.height);
+                x.fillStyle = '#00ff41'; x.strokeStyle = '#00ff41';
+                
+                pts.forEach((p, i) => {
+                    p.x += p.vx; p.y += p.vy;
+                    if(p.x<0 || p.x>c.width) p.vx*=-1;
+                    if(p.y<0 || p.y>c.height) p.vy*=-1;
+                    
+                    x.beginPath(); x.arc(p.x,p.y,1,0,7); x.fill();
+                    
+                    pts.slice(i+1).forEach(p2 => {
+                        let d = Math.hypot(p.x-p2.x, p.y-p2.y);
+                        if(d < 100) {
+                            x.globalAlpha = 1 - d/100;
+                            x.beginPath(); x.moveTo(p.x,p.y); x.lineTo(p2.x,p2.y); x.stroke();
+                        }
+                    });
+                    x.globalAlpha = 1;
+                });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+    </script>
+</body>
+</html>

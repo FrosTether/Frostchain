@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FROSTCHAIN // BLOCK_EXPLORER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --core: #00fbff; --gold: #ffd700; --bg: #000; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; padding: 0; margin: 0; }
+
+.nav { background: #111; padding: 15px; border-bottom: 1px solid var(--core); display: flex; justify-content: space-between; }
+.brand { color: var(--core); font-size: 1.2em; font-weight: bold; }
+
+.container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
+.card { background: #0a0a0a; border: 1px solid #333; padding: 20px; }
+.label { font-size: 10px; color: #666; letter-spacing: 1px; }
+.val { font-size: 1.5em; color: #fff; margin-top: 5px; }
+
+.table-header { display: grid; grid-template-columns: 1fr 2fr 1fr 1fr; padding: 10px; background: #111; color: var(--core); font-size: 12px; }
+.row { display: grid; grid-template-columns: 1fr 2fr 1fr 1fr; padding: 10px; border-bottom: 1px solid #222; font-size: 12px; }
+.row:hover { background: #050505; }
+.hash { color: var(--gold); }
+
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="brand">FROSTCHAIN EXPLORER</div>
+  <div style="color:var(--gold);">MAINNET: ACTIVE</div>
+</div>
+
+<div class="container">
+  
+  <div class="stats-grid">
+    <div class="card">
+      <div class="label">BLOCK HEIGHT</div>
+      <div class="val" id="height">837,492</div>
+    </div>
+    <div class="card">
+      <div class="label">AVG BLOCK TIME</div>
+      <div class="val">5m 00s</div>
+    </div>
+    <div class="card">
+      <div class="label">DIFFICULTY</div>
+      <div class="val">44.2 T</div>
+    </div>
+    <div class="card">
+      <div class="label">HASHRATE</div>
+      <div class="val">452 PH/s</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:10px; font-size:14px; color:#fff;">LATEST BLOCKS</div>
+  <div class="table-header">
+    <div>HEIGHT</div>
+    <div>HASH</div>
+    <div>MINER</div>
+    <div>SIZE</div>
+  </div>
+  <div id="blocks">
+    </div>
+
+</div>
+
+<script>
+let h = 837492;
+function addBlock() {
+  const b = document.getElementById('blocks');
+  const div = document.createElement('div');
+  div.className = 'row';
+  const hash = "00000000" + Math.random().toString(16).substr(2, 16) + "...";
+  div.innerHTML = `
+    <div style="color:#fff">${h}</div>
+    <div class="hash">${hash}</div>
+    <div>Satoshi_Pool_v215</div>
+    <div>1.2 MB</div>
+  `;
+  b.prepend(div);
+  if(b.children.length > 10) b.removeChild(b.lastChild);
+  h++;
+}
+
+// Init
+for(let i=0; i<5; i++) { h--; addBlock(); h++; } // Fill initial
+setInterval(addBlock, 5000); // New block every 5s for demo
+
+</script>
+</body>
+</html>

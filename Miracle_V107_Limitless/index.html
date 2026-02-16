@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+    <title>MIRACLE // V107_LIMITLESS</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#000;--miracle:#ffd700;--blue:#00e0ff;--pink:#ff69b4;--gamma-color:rgba(255, 105, 180, 0.08);}
+        body, html{margin:0;padding:0;width:100%;height:100%;background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;overflow:hidden;touch-action:none;}
+        canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
+        
+        #gamma-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 5; pointer-events: none; opacity: 0;
+        }
+        .flicker-active { animation: strobe40Hz 0.025s infinite; opacity: 1 !important; }
+        @keyframes strobe40Hz {
+            0% { background: transparent; }
+            50% { background: var(--gamma-color); }
+            100% { background: transparent; }
+        }
+
+        #master-ui{position:absolute;z-index:10;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;pointer-events:none;gap:20px;}
+        .btn{padding:25px;background:rgba(0,0,0,0.9);border:2px solid var(--miracle);border-radius:100px;text-align:center;cursor:pointer;pointer-events:auto;transition:0.4s;backdrop-filter:blur(15px);width:220px;}
+        .btn.active{border-color:var(--pink);box-shadow:0 0 50px var(--pink);background:rgba(255,105,180,0.05);}
+        .limitless-btn{border-color:var(--gold);color:var(--gold);display:none;font-weight:bold;letter-spacing:3px;}
+        .limitless-active{background:var(--gold) !important;color:#000 !important;box-shadow:0 0 60px var(--gold) !important;}
+        .stat-overlay{position:absolute;bottom:30px;left:30px;font-size:10px;color:var(--blue);pointer-events:none;z-index:11;}
+    </style>
+</head>
+<body>
+    <div id="gamma-overlay"></div>
+    <canvas id="tangleViz"></canvas>
+    <div id="master-ui">
+        <div id="mainToggle" class="btn" onclick="engageSystem()">
+            <div id="mainLabel" style="font-size:16px;letter-spacing:3px;color:var(--miracle);">INITIALIZE_NODE</div>
+            <div style="font-size:8px;margin-top:5px;color:#555;">WAKELOCK + PINK + SOLFEGGIO</div>
+        </div>
+        <div id="limitlessToggle" class="btn limitless-btn" onclick="toggleLimitless()">
+            LIMITLESS_OFF
+        </div>
+    </div>
+    <div class="stat-overlay">
+        <div>NODE: miracle.frostchain</div>
+        <div>LIQUIDITY: $2.10M</div>
+    </div>
+
+    <script>
+        let audioCtx, gammaGain, gammaOsc, isEngaged = false, limitlessMode = false;
+        const canvas = document.getElementById('tangleViz');
+        const ctx = canvas.getContext('2d');
+        const ennead = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+
+        async function engageSystem() {
+            if(isEngaged) return;
+            try {
+                if ('wakeLock' in navigator) await navigator.wakeLock.request('screen');
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Base Noise + Schumann
+                const bufferSize = 4096;
+                let b0=0,b1=0;
+                const pinkNode = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+                pinkNode.onaudioprocess = (e) => {
+                    let out = e.outputBuffer.getChannelData(0);
+                    for (let i=0; i<bufferSize; i++) {
+                        let w = Math.random()*2-1;
+                        b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
+                        out[i] = (b0+b1+w*0.5362)*0.03;
+                    }
+                };
+
+                // Solfeggio & Magic 888
+                const fL = ennead[Math.floor(Math.random()*ennead.length)];
+                const oscL = audioCtx.createOscillator();
+                const oscR = audioCtx.createOscillator();
+                const merger = audioCtx.createChannelMerger(2);
+                oscL.frequency.value = fL; oscR.frequency.value = fL + 11.11;
+                oscL.connect(merger, 0, 0); oscR.connect(merger, 0, 1);
+                merger.connect(audioCtx.destination);
+                pinkNode.connect(audioCtx.destination);
+
+                // 40Hz Gamma Layer (Starts Muted)
+                gammaOsc = audioCtx.createOscillator();
+                gammaGain = audioCtx.createGain();
+                gammaOsc.frequency.value = 40;
+                gammaGain.gain.value = 0;
+                gammaOsc.connect(gammaGain);
+                gammaGain.connect(audioCtx.destination);
+                
+                [oscL, oscR, gammaOsc].forEach(o => o.start());
+
+                isEngaged = true;
+                document.getElementById('mainToggle').classList.add('active');
+                document.getElementById('mainLabel').innerText = "NODE_LIVE";
+                document.getElementById('limitlessToggle').style.display = "block";
+                if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+            } catch(e) {}
+        }
+
+        function toggleLimitless() {
+            if(!isEngaged) return;
+            limitlessMode = !limitlessMode;
+            const btn = document.getElementById('limitlessToggle');
+            const overlay = document.getElementById('gamma-overlay');
+            
+            if(limitlessMode) {
+                btn.innerText = "LIMITLESS_ON";
+                btn.classList.add('limitless-active');
+                overlay.classList.add('flicker-active');
+                gammaGain.gain.setTargetAtTime(0.12, audioCtx.currentTime, 0.1);
+            } else {
+                btn.innerText = "LIMITLESS_OFF";
+                btn.classList.remove('limitless-active');
+                overlay.classList.remove('flicker-active');
+                gammaGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+            }
+        }
+
+        let nodes = [];
+        function init() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            nodes = [];
+            for(let i=0; i<100; i++) nodes.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:Math.random()-0.5, vy:Math.random()-0.5});
+        }
+
+        function draw() {
+            const flash = limitlessMode && (Math.floor(performance.now() / 12.5) % 2 === 0);
+            ctx.fillStyle = flash ? "rgba(30, 0, 40, 0.5)" : "rgba(0, 0, 0, 0.25)";
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+
+            nodes.forEach((n, i) => {
+                let speed = limitlessMode ? 5 : 1.2;
+                n.x += n.vx * speed; n.y += n.vy * speed;
+                if(n.x<0 || n.x>canvas.width) n.vx*=-1; if(n.y<0 || n.y>canvas.height) n.vy*=-1;
+
+                nodes.forEach((n2, j) => {
+                    if(i === j) return;
+                    let dist = Math.hypot(n.x - n2.x, n.y - n2.y);
+                    if(dist < 130) {
+                        let alpha = limitlessMode ? (flash ? 0.9 : 0.3) : 0.15;
+                        ctx.strokeStyle = limitlessMode ? `rgba(255, 215, 0, ${alpha})` : `rgba(0, 224, 255, ${alpha})`;
+                        ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n2.x, n2.y); ctx.stroke();
+                    }
+                });
+                ctx.fillStyle = limitlessMode ? "var(--gold)" : "var(--blue)";
+                ctx.beginPath(); ctx.arc(n.x, n.y, 1.2, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        window.onresize = init; init(); draw();
+    </script>
+</body>
+</html>

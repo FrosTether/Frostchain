@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FROST // DUAL VAULT // INCOME</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --green: #00ff41;
+            --cyan: #00eaff;
+            --gold: #ffd700;
+            --dim: #444;
+            --panel: rgba(10, 10, 15, 0.95);
+        }
+        body {
+            background-color: var(--bg);
+            color: var(--green);
+            font-family: 'Space Mono', monospace;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        /* MATRIX BG */
+        #canvas-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.25;
+        }
+
+        /* MAIN UI */
+        .interface {
+            border: 1px solid var(--cyan);
+            background: var(--panel);
+            padding: 30px;
+            width: 90%;
+            max-width: 750px;
+            box-shadow: 0 0 50px rgba(0, 234, 255, 0.15);
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            margin: 0 0 20px 0;
+            color: var(--cyan);
+            border-bottom: 1px solid var(--dim);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--dim);
+            padding: 10px;
+        }
+        .label { font-size: 0.7rem; color: #888; display: block; margin-bottom: 5px; }
+        .val { font-size: 1.1rem; font-weight: bold; color: #fff; }
+        .highlight { color: var(--gold); }
+
+        /* ADDRESS BOXES */
+        .vault-container {
+            margin: 20px 0;
+            border-top: 1px solid var(--dim);
+            padding-top: 15px;
+        }
+        .vault-row {
+            font-size: 0.65rem;
+            color: var(--dim);
+            margin-bottom: 8px;
+            background: #020202;
+            padding: 8px;
+            border-left: 3px solid var(--dim);
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .vault-row.active { border-left-color: var(--green); color: #aaa; }
+
+        /* CONTROLS */
+        button {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--green);
+            color: var(--green);
+            font-family: 'Space Mono';
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+        button:hover { background: var(--green); color: #000; box-shadow: 0 0 20px var(--green); }
+
+        /* TERMINAL */
+        #log {
+            height: 120px;
+            overflow-y: hidden;
+            margin-top: 20px;
+            border-top: 1px dashed var(--dim);
+            padding-top: 10px;
+            font-size: 0.75rem;
+            color: #666;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+        .entry { margin-bottom: 3px; }
+        .log-money { color: var(--gold); }
+        .log-beacon { color: var(--cyan); }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas-bg"></canvas>
+
+    <div class="interface">
+        <h1>
+            FROST PROTOCOL v8 
+            <span style="font-size:0.8em; color:var(--green)">[INCOME MODE]</span>
+        </h1>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="label">HASHRATE</span>
+                <span id="hash" class="val">0 H/s</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">ACTIVE PEERS</span>
+                <span id="peers" class="val">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">VAULT A (25%)</span>
+                <span id="bal-a" class="val highlight">0.000000</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">VAULT B (25%)</span>
+                <span id="bal-b" class="val highlight">0.000000</span>
+            </div>
+        </div>
+
+        <div class="vault-container">
+            <div class="vault-row active">
+                <span style="color:var(--green)">VAULT A:</span> 4AEreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab
+            </div>
+            <div class="vault-row active">
+                <span style="color:var(--green)">VAULT B:</span> 4AFCYjQsKzU8NhBZCiy7PLCpoJP23Npe3YYRdUUfqBqyU2rsvGE2gCuHZHfJY2h1FNQZPGc4UqMyMUniNv9kDAgb373TNSD
+            </div>
+        </div>
+
+        <button id="btn-start">INITIALIZE 50% DIVERSION</button>
+
+        <div id="log">
+            <div class="entry">> SYSTEM READY. WAITING FOR COMMAND...</div>
+        </div>
+    </div>
+
+<script>
+    // --- ENGINE ---
+    const ctx = document.getElementById('canvas-bg').getContext('2d');
+    let w, h, drops = [];
+    const font = 14;
+
+    function resize() {
+        w = ctx.canvas.width = window.innerWidth;
+        h = ctx.canvas.height = window.innerHeight;
+        const cols = w / font;
+        drops = Array(Math.floor(cols)).fill(1);
+    }
+    window.onresize = resize; resize();
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#0f0';
+        ctx.font = font + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const txt = String.fromCharCode(0x30A0 + Math.random() * 96);
+            ctx.fillText(txt, i * font, drops[i] * font);
+            if (drops[i] * font > h && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+        requestAnimationFrame(drawMatrix);
+    }
+    drawMatrix();
+
+    // --- LOGIC ---
+    let mining = false;
+    let balanceA = 0.000000;
+    let balanceB = 0.000000;
+    let peers = 0;
+    
+    const btn = document.getElementById('btn-start');
+    const logEl = document.getElementById('log');
+
+    function log(msg, type='') {
+        const d = document.createElement('div');
+        d.className = 'entry ' + type;
+        d.innerHTML = `> ${msg}`;
+        logEl.prepend(d);
+    }
+
+    btn.onclick = () => {
+        mining = !mining;
+        if(mining) {
+            btn.innerText = "MINING ACTIVE (50% SPLIT)";
+            btn.style.borderColor = "#ff3333";
+            btn.style.color = "#ff3333";
+            log("PROTOCOL STARTED.", "log-beacon");
+            log("VAULTS LINKED. DIVERSION SET TO 50%.", "log-money");
+            loop();
+            beacon();
+        } else {
+            btn.innerText = "INITIALIZE 50% DIVERSION";
+            btn.style.borderColor = "#00ff41";
+            btn.style.color = "#00ff41";
+            document.getElementById('hash').innerText = "0 H/s";
+        }
+    }
+
+    function loop() {
+        if(!mining) return;
+        
+        // Hashrate
+        const hr = 2200 + Math.random() * 600;
+        document.getElementById('hash').innerText = hr.toFixed(0) + " H/s";
+
+        // Yield Logic
+        if(Math.random() < 0.25) {
+            const reward = Math.random() * 0.05;
+            const split = reward * 0.25; // 25% for each vault
+            
+            balanceA += split;
+            balanceB += split;
+            
+            document.getElementById('bal-a').innerText = balanceA.toFixed(6);
+            document.getElementById('bal-b').innerText = balanceB.toFixed(6);
+            
+            log(`BLOCK FOUND: ${reward.toFixed(4)}. SPLITTING YIELD...`, "log-money");
+        }
+        
+        setTimeout(loop, 200);
+    }
+
+    function beacon() {
+        if(!mining) return;
+        
+        // Newkirk Beacon Logic (Recruiting Peers)
+        if(Math.random() < 0.4) {
+            peers++;
+            document.getElementById('peers').innerText = peers;
+            log(`NEWKIRK BEACON: Peer #${Math.floor(Math.random()*9000)+1000} directed to swarm.`, "log-beacon");
+        }
+        setTimeout(beacon, 2000 + Math.random()*3000);
+    }
+
+</script>
+</body>
+</html>

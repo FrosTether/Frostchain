@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grayson's Smart Wallet</title>
+    <style>
+        :root { --bg: #000; --accent: #00ff41; --panel: #111; --text: #eee; --err: #ff0055; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; overflow-x: hidden; touch-action: manipulation; }
+
+        /* CENTRAL CONTAINER */
+        .container { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; transition: opacity 0.5s; }
+        
+        .logo { font-size: 1.8rem; font-weight: bold; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,255,65,0.3); }
+        .sub-text { color: #666; font-size: 0.8rem; margin-bottom: 30px; }
+
+        /* PIN INPUTS */
+        .pin-display { display: flex; gap: 10px; margin-bottom: 30px; justify-content: center; }
+        .dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid #333; transition: all 0.2s; }
+        .dot.filled { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .dot.error { background: var(--err); border-color: var(--err); animation: shake 0.3s; }
+
+        /* KEYPAD */
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 300px; }
+        .key { width: 70px; height: 70px; background: #111; border: 1px solid #333; border-radius: 50%; color: #fff; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+        .key:active { background: #333; transform: scale(0.95); }
+        .key-bio { border-color: var(--accent); color: var(--accent); }
+
+        /* BIOMETRIC ICON */
+        .fingerprint-btn { margin-top: 20px; cursor: pointer; opacity: 0.7; }
+        .fingerprint-btn:hover { opacity: 1; }
+        .fingerprint-btn svg { width: 50px; fill: var(--accent); }
+
+        /* DASHBOARD */
+        #dashboard { display: none; padding: 20px; }
+        .card { background: #111; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 4px solid var(--accent); }
+        .big-bal { font-size: 2.5rem; font-weight: bold; color: #fff; }
+
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 100% { transform: translateX(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="setup-view" class="container" style="display:none;">
+        <div class="logo">INITIALIZE WALLET</div>
+        <p class="sub-text">CREATE A NEW 6-DIGIT SECURITY PIN</p>
+        <div class="pin-display" id="setup-dots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="keypad" id="setup-pad">
+            </div>
+    </div>
+
+    <div id="login-view" class="container" style="display:none;">
+        <div class="logo">GRAYSON'S WALLET</div>
+        <p class="sub-text">ENTER PIN OR SCAN FINGERPRINT</p>
+        
+        <div class="pin-display" id="login-dots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+
+        <div class="keypad" id="login-pad">
+            </div>
+
+        <div class="fingerprint-btn" onclick="triggerBiometric()">
+            <svg viewBox="0 0 24 24"><path d="M17.81 4.47c-.08 0-.16-.02-.23-.06C15.66 3.42 14 3 12.01 3c-1.98 0-3.86.47-5.57 1.41-.24.13-.54.04-.68-.2-.13-.24-.04-.55.2-.68C7.82 2.52 9.86 2 12.01 2c2.13 0 3.99.47 6.03 1.52.25.13.34.43.21.67-.09.18-.26.28-.44.28zM3.5 9.72c-.1 0-.2-.03-.29-.09-.23-.16-.28-.47-.12-.7.99-1.4 2.25-2.5 3.75-3.27C9.98 4.04 14 4.03 17.15 5.65c1.5.77 2.76 1.86 3.75 3.25.16.22.11.54-.12.7-.23.16-.54.11-.7-.12-.9-1.26-2.04-2.25-3.39-2.94-2.87-1.47-6.54-1.47-9.4.01-1.36.7-2.5 1.7-3.4 2.96-.08.14-.23.21-.39.21zm6.25 12.07c-.13 0-.26-.05-.35-.15-.87-.87-1.34-1.43-2.01-2.64-.69-1.23-1.05-2.73-1.05-4.34 0-2.97 2.54-5.39 5.66-5.39s5.66 2.42 5.66 5.39c0 .28-.22.5-.5.5s-.5-.22-.5-.5c0-2.42-2.09-4.39-4.66-4.39-2.57 0-4.66 1.97-4.66 4.39 0 1.44.32 2.77.93 3.85.64 1.15 1.08 1.64 1.85 2.42.19.2.19.51 0 .71-.11.1-.24.15-.37.15zm7.17-1.85c-1.19 0-2.24-.3-3.1-.89-1.49-1.01-2.38-2.65-2.38-4.39 0-.28.22-.5.5-.5s.5.22.5.5c0 1.41.72 2.74 1.94 3.56.71.48 1.54.71 2.54.71.24 0 .64-.03 1.04-.1.27-.05.53.13.58.41.05.27-.13.53-.41.58-.57.11-1.07.12-1.21.12zM14.91 22c-.04 0-.09-.01-.13-.02-1.59-.44-2.63-1.03-3.72-2.1-1.4-1.39-2.17-3.24-2.17-5.22 0-1.62 1.38-2.94 3.08-2.94 1.7 0 3.08 1.32 3.08 2.94 0 1.07.93 1.94 2.08 1.94.12 0 .24-.02.36-.06.27-.08.55.08.63.35.09.28-.08.56-.35.63-.31.09-.63.12-.95.12-1.7 0-3.08-1.27-3.08-2.94 0-1.07-.93-1.94-2.08-1.94-1.15 0-2.08.87-2.08 1.94 0 1.71.66 3.31 1.87 4.51.95.94 1.86 1.46 3.27 1.85.27.07.42.35.35.62-.05.23-.26.38-.47.38z"/></svg>
+        </div>
+        <div style="color:var(--accent); font-size:0.7rem; margin-top:5px;">TOUCH ID ENABLED</div>
+    </div>
+
+    <div id="dashboard">
+        <div style="display:flex; justify-content:space-between; align-items:center; color:var(--accent);">
+            <span>IDENTITY: DRFROST</span>
+            <span style="font-size:0.7rem; border:1px solid var(--accent); padding:2px 5px;">MN: ACTIVE</span>
+        </div>
+
+        <div class="card" style="margin-top:20px;">
+            <div class="sub-text">TOTAL BALANCE</div>
+            <div class="big-bal">20,069</div>
+            <div style="color:#00ff41;">+3.1M FRST (STAKING)</div>
+        </div>
+
+        <div class="card" style="background:#0a0a0a;">
+            <h3 style="margin:0 0 10px 0;">ASSETS</h3>
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #222;">
+                <span>FRST</span><span>3,100,000</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #222;">
+                <span>FTC</span><span>200,000</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:10px 0;">
+                <span>XMR</span><span>1.543</span>
+            </div>
+        </div>
+
+        <button class="key" style="width:100%; border-radius:10px; font-size:1rem; margin-top:20px;" onclick="resetPin()">RESET WALLET</button>
+    </div>
+
+    <script>
+        let currentPin = "";
+        let savedPin = localStorage.getItem("grayson_pin");
+
+        // INIT
+        if (!savedPin) {
+            document.getElementById("setup-view").style.
+
+# 1. Move to project folder
+cd graysons_v2
+
+# 2. Write the Smart Wallet Application
+cat <<EOF > index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grayson's Smart Wallet</title>
+    <style>
+        :root { --bg: #000; --accent: #00ff41; --panel: #111; --text: #eee; --err: #ff0055; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; overflow-x: hidden; touch-action: manipulation; }
+
+        /* CENTRAL CONTAINER */
+        .container { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; transition: opacity 0.5s; }
+        
+        .logo { font-size: 1.8rem; font-weight: bold; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,255,65,0.3); }
+        .sub-text { color: #666; font-size: 0.8rem; margin-bottom: 30px; }
+
+        /* PIN INPUTS */
+        .pin-display { display: flex; gap: 10px; margin-bottom: 30px; justify-content: center; }
+        .dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid #333; transition: all 0.2s; }
+        .dot.filled { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .dot.error { background: var(--err); border-color: var(--err); animation: shake 0.3s; }
+
+        /* KEYPAD */
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 300px; }
+        .key { width: 70px; height: 70px; background: #111; border: 1px solid #333; border-radius: 50%; color: #fff; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+        .key:active { background: #333; transform: scale(0.95); }
+        .key-bio { border-color: var(--accent); color: var(--accent); }
+
+        /* BIOMETRIC ICON */
+        .fingerprint-btn { margin-top: 20px; cursor: pointer; opacity: 0.7; }
+        .fingerprint-btn:hover { opacity: 1; }
+        .fingerprint-btn svg { width: 50px; fill: var(--accent); }
+
+        /* DASHBOARD */
+        #dashboard { display: none; padding: 20px; }
+        .card { background: #111; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 4px solid var(--accent); }
+        .big-bal { font-size: 2.5rem; font-weight: bold; color: #fff; }
+
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 100% { transform: translateX(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="setup-view" class="container" style="display:none;">
+        <div class="logo">INITIALIZE WALLET</div>
+        <p class="sub-text">CREATE A NEW 6-DIGIT SECURITY PIN</p>
+        <div class="pin-display" id="setup-dots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="keypad" id="setup-pad">
+            </div>
+    </div>
+
+    <div id="login-view" class="container" style="display:none;">
+        <div class="logo">GRAYSON'S WALLET</div>
+        <p class="sub-text">ENTER PIN OR SCAN FINGERPRINT</p>
+        
+        <div class="pin-display" id="login-dots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+
+        <div class="keypad" id="login-pad">
+            </div>
+
+        <div class="fingerprint-btn" onclick="triggerBiometric()">
+            <svg viewBox="0 0 24 24"><path d="M17.81 4.47c-.08 0-.16-.02-.23-.06C15.66 3.42 14 3 12.01 3c-1.98 0-3.86.47-5.57 1.41-.24.13-.54.04-.68-.2-.13-.24-.04-.55.2-.68C7.82 2.52 9.86 2 12.01 2c2.13 0 3.99.47 6.03 1.52.25.13.34.43.21.67-.09.18-.26.28-.44.28zM3.5 9.72c-.1 0-.2-.03-.29-.09-.23-.16-.28-.47-.12-.7.99-1.4 2.25-2.5 3.75-3.27C9.98 4.04 14 4.03 17.15 5.65c1.5.77 2.76 1.86 3.75 3.25.16.22.11.54-.12.7-.23.16-.54.11-.7-.12-.9-1.26-2.04-2.25-3.39-2.94-2.87-1.47-6.54-1.47-9.4.01-1.36.7-2.5 1.7-3.4 2.96-.08.14-.23.21-.39.21zm6.25 12.07c-.13 0-.26-.05-.35-.15-.87-.87-1.34-1.43-2.01-2.64-.69-1.23-1.05-2.73-1.05-4.34 0-2.97 2.54-5.39 5.66-5.39s5.66 2.42 5.66 5.39c0 .28-.22.5-.5.5s-.5-.22-.5-.5c0-2.42-2.09-4.39-4.66-4.39-2.57 0-4.66 1.97-4.66 4.39 0 1.44.32 2.77.93 3.85.64 1.15 1.08 1.64 1.85 2.42.19.2.19.51 0 .71-.11.1-.24.15-.37.15zm7.17-1.85c-1.19 0-2.24-.3-3.1-.89-1.49-1.01-2.38-2.65-2.38-4.39 0-.28.22-.5.5-.5s.5.22.5.5c0 1.41.72 2.74 1.94 3.56.71.48 1.54.71 2.54.71.24 0 .64-.03 1.04-.1.27-.05.53.13.58.41.05.27-.13.53-.41.58-.57.11-1.07.12-1.21.12zM14.91 22c-.04 0-.09-.01-.13-.02-1.59-.44-2.63-1.03-3.72-2.1-1.4-1.39-2.17-3.24-2.17-5.22 0-1.62 1.38-2.94 3.08-2.94 1.7 0 3.08 1.32 3.08 2.94 0 1.07.93 1.94 2.08 1.94.12 0 .24-.02.36-.06.27-.08.55.08.63.35.09.28-.08.56-.35.63-.31.09-.63.12-.95.12-1.7 0-3.08-1.27-3.08-2.94 0-1.07-.93-1.94-2.08-1.94-1.15 0-2.08.87-2.08 1.94 0 1.71.66 3.31 1.87 4.51.95.94 1.86 1.46 3.27 1.85.27.07.42.35.35.62-.05.23-.26.38-.47.38z"/></svg>
+        </div>
+        <div style="color:var(--accent); font-size:0.7rem; margin-top:5px;">TOUCH ID ENABLED</div>
+    </div>
+
+    <div id="dashboard">
+        <div style="display:flex; justify-content:space-between; align-items:center; color:var(--accent);">
+            <span>IDENTITY: DRFROST</span>
+            <span style="font-size:0.7rem; border:1px solid var(--accent); padding:2px 5px;">MN: ACTIVE</span>
+        </div>
+
+        <div class="card" style="margin-top:20px;">
+            <div class="sub-text">TOTAL BALANCE</div>
+            <div class="big-bal">20,069</div>
+            <div style="color:#00ff41;">+3.1M FRST (STAKING)</div>
+        </div>
+
+        <div class="card" style="background:#0a0a0a;">
+            <h3 style="margin:0 0 10px 0;">ASSETS</h3>
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #222;">
+                <span>FRST</span><span>3,100,000</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #222;">
+                <span>FTC</span><span>200,000</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:10px 0;">
+                <span>XMR</span><span>1.543</span>
+            </div>
+        </div>
+
+        <button class="key" style="width:100%; border-radius:10px; font-size:1rem; margin-top:20px;" onclick="resetPin()">RESET WALLET</button>
+    </div>
+
+    <script>
+        let currentPin = "";
+        let savedPin = localStorage.getItem("grayson_pin");
+
+        // INIT
+        if (!savedPin) {
+            document.getElementById("setup-view").style.
+
+#!/bin/bash
+
+# --- GRAYSON'S WALLET DEPLOYMENT ---
+# Features: Google Auth (TOTP), Dark Mode, Multi-Asset
+# Domain: graysonswallet.surge.sh
+
+echo "❄️  BUILDING WALLET INTERFACE..."
+
+# 1. Create Project Directory
+mkdir -p ~/graysons_wallet_v2
+cd ~/graysons_wallet_v2
+
+# 2. Write the Application (Single File SPA)
+cat <<EOF > index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grayson's Wallet | 2FA Secured</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.4.2/sha.js"></script>
+    <style>
+        /* AESTHETIC CONFIG */
+        :root { --bg: #050505; --panel: #111; --accent: #00ff41; --text: #eee; --warn: #ff0055; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; padding: 0; overflow-x: hidden; }
+
+        /* AUTH SCREEN */
+        #auth-view { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
+        .logo { font-size: 1.8rem; font-weight: bold; color: var(--accent); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px var(--accent); }
+        
+        .qr-box { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0,255,65,0.2); }
+        .qr-box img { display: block; width: 200px; height: 200px; }
+        
+        .instructions { font-size: 0.8rem; color: #888; margin-bottom: 20px; max-width: 300px; line-height: 1.4; }
+        
+        input { background: #111; border: 1px solid #333; color: var(--accent); padding: 15px; width: 220px; text-align: center; font-size: 1.5rem; border-radius: 5px; outline: none; letter-spacing: 5px; margin-bottom: 15px; }
+        input:focus { border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        
+        .btn { background: var(--accent); color: #000; padding: 15px 0; width: 250px; font-weight: bold; font-size: 1rem; border: none; border-radius: 5px; cursor: pointer; text-transform: uppercase; }
+        .btn:active { transform: scale(0.98); }
+
+        /* DASHBOARD */
+        #dashboard { display: none; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .user-tag { color: var(--accent); font-weight: bold; }
+        .status-badge { background: #111; color: gold; padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; border: 1px solid gold; }
+
+        .balance-card { background: linear-gradient(145deg, #111, #0a0a0a); border-left: 4px solid var(--accent); padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+        .total-label { color: #888; font-size: 0.8rem; letter-spacing: 1px; }
+        .total-val { font-size: 2.5rem; font-weight: bold; margin: 10px 0; color: #fff; }
+
+        .asset-list { display: flex; flex-direction: column; gap: 10px; }
+        .asset-row { display: flex; justify-content: space-between; align-items: center; background: #111; padding: 15px; border-radius: 8px; border-bottom: 1px solid #222; }
+        .coin-name { font-weight: bold; color: #fff; }
+        .coin-amt { color: #aaa; font-size: 0.9rem; }
+        .coin-val { color: var(--accent); font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+    <div id="auth-view">
+        <div class="logo">Grayson's Wallet<br><span style="font-size:0.8rem; color:#fff;">2FA REQUIRED</span></div>
+        
+        <div class="qr-box">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/GraysonWallet:Admin?secret=JBSWY3DPEHPK3PXP&issuer=GraysonWallet" alt="Scan Me">
+        </div>
+        
+        <div class="instructions">
+            1. Open Google Authenticator<br>
+            2. Scan this QR Code<br>
+            3. Enter the 6-digit token below
+        </div>
+
+        <input type="number" id="totp-input" placeholder="000 000" oninput="if(this.value.length > 6) this.value = this.value.slice(0,6)">
+        <button class="btn" onclick="checkToken()">UNLOCK VAULT</button>
+        <div id="error-msg" style="color: var(--warn); margin-top: 15px; height: 20px; font-size: 0.9rem;"></div>
+    </div>
+
+    <div id="dashboard">
+        <div class="header">
+            <div class="user-tag">drfrost.frostchain</div>
+            <div class="status-badge">MN: ACTIVE</div>
+        </div>
+
+        <div class="balance-card">
+            <div class="total-label">TOTAL PORTFOLIO VALUE</div>
+            <div class="total-val">20,069.00</div>
+            <div style="color: var(--accent); font-size: 0.8rem;">+12% (24h) // MASTERNODE YIELD</div>
+        </div>
+
+        <h3 style="color: #888; border-bottom: 1px solid #333; padding-bottom: 5px;">ASSETS</h3>
+        <div class="asset-list">
+            <div class="asset-row">
+                <div>
+                    <div class="coin-name">FRST (Frostcoin)</div>
+                    <div class="coin-amt">3,100,000 FRST</div>
+                </div>
+                <div class="coin-val">10k</div>
+            </div>
+            <div class="asset-row">
+                <div>
+                    <div class="coin-name">FTC (Frost Token)</div>
+                    <div class="coin-amt">200,000 FTC</div>
+                </div>
+                <div class="coin-val">0k</div>
+            </div>
+            <div class="asset-row">
+                <div>
+                    <div class="coin-name">FNR (Softfork)</div>
+                    <div class="coin-amt">40,000 FNR</div>
+                </div>
+                <div class="coin-val">2k</div>
+            </div>
+            <div class="asset-row">
+                <div>
+                    <div class="coin-name">XMR (Monero)</div>
+                    <div class="coin-amt">1.543 XMR</div>
+                </div>
+                <div class="coin-val">40</div>
+            </div>
+        </div>
+        
+        <button class="btn" style="width:100%; margin-top:20px; background:#222; border:1px solid #333; color:#fff;" onclick="location.reload()">LOCK WALLET</button>
+    </div>
+
+    <script>
+        // CLIENT-SIDE TOTP VERIFICATION LOGIC
+        // Secret Key (Base32): JBSWY3DPEHPK3PXP
+        
+        function checkToken() {
+            const input = document.getElementById('totp-input').value;
+            const msg = document.getElementById('error-msg');
+            
+            if(input.length !== 6) {
+                msg.innerText = "ENTER 6 DIGITS";
+                return;
+            }
+            
+            // Calculate the valid TOTP for the current time window
+            const validToken = getTOTP("JBSWY3DPEHPK3PXP");
+            
+            // Check against current token (and previous/next for drift tolerance)
+            // Note: For this static demo, we check exact match.
+            if(input === validToken) {
+                document.getElementById('auth-view').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+            } else {
+                msg.innerText = "INVALID CODE";
+                setTimeout(() => { document.getElementById('totp-input').value = ""; }, 1000);
+            }
+        }
+
+        // --- TOTP HELPER FUNCTIONS (SHA-1 HMAC) ---
+        function getTOTP(secret) {
+            const epoch = Math.round(new Date().getTime() / 1000.0);
+            const time = leftpad(dec2hex(Math.floor(epoch / 30)), 16, '0');
+            const hmac = getHMAC(base32tohex(secret), time, 'SHA-1', "HEX");
+            const offset = hex2dec(hmac.substring(hmac.length - 1));
+            const otp = (hex2dec(hmac.substr(offset * 2, 8)) & hex2dec('7fffffff')) + '';
+            return otp.substr(otp.length - 6, 6);
+        }
+
+        function getHMAC(key, message, variant, outputFormat) {
+            const shaObj = new jsSHA(variant, "HEX");
+            shaObj.setHMACKey(key, "HEX");
+            shaObj.update(message);
+            return shaObj.getHMAC(outputFormat);
+        }
+
+        function base32tohex(base32) {
+            const base32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+            let bits = "";
+            let hex = "";
+            for (let i = 0; i < base32.length; i++) {
+                const val = base32chars.indexOf(base32.charAt(i).toUpperCase());
+                bits += leftpad(val.toString(2), 5, '0');
+            }
+            for (let i = 0; i + 4 <= bits.length; i += 4) {
+                const chunk = bits.substr(i, 4);
+                hex = hex + parseInt(chunk, 2).toString(16);
+            }
+            return hex;
+        }
+
+        function leftpad(str, len, pad) {
+            if (len + 1 >= str.length) {
+                str = new Array(len + 1 - str.length).join(pad) + str;
+            }
+            return str;
+        }
+
+        function dec2hex(s) { return (s < 15.5 ? '0' : '') + Math.round(s).toString(16); }
+        function hex2dec(s) { return parseInt(s, 16); }
+    </script>
+</body>
+</html>

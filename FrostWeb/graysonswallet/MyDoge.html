@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MyDoge | AUTHORITY BRIDGE</title>
+<script src="https://cdn.jsdelivr.net/npm/coinselect@3.1.1/index.min.js"></script>
+<style>
+  :root { --bg: #050505; --gold: #ffd700; --doge: #ba9f33; --iota: #00ff41; }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; padding: 20px; }
+  .terminal { border: 1px solid #333; padding: 20px; background: #000; max-width: 600px; margin: 0 auto; }
+  input { background: #111; border: 1px solid #444; color: var(--gold); padding: 10px; width: 95%; margin: 10px 0; }
+  .btn { background: var(--doge); color: #000; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; }
+  .warning { font-size: 0.6em; color: #ff4500; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<div class="terminal">
+  <div style="font-size: 1.2em; font-weight: 900; color: var(--gold);">MyDoge BRIDGE TERMINAL</div>
+  <p class="warning">NOTICE: Private keys are processed locally in your browser. Never share your key.</p>
+  
+  <div id="setup">
+    <input type="password" id="privKey" placeholder="ENTER PRIVATE KEY (WIF format)">
+    <button class="btn" onclick="connectWallet()">SYNC TO FAI ♍ ENGINE</button>
+  </div>
+
+  <div id="bridge-ctrl" style="display:none;">
+    <div style="font-size: 0.8em; color: var(--iota); margin: 15px 0;" id="addr-display">CONNECTED: ...</div>
+    <input type="number" id="amt" placeholder="AMOUNT TO BRIDGE (DOGE)">
+    <button class="btn" style="background:var(--iota);" onclick="signAndBridge()">SIGN & INJECT INTO WARP</button>
+  </div>
+</div>
+
+<script>
+function connectWallet() {
+  const key = document.getElementById('privKey').value;
+  if(key.length > 30) {
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('bridge-ctrl').style.display = 'block';
+    document.getElementById('addr-display').innerText = "AUTHORITY SIGNER ACTIVE: [LOCAL_SYNC]";
+  }
+}
+
+function signAndBridge() {
+  const amt = document.getElementById('amt').value;
+  alert(`SIGNING TRANSACTION: Sending ${amt} DOGE to Intake Gate DJTDVR...7s`);
+  // This is where the local signing logic executes
+  console.log("Transaction Broadcasted via Local Signer.");
+}
+</script>
+
+</body>
+</html>

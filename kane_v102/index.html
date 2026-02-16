@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kane Frostchain | Sovereign Command</title>
+    <style>
+        :root { 
+            --bg: #010105; --ice: #a5f2f3; --term: #00ff41; --fail: #ff3333; 
+            --gold: #ffd700; --plat: #e5e4e2; --feather: #ffccff; --steem: #06d6a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; }
+
+        /* SETTLEMENT WAVE BACKGROUND */
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.3; filter: blur(1px); }
+        .grid { position: fixed; inset: 0; z-index: -1; background-image: linear-gradient(rgba(165,242,243,0.03) 1px, transparent 1px); background-size: 100% 40px; }
+
+        /* AUTH GATE */
+        #pin-gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .glass-box { background: rgba(10, 12, 18, 0.9); border: 1px solid var(--ice); padding: 40px; border-radius: 30px; text-align: center; width: 360px; backdrop-filter: blur(20px); }
+
+        /* UI LAYOUT */
+        #dashboard { display: none; width: 100%; height: 100vh; grid-template-rows: 100px 1fr 60px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(0,0,0,0.8); border-bottom: 1px solid rgba(165,242,243,0.2); }
+        .main { display: grid; grid-template-columns: 380px 1fr 380px; gap: 20px; padding: 20px; overflow: hidden; }
+
+        /* DATA CARDS */
+        .panel { background: rgba(10, 15, 25, 0.8); border: 1px solid rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; display: flex; flex-direction: column; backdrop-filter: blur(10px); }
+        .stat-lbl { font-size: 0.55rem; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-val { font-size: 1.8rem; font-weight: 800; color: #fff; }
+
+        /* NFT GALLERY */
+        .nft-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
+        .nft-card { background: #000; border: 1px solid #222; padding: 5px; border-radius: 8px; text-align: center; }
+        .nft-img { width: 100%; height: 100px; background: linear-gradient(45deg, #111, #222); border-radius: 4px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; color: #444; font-size: 0.6rem; }
+
+        /* BUTTONS */
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 0.7rem; margin-top: 10px; transition: 0.3s; }
+        .btn-feather { background: var(--feather); color: #000; box-shadow: 0 0 15px rgba(255,204,255,0.3); }
+
+        /* SETTLEMENT MONITOR */
+        .monitor-box { background: rgba(0,255,65,0.05); border: 1px solid var(--term); padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; width: 300px; }
+        .pulse { height: 8px; width: 8px; background: var(--term); border-radius: 50%; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="grid"></div>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="pin-gate">
+        <div class="glass-box">
+            <div style="font-size: 0.6rem; letter-spacing: 4px; color: #666; margin-bottom: 20px;">FROST_SETTLEMENT_LOCKED</div>
+            <div id="dots" style="font-size: 2rem; letter-spacing: 10px; color: #fff;">••••••</div>
+            <div id="pad" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-top:20px;"></div>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="stat-lbl">Settlement Layer</div>
+                <div style="font-size: 1.2rem; font-weight: 900; letter-spacing: 4px;">FROST<span style="color:var(--term)">SETTLE</span></div>
+            </div>
+            <div class="monitor-box">
+                <div style="font-size: 0.6rem; color: var(--term);">L1 FINALITY: 400ms</div>
+                <div class="pulse"></div>
+                <div style="font-size: 0.6rem; color: var(--term);">TPS: 142,000</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="stat-lbl">AUM (NEWKIRK + FEATHER)</div>
+                <div class="stat-val" id="total-aum">$142,809,111</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="stat-group" style="border-left: 3px solid var(--feather); padding-left: 15px; margin-bottom: 20px;">
+                    <div class="stat-lbl">Feather Asset (ETH/SOL Killer)</div>
+                    <div class="stat-val" style="color:var(--feather);">$42.09</div>
+                    <button class="btn btn-feather" onclick="inject('Feather')">USE FEATHER GAS</button>
+                </div>
+                
+                <div class="stat-group">
+                    <div class="stat-lbl">wBTC RESERVE (1.05x DQ)</div>
+                    <div class="stat-val" id="btc-res" style="font-size: 1.2rem;">450.0000</div>
+                </div>
+                
+                <div style="margin-top:auto; font-size: 0.6rem; color: #444;">
+                    > Drake Quorum Trick: ACTIVE<br>
+                    > Settlement Logic: IRREVERSIBLE
+                </div>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:center;">
+                </div>
+
+            <div class="panel">
+                <div class="stat-lbl">Amiah Doodles (Steemit Fork)</div>
+                <div class="nft-grid">
+                    <div class="nft-card"><div class="nft-img">DOODLE_#001</div><div class="stat-lbl" style="font-size:0.4rem;">ORIGIN: STEEM_FORK</div></div>
+                    <div class="nft-card"><div class="nft-img">DOODLE_#042</div><div class="stat-lbl" style="font-size:0.4rem;">ORIGIN: STEEM_FORK</div></div>
+                    <div class="nft-card"><div class="nft-img">DOODLE_#741</div><div class="stat-lbl" style="font-size:0.4rem;">ORIGIN: STEEM_FORK</div></div>
+                    <div class="nft-card"><div class="nft-img">DOODLE_#963</div><div class="stat-lbl" style="font-size:0.4rem;">ORIGIN: STEEM_FORK</div></div>
+                </div>
+                
+                <div style="margin-top:20px; padding:10px; border:1px solid var(--steem); border-radius:8px; background:rgba(6,214,160,0.05);">
+                    <div style="color:var(--steem); font-size:0.6rem; font-weight:bold;">PROVENANCE VERIFIED</div>
+                    <div style="font-size:0.5rem; color:#666;">ID: drfrost.steem_enclave</div>
+                </div>
+
+                <div id="log" style="margin-top:auto; height:100px; overflow:hidden; font-size:0.5rem; color:#444;">
+                    <div>> Settlement block #842,110 batched...</div>
+                    <div>> Feather gas fees recycled to Newkirk...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer" style="padding: 0 40px; background: #000; border-top: 1px solid #222; display:flex; align-items:center; justify-content:space-between; font-size: 0.6rem; color: #444;">
+            <div>FROST SETTLEMENT LAYER // v102.0 // NEWKIRK BACKED</div>
+            <div>STATUS: CONVERGED</div>
+        </div>
+    </div>
+
+    <script>
+        let pin = "";
+        let master = localStorage.getItem('frost_pin') || "000000";
+
+        // --- PIN PAD ---
+        const pad = document.getElementById('pad');
+        for(let i=1; i<=9; i++) {
+            const b = document.createElement('button'); b.style.padding = "15px"; b.style.background = "#111"; b.style.border = "1px solid #222"; b.style.color = "#fff"; b.innerText = i; b.onclick = () => { pin += i; check(); }; pad.appendChild(b);
+        }
+        const z = document.createElement('button'); z.style.padding = "15px"; z.style.background = "#111"; z.style.border = "1px solid #222"; z.innerText = "0"; z.onclick = () => { pin += "0"; check(); }; pad.appendChild(z);
+
+        function check() {
+            document.getElementById('dots').innerText = "•".repeat(pin.length).padEnd(6, ' ');
+            if(pin.length === 6) {
+                if(pin === master) unlock();
+                else { pin = ""; check(); }
+            }
+        }
+
+        function unlock() {
+            document.getElementById('pin-gate').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'grid';
+            initTangle(); drawTangle();
+        }
+
+        function inject(asset) {
+            const l = document.getElementById('log');
+            const d = document.createElement('div');
+            d.innerText = `> ${asset} used for L1 Settlement. Quorum 1.05x confirmed.`;
+            d.style.color = "var(--term)";
+            l.prepend(d);
+        }
+
+        // --- TANGLE ---
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function initTangle() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            for(let i=0; i<60; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3 });
+        }
+        function drawTangle() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1;
+                if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                particles.slice(i+1).forEach(p2 => {
+                    if(Math.hypot(p.x-p2.x, p.y-p2.y) < 180) {
+                        ctx.strokeStyle = 'rgba(165,242,243,0.1)';
+                        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+                    }
+                });
+            });
+            requestAnimationFrame(drawTangle);
+        }
+        window.onresize = initTangle;
+    </script>
+</body>
+</html>

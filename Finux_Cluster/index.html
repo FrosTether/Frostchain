@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FINUX | AMIAHCOIN_MANIFEST</title>
+<style>
+  :root { --bg: #050505; --cyan: #00fbff; --orange: #ff4500; --purple: #b026ff; }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; margin: 0; text-transform: uppercase; overflow-x: hidden; }
+  body::before { content: " "; position: fixed; inset: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%); background-size: 100% 2px; z-index: 100; pointer-events: none; }
+
+  .status-bar { border-bottom: 2px solid var(--orange); padding: 10px 20px; display: flex; justify-content: space-between; font-size: 11px; background: #000; letter-spacing: 1px; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+  
+  /* LORE SECTION */
+  .lore-box { border: 1px solid var(--purple); background: rgba(176, 38, 255, 0.05); padding: 25px; margin-bottom: 40px; position: relative; }
+  .lore-box h2 { color: var(--purple); margin-top: 0; font-size: 20px; }
+  .lore-text { font-size: 13px; color: #aaa; line-height: 1.6; text-transform: none; }
+
+  .node-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+  .node-btn { border: 2px solid var(--cyan); background: #0a0a0a; color: #fff; padding: 25px; text-decoration: none; transition: 0.3s; }
+  .node-btn:hover { background: var(--cyan); color: #000; box-shadow: 0 0 30px var(--cyan); transform: translateY(-3px); }
+  
+  .node-name { display: block; font-size: 18px; font-weight: 900; }
+  .node-status { display: block; font-size: 9px; margin-top: 8px; color: #666; }
+  
+  .purple-node { border-color: var(--purple); }
+  .purple-node:hover { background: var(--purple); box-shadow: 0 0 30px var(--purple); }
+</style>
+</head>
+<body>
+
+<div class="status-bar">
+  <div>ID: drfrost.frostchain</div>
+  <div style="color:var(--purple)">AMIAH_SUPPLY: 12,000,000,000 // GENESIS_ACTIVE</div>
+  <div style="color:var(--orange)">FTC_REWARD: 13.37 // PO-THERMAL-WORK</div>
+</div>
+
+<div class="container">
+  <div style="font-size: 40px; color: var(--cyan); text-shadow: 0 0 15px var(--cyan); margin-bottom: 10px;">FINUX_OS // CLUSTER</div>
+  
+  <div class="lore-box">
+    <h2>THE AMIAH MASTERPIECE COLLECTION</h2>
+    <div class="lore-text">
+      At age 3, Amiah was subject to a celestial abduction event. Upon her return, she began producing sacred doodles—non-linear data manifests that serve as the anchor for the <strong>AMIAHCOIN</strong> ecosystem. These are not just drawings; they are the entropy source for the 12 Billion supply. Every "AMD" (Amiah Masterpiece Doodle) is an NFR of AMD, securing the recovery of the Genesis Block.
+    </div>
+  </div>
+
+  <div class="node-grid">
+    <a href="https://base.app/coin/base-mainnet/0x996668c3d175aaa6a8fa6c910890033a18900242" target="_blank" class="node-btn purple-node">
+      <span class="node-name">AMIAHCOIN_GENESIS</span>
+      <span class="node-status">BASE MAINNET | 12B SUPPLY</span>
+    </a>
+
+    <a href="whitepaper.html" class="node-btn">
+      <span class="node-name">SYSTEM_WHITEPAPER</span>
+      <span class="node-status">FNR / FTC / AMIAH SPECS</span>
+    </a>
+
+    <a href="https://graysonswallet.surge.sh" class="node-btn" style="border-color:var(--orange)">
+      <span class="node-name">GRAYSONS_WALLET</span>
+      <span class="node-status">V2.0 AUTHORITY INTERFACE</span>
+    </a>
+
+    <a href="https://cryptodoku.surge.sh" class="node-btn">
+      <span class="node-name">CRYPTODOKU</span>
+      <span class="node-status">ENGINE GRADE V235</span>
+    </a>
+
+    <a href="https://frostcrush.surge.sh" class="node-btn">
+      <span class="node-name">FROSTCRUSH</span>
+      <span class="node-status">SVG TANGLE MINER</span>
+    </a>
+  </div>
+</div>
+
+</body>
+</html>

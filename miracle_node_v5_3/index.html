@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Miracle Node | Legacy Bridge</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --btc: #f7931a; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; }
+        #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: grid; grid-template-columns: 400px 1fr; gap: 20px; padding: 20px; box-sizing: border-box; }
+        .panel { background: rgba(0, 15, 0, 0.95); border: 1px solid #222; padding: 15px; }
+        .tx-log { overflow-y: auto; border-left: 2px solid var(--btc); }
+        .tx-card { border-bottom: 1px solid #222; padding: 10px 0; font-size: 0.7rem; }
+        .wallet { text-align: right; border-right: 2px solid var(--term); }
+    </style>
+</head>
+<body>
+    <div id="hud">
+        <div class="panel tx-log" id="tx-log">
+            <div style="font-weight:bold; color:var(--btc); margin-bottom:10px;">LEGACY BRIDGE LOG</div>
+            <div class="tx-card" style="border-color: var(--btc);">
+                <div style="color:var(--btc);">OUTGOING TRANSFER: 1.00000000 BTC</div>
+                <div>TO: 334BSEeNo9wMhASUH9tCA7CKCMKuuARyRg</div>
+                <div style="color:#555;">STATUS: BROADCASTING...</div>
+            </div>
+            <div id="block-list"></div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+            <div class="panel wallet">
+                <div style="font-size: 1.2rem; font-weight: bold; color: #fff;">drfrost.frostchain</div>
+                <div style="margin: 10px 0;">
+                    <div style="color:var(--btc);">BTC: 30.33700000</div>
+                    <div style="color:#8dc351;">BCH: 133.70000000</div>
+                </div>
+                <div style="font-size:0.6rem; color:#888;">FTC/FNR/FRST MINING ACTIVE</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

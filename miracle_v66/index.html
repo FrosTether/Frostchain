@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Resonance Minting</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --freq: #ff33cc; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #app { display: grid; grid-template-rows: 60px 1fr 140px; height: 100vh; max-width: 1200px; margin: 0 auto; border-left: 1px solid #222; border-right: 1px solid #222; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 2px solid var(--term); }
+        
+        .main { display: grid; grid-template-columns: 1fr 350px; gap: 2px; background: #222; overflow: hidden; }
+        .panel { background: #000; padding: 20px; overflow-y: auto; }
+
+        /* FREQUENCY WALLETS */
+        .freq-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .freq-card { border: 1px solid #333; padding: 10px; border-radius: 5px; text-align: center; background: #050505; }
+        .f-label { font-size: 0.6rem; color: var(--freq); font-weight: bold; }
+        .f-val { font-size: 0.8rem; color: #fff; margin-top: 5px; }
+
+        /* MINTING DATA */
+        .carrier-box { background: #0a0a0a; border: 1px solid var(--gold); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+        .lbl { font-size: 0.6rem; color: #444; text-transform: uppercase; letter-spacing: 2px; }
+        
+        /* ANONYMOUS MINER LIST */
+        .m-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #111; font-size: 0.7rem; color: #888; }
+        .m-entropy { color: var(--cyan); }
+
+        .footer { border-top: 1px solid #333; padding: 15px; font-size: 0.7rem; color: #555; display: flex; justify-content: space-between; align-items: flex-end; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div style="font-weight:bold; font-size:1.1rem;">MIRACLE NODE <span style="color:var(--gold);">RESONANCE</span></div>
+            <div style="text-align:right;"><div class="lbl">CARRIER</div><div style="color:var(--gold);">741.frostchain</div></div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="lbl" style="margin-bottom:15px;">MINTING_RESONANCE_NETWORK</div>
+                <div class="freq-grid" id="freq-wallets">
+                    </div>
+            </div>
+
+            <div class="panel" style="border-left:1px solid #222;">
+                <div class="carrier-box">
+                    <div class="lbl">CURRENT_BLOCK_REWARD</div>
+                    <div style="font-size:1.5rem; color:var(--term); font-weight:bold;">741.000 FTC</div>
+                    <div style="font-size:0.5rem; color:#444; margin-top:5px;">TRANSMITTING VIA CARRIER 741</div>
+                </div>
+
+                <div class="lbl">ANONYMOUS_MINER_DATA</div>
+                <div id="m-list" style="margin-top:10px;">
+                    </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div id="log">> v66.0 Resonance Active. Entropy Synced...</div>
+            <div style="text-align:right;">
+                <div class="lbl">BLOCK_TIMER</div>
+                <div style="font-size:2rem; color:#fff;" id="timer">741</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const frequencies = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        const wallets = document.getElementById('freq-wallets');
+
+        frequencies.forEach(f => {
+            const card = document.createElement('div');
+            card.className = 'freq-card';
+            card.innerHTML = `
+                <div class="f-label">${f}Hz.frostchain</div>
+                <div class="f-val">${(11.111).toFixed(3)}M FTC</div>
+            `;
+            wallets.appendChild(card);
+        });
+
+        function updateMinerData() {
+            const list = document.getElementById('m-list');
+            list.innerHTML = '';
+            for(let i=0; i<5; i++) {
+                const entropy = Math.random().toString(16).substring(2, 10);
+                const hash = (Math.random() * 50).toFixed(2) + " PH/s";
+                list.innerHTML += `<div class="m-row"><span class="m-entropy">0x${entropy}...</span><span>${hash}</span></div>`;
+            }
+        }
+
+        let t = 741;
+        setInterval(() => {
+            t--; if(t<0) t=741;
+            document.getElementById('timer').innerText = t;
+            if(t % 10 === 0) updateMinerData();
+        }, 1000);
+
+        updateMinerData();
+    </script>
+</body>
+</html>
