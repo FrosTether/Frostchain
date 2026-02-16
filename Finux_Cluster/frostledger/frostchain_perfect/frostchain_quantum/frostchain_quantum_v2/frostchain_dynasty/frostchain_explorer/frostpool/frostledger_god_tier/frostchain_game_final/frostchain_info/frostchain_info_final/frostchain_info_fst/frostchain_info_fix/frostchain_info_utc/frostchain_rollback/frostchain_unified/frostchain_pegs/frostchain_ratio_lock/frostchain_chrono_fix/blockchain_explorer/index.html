@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Explorer | Live Status</title>
+    <style>
+        body {
+            background: #050505;
+            color: #ccc;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            border-bottom: 2px solid #00fbff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            padding: 15px;
+        }
+        .label { font-size: 10px; color: #666; }
+        .value { font-size: 1.5em; color: #fff; font-weight: bold; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #0a0a0a;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        th { color: #666; font-size: 11px; }
+        .highlight { color: #00fbff; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>NETWORK_EXPLORER_V1</div>
+        <div id="clock">UTC SYNCING...</div>
+    </div>
+
+    <div class="stats">
+        <div class="card">
+            <div class="label">CURRENT HEIGHT</div>
+            <div class="value" id="height">0</div>
+        </div>
+        <div class="card">
+            <div class="label">NEXT BLOCK IN</div>
+            <div class="value" id="timer">--:--</div>
+        </div>
+        <div class="card">
+            <div class="label">NETWORK STATUS</div>
+            <div class="value" style="color: #00fbff;">STABLE</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>HEIGHT</th>
+                <th>HASH</th>
+                <th>REWARD</th>
+                <th>TIMESTAMP (UTC)</th>
+            </tr>
+        </thead>
+        <tbody id="ledger"></tbody>
+    </table>
+
+    <script>
+        const BLOCK_INTERVAL = 300000; // 5 Minutes
+        let lastProcessedSlot = null;
+
+        function update() {
+            const now = new Date();
+            const ms = now.getTime();
+            document.getElementById('clock').innerText = now.toUTCString();
+
+            const next = Math.ceil(ms / BLOCK_INTERVAL) * BLOCK_INTERVAL;
+            const diff = Math.floor((next - ms) / 1000);
+            
+            const m = Math.floor(diff / 60);
+            const s = (diff % 60).toString().padStart(2, '0');
+            document.getElementById('timer').innerText = `${m}:${s}`;
+
+            const currentSlot = Math.floor(ms / BLOCK_INTERVAL);
+            if (lastProcessedSlot !== currentSlot) {
+                lastProcessedSlot = currentSlot;
+                refreshLedger(currentSlot);
+            }
+        }
+
+        function refreshLedger(slot) {
+            const height = slot; // Simplified height based on time slot
+            document.getElementById('height').innerText = height.toLocaleString();
+
+            const tbody = document.getElementById('ledger');
+            tbody.innerHTML = '';
+            
+            for (let i = 0; i < 10; i++) {
+                const s = slot - i;
+                const time = new Date(s * BLOCK_INTERVAL);
+                const hash = '0000' + Math.random().toString(16).substr(2, 12);
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${s}</td>
+                    <td style="color: #888;">${hash}...</td>
+                    <td>13.37</td>
+                    <td class="highlight">${time.toUTCString().split(' ')[4]}</td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        setInterval(update, 1000);
+        update();
+    </script>
+</body>
+</html>

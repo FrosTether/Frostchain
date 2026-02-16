@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FSP GOD-TIER V82 // LEDGER_MASTER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+:root {
+  --bg: #000;
+  --text: #e0e0e0;
+  --orange: #ff6600; /* FNR */
+  --burgundy: #800020; /* Hash Burgundy */
+  --yellow: #ffd700; /* Hash Yellow */
+  --iota: #00e0ff; /* IOTA Blue */
+  --grey: #222;
+}
+
+* { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* HEADER: CYCLE STATUS */
+.header {
+  background: #111;
+  border-bottom: 2px solid var(--orange);
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+}
+
+.cycle-box { text-align: right; font-size: 10px; color: #888; }
+.cycle-val { font-size: 14px; color: var(--yellow); font-weight: bold; }
+.sync-badge { 
+  background: var(--burgundy); color: #fff; padding: 2px 6px; 
+  font-size: 10px; animation: pulse 2s infinite; 
+}
+
+/* MAIN DASHBOARD AREA */
+.dashboard {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: radial-gradient(circle at center, #111 0%, #000 70%);
+}
+
+/* THE 9x9 STATE GRID (VISUAL LEDGER) */
+.state-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 36px);
+  grid-template-rows: repeat(9, 36px);
+  gap: 2px;
+  border: 4px solid var(--grey);
+  padding: 4px;
+  background: #000;
+  box-shadow: 0 0 30px rgba(255, 102, 0, 0.2);
+}
+
+.cell {
+  width: 36px; height: 36px;
+  background: #151515;
+  border: 1px solid #333;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+
+/* ASSET OBJECTS FROM MHT */
+.cell.obj-iota::after { content: "•"; color: var(--iota); font-size: 24px; text-shadow: 0 0 10px var(--iota); }
+.cell.obj-ftc::after { content: "■"; color: var(--orange); font-size: 14px; }
+.cell.obj-ama::after { content: "♥"; color: #ff0055; font-size: 16px; } /* AmiahDoodles */
+.cell.h-burgundy { background: var(--burgundy); box-shadow: 0 0 10px var(--burgundy); }
+.cell.h-yellow { background: var(--yellow); box-shadow: 0 0 10px var(--yellow); }
+
+/* WALLET BAR */
+.wallet-bar {
+  background: var(--grey);
+  border-top: 2px solid var(--orange);
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 80px;
+}
+
+.asset-group { display: flex; flex-direction: column; }
+.asset-lbl { font-size: 10px; color: #888; }
+.asset-val { font-size: 18px; font-weight: bold; }
+
+.wallet-total { font-size: 24px; color: var(--iota); text-shadow: 0 0 10px var(--iota); }
+
+/* CONTROLS */
+.controls {
+  display: flex;
+  height: 60px;
+  background: #000;
+  border-top: 1px solid #333;
+}
+.btn {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  border-right: 1px solid #333;
+  color: #666; font-size: 12px; cursor: pointer;
+}
+.btn.active { color: var(--orange); background: rgba(255,102,0,0.1); }
+.btn:last-child { border-right: none; }
+
+@keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
+
+</style>
+</head>
+<body onload="initGodTier()">
+
+<div class="header">
+  <div>
+    <div style="font-weight:bold; color:var(--text)">FSP GOD-TIER</div>
+    <div style="font-size:10px; color:var(--orange)">V82 // LEDGER_MASTER</div>
+  </div>
+  <div class="cycle-box">
+    <div>CYCLE_SYNC</div>
+    <div class="cycle-val"><span id="cycle-timer">145</span>s WRITE</div>
+  </div>
+  <div class="sync-badge">IOTA: LINKED</div>
+</div>
+
+<div class="dashboard">
+  <div class="state-grid" id="grid"></div>
+</div>
+
+<div class="wallet-bar">
+  <div class="asset-group">
+    <span class="asset-lbl">FNR BALANCE</span>
+    <span class="asset-val" style="color:var(--orange)">0.0516</span>
+  </div>
+  <div class="asset-group" style="text-align:right;">
+    <span class="asset-lbl">IOTA WALLET (LINKED)</span>
+    <span class="wallet-total">30.8071 Mi</span>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="btn active">DASHBOARD</div>
+  <div class="btn">HISTORY</div>
+  <div class="btn">NODES</div>
+  <div class="btn" style="color:var(--iota)">SYNC</div>
+</div>
+
+<script>
+// --- GOD TIER V82 LOGIC ---
+const STATE = {
+  cycleTime: 145,
+  mode: 'WRITE', // WRITE -> SOLVE -> SYNC
+  iota: 30.8071,
+  fnr: 0.0516
+};
+
+function initGodTier() {
+  renderGrid();
+  cycleLoop();
+}
+
+function renderGrid() {
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  // Populate 9x9 with visual data from "Snapshot" logic
+  for(let i=0; i<81; i++) {
+    let d = document.createElement('div');
+    d.className = 'cell';
+    
+    // Simulate V82 State Data
+    if(i === 40) d.classList.add('obj-iota'); // Center IOTA
+    if(i === 10 || i === 11) d.classList.add('h-burgundy');
+    if(i === 70 || i === 71) d.classList.add('h-yellow');
+    if(i === 22) d.classList.add('obj-ftc');
+    if(i === 58) d.classList.add('obj-ama'); // Amiah marker
+    
+    g.appendChild(d);
+  }
+}
+
+function cycleLoop() {
+  setInterval(() => {
+    STATE.cycleTime--;
+    if(STATE.cycleTime <= 0) {
+      // Cycle Switch Logic
+      if(STATE.mode === 'WRITE') { STATE.mode = 'SOLVE'; STATE.cycleTime = 156; }
+      else if(STATE.mode === 'SOLVE') { STATE.mode = 'SYNC'; STATE.cycleTime = 8; }
+      else { STATE.mode = 'WRITE'; STATE.cycleTime = 145; }
+    }
+    
+    document.getElementById('cycle-timer').innerText = STATE.cycleTime;
+    document.querySelector('.cycle-val').lastChild.nodeValue = "s " + STATE.mode;
+    
+  }, 1000);
+}
+
+</script>
+</body>
+</html>

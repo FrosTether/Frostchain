@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FROSTLEDGER // BLOCK_OBSERVER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #050505; --core: #00e0ff; --xmr: #f60; --doge: #ba9f33; --pink: #ff007f; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* PINK NOISE HUM */
+body::after {
+  content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, rgba(255,0,127,0.03) 0px, transparent 1px);
+  background-size: 100% 3px; pointer-events: none; z-index: 100;
+}
+
+.nav { background: #000; border-bottom: 2px solid var(--pink); padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+.main { flex-grow: 1; display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; padding: 20px; overflow: hidden; }
+
+/* CHAIN STATUS */
+.stats-box { display: flex; flex-direction: column; gap: 15px; }
+.card { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 15px; border-left: 3px solid var(--core); }
+.val { font-size: 20px; color: #fff; font-weight: bold; }
+
+/* LIVE LEDGER */
+.ledger-box { background: #000; border: 1px solid #1a1a1a; padding: 20px; overflow-y: scroll; display: flex; flex-direction: column; gap: 10px; }
+.block-entry { background: #080808; border: 1px solid #111; padding: 12px; font-size: 11px; display: grid; grid-template-columns: 80px 1fr 100px; align-items: center; transition: 0.3s; }
+.block-entry:hover { border-color: var(--pink); }
+.tag { font-size: 9px; padding: 2px 6px; border-radius: 2px; font-weight: bold; width: fit-content; }
+
+.footer { background: #000; padding: 10px 20px; border-top: 1px solid #111; font-size: 10px; color: #444; }
+</style>
+</head>
+<body onload="init()">
+
+<div class="nav">
+  <div style="font-weight:bold; color:var(--pink);">FROSTLEDGER <span style="color:#555;">V2.0</span></div>
+  <div style="font-size: 10px; color: var(--core);">TRIPLE_CHAIN_OBSERVER // SYNC_ACTIVE</div>
+</div>
+
+<div class="main">
+  <div class="stats-box">
+    <div class="card">
+      <div style="font-size:9px; color:#555;">FNR (XMR FORK)</div>
+      <div class="val">33,000,000 <span style="font-size:10px; color:var(--xmr);">MAX_CAP</span></div>
+      <div style="font-size:9px; color:#333;">ALGO: CRYPTONIGHT_FROST</div>
+    </div>
+    <div class="card" style="border-left-color: var(--doge);">
+      <div style="font-size:9px; color:#555;">FRST (DOGE FORK)</div>
+      <div class="val">31,415,926,535 <span style="font-size:10px; color:var(--doge);">PI_CONSTANT</span></div>
+      <div style="font-size:9px; color:#333;">BLOCK_TIME: 1.337 MIN</div>
+    </div>
+    <div class="card" style="border-left-color: var(--pink);">
+      <div style="font-size:9px; color:#555;">BCH_NATIVE_DONATIONS</div>
+      <div style="font-size:10px; color:var(--pink); word-break:break-all;">bitcoincash:pr2a6fcv7usyq97eh9an0782x9txdzwl0y30mz7gup</div>
+    </div>
+    
+    <div style="margin-top:auto;"><a href="https://frostminer.surge.sh" style="color:var(--core); text-decoration:none; font-size:11px;">>> BACK_TO_MINER</a></div>
+    <div><a href="https://frstico.surge.sh" style="color:var(--gold); text-decoration:none; font-size:11px;">>> ICO_NEXUS</a></div>
+  </div>
+
+  <div class="ledger-box" id="ledger">
+    </div>
+</div>
+
+<div class="footer">
+  ARCHITECT_LOG: 82 MONTHS SERVED // GENESIS: 683050920 // SATOSHI_SHIELD_ACTIVE
+</div>
+
+<script>
+let bHeight = 937783;
+const ledger = document.getElementById('ledger');
+
+function addBlock() {
+  const assets = [
+    { name: 'FNR', color: '#f60', reward: '33.0' },
+    { name: 'FRST', color: '#ba9f33', reward: '1337.0' },
+    { name: 'FTC', color: '#00e0ff', reward: '13.37' }
+  ];
+  const a = assets[Math.floor(Math.random() * assets.length)];
+  const hash = '0000' + Math.random().toString(16).substr(2, 28);
+  
+  const entry = document.createElement('div');
+  entry.className = 'block-entry';
+  entry.innerHTML = `
+    <div class="tag" style="background:${a.color}; color:#000;">${a.name}_BLOCK</div>
+    <div style="color:#888;">${hash}</div>
+    <div style="text-align:right; color:#fff;">+${a.reward}</div>
+  `;
+  
+  ledger.prepend(entry);
+  if(ledger.children.length > 15) ledger.removeChild(ledger.lastChild);
+}
+
+function init() {
+  setInterval(addBlock, 3000); // Visual block simulation
+  for(let i=0; i<10; i++) addBlock();
+}
+</script>
+</body>
+</html>

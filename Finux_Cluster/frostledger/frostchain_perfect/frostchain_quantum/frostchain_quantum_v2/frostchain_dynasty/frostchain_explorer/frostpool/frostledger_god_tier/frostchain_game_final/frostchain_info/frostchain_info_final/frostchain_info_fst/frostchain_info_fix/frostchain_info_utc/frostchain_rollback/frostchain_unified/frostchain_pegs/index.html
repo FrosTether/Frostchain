@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FROSTCHAIN // UNIFIED_LIQUIDITY</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { 
+  --core: #00fbff; --gold: #ffd700; --bch: #8dc351; --doge: #ba9f33; 
+  --frst: #ffffff; --fnr: #ff6600; --ico: #ff0055;
+  --bg: #020202; --panel: #0a0a0a; --border: #1a1a1a; 
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; font-size: 12px; }
+
+/* HEADER */
+.nav { background: #000; border-bottom: 2px solid var(--core); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+.brand { font-size: 1.4em; color: var(--core); letter-spacing: 2px; font-weight: bold; }
+.status { color: var(--gold); font-size: 10px; border: 1px solid var(--gold); padding: 3px 8px; animation: pulse 2s infinite; }
+
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; display: grid; gap: 20px; }
+
+/* PEG TILES */
+.peg-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+.card { background: var(--panel); border: 1px solid var(--border); padding: 20px; position: relative; }
+.card::after { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background: #333; }
+
+.card.frst { border-color: var(--frst); }
+.card.frst::after { background: var(--frst); }
+.card.fnr { border-color: var(--fnr); }
+.card.fnr::after { background: var(--fnr); }
+.card.ftc { border-color: var(--ico); }
+.card.ftc::after { background: var(--ico); }
+
+.lbl { font-size: 10px; color: #666; letter-spacing: 1px; }
+.val { font-size: 2.2em; color: #fff; font-weight: bold; margin: 10px 0; }
+.peg-info { font-size: 10px; color: #888; border-top: 1px solid #222; padding-top: 10px; margin-top: 10px; }
+.trend-up { color: var(--core); }
+
+/* MAIN LAYOUT */
+.main-view { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.section-title { color: var(--core); border-bottom: 1px solid #222; padding: 10px 0; margin-bottom: 10px; font-size: 14px; }
+
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); }
+th { text-align: left; padding: 10px; background: #000; color: #666; font-size: 9px; }
+td { padding: 10px; border-bottom: 1px solid #111; font-family: monospace; font-size: 11px; }
+
+@keyframes pulse { 50% { opacity: 0.5; } }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="brand">FROSTCHAIN // PEGGED_LIQUIDITY</div>
+  <div class="status">● PEGS: SYNCHRONIZED</div>
+</div>
+
+<div class="container">
+  
+  <div class="peg-row">
+    <div class="card frst">
+      <div class="lbl">FRST (FROST TOKEN)</div>
+      <div class="val" id="frst-price">$3.1415</div>
+      <div class="peg-info">
+        PEGGED TO: <span style="color:var(--doge)">DOGE × π (PI)</span><br>
+        <span class="trend-up">↑ ORBITAL VELOCITY ACTIVE</span>
+      </div>
+    </div>
+    
+    <div class="card fnr">
+      <div class="lbl">FNR (NETWORK RESOURCE)</div>
+      <div class="val" id="fnr-price">$455.00</div>
+      <div class="sub"></div>
+      <div class="peg-info">
+        PEGGED TO: <span style="color:var(--bch)">BCH ICO HISTORIC</span><br>
+        <span>STATUS: NETWORK GAS STABLE</span>
+      </div>
+    </div>
+
+    <div class="card ftc">
+      <div class="lbl">FTC (FROST TOKEN COIN)</div>
+      <div class="val">$1.00</div>
+      <div class="peg-info">
+        ICO PRICE: <span style="color:var(--ico)">SECURE BASELINE</span><br>
+        <span>MINING REWARD: 13.37 FTC</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-view">
+    <div>
+      <div class="section-title">>> LIVE NETWORK LEDGER (FST SYNC)</div>
+      <table>
+        <thead><tr><th>HEIGHT</th><th>CHAIN</th><th>HASH</th><th>REWARD</th><th>TIMESTAMP (UTC)</th></tr></thead>
+        <tbody id="ledger"></tbody>
+      </table>
+    </div>
+
+    <div>
+      <div class="section-title">ECONOMICS CHART</div>
+      <div class="card" style="margin-bottom:10px; border-color:var(--gold)">
+        <div class="lbl">ARCHITECT RESERVE</div>
+        <div class="val" style="font-size:1.4em; color:var(--gold)">12,370,000 FTC</div>
+        <div class="peg-info">drfrost.frostchain</div>
+      </div>
+      <div class="card">
+        <div class="lbl">BCH FORK (1:1)</div>
+        <div class="val" style="font-size:1.4em; color:var(--bch)">21,000,000 FTC</div>
+        <div class="peg-info">CLAIMABLE BY BCH HOLDERS</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// LIQUIDITY MATH
+const PI = Math.PI;
+let dogePrice = 0.082; // Baseline
+let bchIcoPrice = 455.00;
+
+function updatePrices() {
+  // Simulate orbital drift
+  let currentDoge = dogePrice + (Math.random() * 0.001 - 0.0005);
+  let frstVal = (currentDoge * PI).toFixed(4);
+  
+  document.getElementById('frst-price').innerText = "$" + frstVal;
+  document.getElementById('fnr-price').innerText = "$" + bchIcoPrice.toFixed(2);
+}
+
+// LEDGER SIM
+let h = 1675350;
+function addBlock() {
+  const tbody = document.getElementById('ledger');
+  const tr = document.createElement('tr');
+  const hash = '0000' + Math.random().toString(16).substr(2,10) + '...';
+  const time = new Date().toUTCString().split(' ')[4];
+  
+  tr.innerHTML = `
+    <td style="color:#fff">${h}</td>
+    <td style="color:var(--core)">FST_BLOCK</td>
+    <td style="color:var(--gold)">${hash}</td>
+    <td>13.37 FTC</td>
+    <td style="color:var(--core)">${time}</td>
+  `;
+  tbody.prepend(tr);
+  if(tbody.children.length > 10) tbody.removeChild(tbody.lastChild);
+  h++;
+}
+
+setInterval(updatePrices, 3000);
+setInterval(addBlock, 6000);
+updatePrices();
+addBlock();
+
+</script>
+</body>
+</html>

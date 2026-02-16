@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FROST // WAN NODE</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        :root { --bg: #050505; --cyan: #00eaff; --green: #00ff41; --mag: #ff00ff; }
+        body { margin:0; background:var(--bg); color:var(--cyan); font-family:monospace; overflow:hidden; }
+        #canvas { position:absolute; top:0; left:0; width:100%; height:100%; z-index:1; }
+        #ui { position:relative; z-index:10; padding:20px; display:flex; flex-direction:column; height:90vh; pointer-events:none; }
+        .panel { background:rgba(10,10,10,0.8); border:1px solid var(--cyan); padding:15px; width:300px; margin-bottom:10px; pointer-events:auto; }
+        button { background:rgba(0,234,255,0.1); border:1px solid var(--cyan); color:var(--cyan); padding:10px; cursor:pointer; width:100%; margin-top:5px; }
+        button:hover { background:var(--cyan); color:#000; }
+        .wan-btn { border-color:var(--mag); color:var(--mag); }
+        .wan-btn:hover { background:var(--mag); color:#000; }
+        #log { height:100px; overflow-y:auto; font-size:0.8em; color:#888; border-top:1px solid #333; margin-top:10px; }
+        .stat { display:flex; justify-content:space-between; margin-bottom:5px; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="ui">
+        <div class="panel">
+            <h3 style="margin:0 0 10px 0; border-bottom:1px solid #333;">FROST NODE v4.2</h3>
+            <div class="stat"><span>STATUS</span><span id="status" style="color:#ff3333">STANDBY</span></div>
+            <div class="stat"><span>PEERS</span><span id="peers">0</span></div>
+            <div class="stat"><span>HASHRATE</span><span id="hash">0 H/s</span></div>
+        </div>
+        <div class="panel" style="margin-top:auto;">
+            <button id="conn">CONNECT WALLET</button>
+            <button id="scan" class="wan-btn">SCAN WAN (OTA)</button>
+            <button id="mine" disabled>START MINING</button>
+            <div id="log"><div>> SYSTEM READY...</div></div>
+        </div>
+    </div>
+<script>
+    // ENGINE
+    const cvs = document.getElementById('canvas'), ctx = cvs.getContext('2d');
+    let w, h, nodes = [], mining = false;
+    const resize = () => { w=cvs.width=window.innerWidth; h=cvs.height=window.innerHeight; };
+    window.onresize = resize; resize();
+
+    function Node(isWan) {
+        this.x = w+10; this.y = Math.random()*h;
+        this.vx = -2-Math.random(); 
+        this.color = isWan ? '#ff00ff' : '#00eaff';
+        this.parents = [];
+        if(nodes.length>1) this.parents.push(nodes[Math.floor(Math.random()*nodes.length)]);
+    }
+    Node.prototype.draw = function() {
+        this.x += this.vx;
+        this.parents.forEach(p => {
+            ctx.beginPath(); ctx.moveTo(this.x,this.y); ctx.lineTo(p.x,p.y);
+            ctx.strokeStyle = `rgba(${this.color=='#ff00ff'?'255,0,255':'0,234,255'},0.3)`; ctx.stroke();
+        });
+        ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x,this.y,3,0,7); ctx.fill();
+    };
+
+    function loop() {
+        ctx.clearRect(0,0,w,h);
+        if(Math.random() < (mining?0.3:0.05)) nodes.push(new Node(false));
+        nodes = nodes.filter(n => { n.draw(); return n.x > -50; });
+        document.getElementById('peers').innerText = nodes.length;
+        if(mining) document.getElementById('hash').innerText = (Math.random()*100+1000).toFixed(0)+" H/s";
+        requestAnimationFrame(loop);
+    }
+    loop();
+
+    // LOGIC
+    const log = (m) => document.getElementById('log').innerHTML = `<div>> ${m}</div>` + document.getElementById('log').innerHTML;
+    
+    document.getElementById('conn').onclick = async () => {
+        if(window.ethereum) {
+            await window.ethereum.request({method:'eth_requestAccounts'});
+            document.getElementById('status').innerText = "LOCAL LINK";
+            document.getElementById('status').style.color = "#00eaff";
+            document.getElementById('mine').disabled = false;
+            document.getElementById('conn').innerText = "LINKED";
+            log("WALLET CONNECTED");
+        } else log("METAMASK MISSING");
+    };
+
+    document.getElementById('scan').onclick = async () => {
+        log("SCANNING FREQUENCIES...");
+        try {
+            const res = await fetch('/frost_manifest.json');
+            const data = await res.json();
+            log(`WAN PEER FOUND: VER ${data.version}`);
+            log(`SIG: ${data.signature.substring(0,8)}...`);
+            for(let i=0;i<10;i++) setTimeout(()=>nodes.push(new Node(true)), i*100);
+            document.getElementById('status').innerText = "WAN ACTIVE";
+            document.getElementById('status').style.color = "#ff00ff";
+        } catch(e) { log("SCAN FAILED"); }
+    };
+
+    document.getElementById('mine').onclick = () => {
+        mining = !mining;
+        document.getElementById('mine').innerText = mining ? "STOP MINING" : "START MINING";
+        log(mining ? "MINING STARTED" : "MINING HALTED");
+    };
+</script>
+</body>
+</html>

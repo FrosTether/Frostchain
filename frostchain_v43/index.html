@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frostchain | v43 Vault</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --fnr: #00d2ff; --btc: #f7931a; --cyan: #00ffff; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #dash { display: grid; grid-template-columns: 340px 1fr 340px; height: 100vh; position: relative; }
+        #tangle-canvas { position: fixed; inset: 0; z-index: 5; cursor: crosshair; filter: contrast(1.8) brightness(1.2); }
+
+        .panel { background: rgba(5,5,5,0.96); border: 1px solid #222; z-index: 50; padding: 15px; overflow-y: auto; backdrop-filter: blur(12px); }
+        .header { grid-column: 1 / -1; height: 60px; background: #000; border-bottom: 2px solid var(--term); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 100; }
+        
+        /* VAULT CARD */
+        .vault-card { background: #0a0a0a; border: 1px solid #333; padding: 20px; border-left: 4px solid var(--gold); margin-bottom: 20px; }
+        .pre-mine-badge { display: inline-block; background: var(--gold); color: #000; font-size: 0.6rem; padding: 2px 8px; font-weight: bold; margin-bottom: 10px; }
+        .balance-val { font-size: 1.8rem; font-weight: bold; color: #fff; margin: 5px 0; }
+        .sub-val { font-size: 0.7rem; color: #666; margin-bottom: 15px; }
+
+        .lbl { font-size: 0.65rem; color: #555; text-transform: uppercase; letter-spacing: 2px; }
+        .val-box { background: #000; border: 1px solid #222; padding: 12px; margin-bottom: 15px; border-left: 4px solid var(--term); }
+        
+        #chat-log { height: 100%; background: rgba(0,0,0,0.85); border: 1px solid #222; overflow-y: auto; padding: 15px; font-size: 0.7rem; z-index: 60; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dash">
+        <div class="header">
+            <div>VAULT_OWNER: <span style="color:var(--cyan)">drfrost.frostchain</span></div>
+            <div style="font-size:0.7rem; color:var(--gold);">NEWKIRK_STRATUM_BRIDGE: [SHA-256_ACTIVE]</div>
+        </div>
+
+        <div class="panel">
+            <div class="lbl">STRATUM HASHPOWER</div>
+            <div class="val-box" style="border-left-color: var(--btc);">
+                <div style="font-size:1.5rem; color:#fff;" id="btc-h">66.0 EH/s</div>
+            </div>
+
+            <div class="lbl">CONSENSUS TIMER</div>
+            <div class="val-box" style="text-align:center;">
+                <div style="font-size:2.5rem; color:#fff;" id="timer">300</div>
+            </div>
+
+            <div style="margin-top:20px; border:1px solid #222; padding:10px; font-size:0.6rem;">
+                > PoTW Status: THERMAL_LOCK_OK<br>
+                > FOTA Sync: AM_WAN_ACTIVE
+            </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; height:100%; z-index:60; position:relative;">
+            <div style="padding:20px; overflow-y:auto;">
+                <div class="vault-card">
+                    <div class="pre-mine-badge">13.37% GENESIS PRE-MINE VERIFIED</div>
+                    <div class="lbl" style="color:var(--gold)">FTC TOTAL BALANCE</div>
+                    <div class="balance-val">1,337,000.00 FTC</div>
+                    <div class="sub-val">Source: wallet.dat (drfrost) | API: Grayson_v1.2</div>
+                </div>
+
+                <div class="vault-card" style="border-left-color: var(--fnr);">
+                    <div class="lbl" style="color:var(--fnr)">FNR RESERVE TOTAL</div>
+                    <div class="balance-val">250,000.00 FNR</div>
+                    <div class="sub-val">Genesis Node Reserve Allocation</div>
+                </div>
+
+                <div class="vault-card" style="border-left-color: var(--pink);">
+                    <div class="lbl" style="color:var(--pink)">FRST GOVERNANCE TOTAL</div>
+                    <div class="balance-val">3,141,592.00 FRST</div>
+                    <div class="sub-val">Stellar Frost Layer Anchored Asset</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="lbl">BITCHAT_OTR_FEED</div>
+            <div id="chat-log">
+                <div style="color:var(--cyan); margin-bottom:10px;">[SYSTEM] drfrost wallet.dat scanned successfully.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timeLeft = 300;
+        setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').innerText = timeLeft;
+            if(timeLeft <= 0) timeLeft = 300;
+            document.getElementById('btc-h').innerText = (65 + Math.random()).toFixed(1) + " EH/s";
+        }, 1000);
+
+        // Immersive HDR Tangle
+        function initTangle() {
+            const canvas = document.getElementById('tangle-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let p = Array(60).fill().map(()=>({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-.5)*1.2, vy:(Math.random()-.5)*1.2, clr: ["#00ff41", "#00ffff", "#ff00ff"][Math.floor(Math.random()*3)]}));
+            function loop() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                p.forEach(n => {
+                    n.x+=n.vx; n.y+=n.vy;
+                    if(n.x<0||n.x>canvas.width)n.vx*=-1; if(n.y<0||n.y>canvas.height)n.vy*=-1;
+                    p.forEach(n2 => {
+                        let d = Math.hypot(n.x-n2.x, n.y-n2.y);
+                        if(d < 150) {
+                            ctx.strokeStyle = n.clr; ctx.globalAlpha = 1 - d/150;
+                            ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                        }
+                    });
+                });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+        initTangle();
+    </script>
+</body>
+</html>

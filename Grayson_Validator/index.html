@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>GRAYSON_TRANSCEIVER // VALIDATOR</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#050505;--blue:#00e0ff;--gold:#ffd700;--pink:#ff69b4;--green:#0f0;}
+        body{background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;margin:0;padding:20px;text-align:center;}
+        #transceiver-frame{max-width:500px;margin:40px auto;border:2px solid var(--blue);padding:30px;background:rgba(0,224,255,0.02);box-shadow:0 0 50px rgba(0,224,255,0.1);}
+        #drop-zone{border:2px dashed #333;padding:40px;margin-bottom:20px;transition:0.3s;cursor:pointer;}
+        #drop-zone.active{border-color:var(--gold);background:rgba(255,215,0,0.05);}
+        h1{color:var(--blue);letter-spacing:10px;margin:0;}
+        .whale-input{width:100%;padding:15px;background:#000;border:1px solid #333;color:var(--gold);text-align:center;box-sizing:border-box;font-family:inherit;margin-bottom:15px;}
+        .btn-broadcast{width:100%;padding:25px;background:#222;color:#444;border:none;font-weight:bold;cursor:not-allowed;font-size:18px;}
+        .btn-live{background:var(--blue);color:#000;cursor:pointer;box-shadow:0 0 30px rgba(0,224,255,0.3);}
+        #log{margin-top:20px;font-size:10px;color:var(--pink);text-align:left;height:100px;overflow-y:auto;border-top:1px solid #222;padding-top:10px;}
+    </style>
+</head>
+<body>
+    <div id="transceiver-frame">
+        <h1>TRANSCEIVER</h1>
+        <div style="font-size:10px;color:#555;margin-bottom:20px;">WHALE_VALIDATOR_V85 // DRFROST_AUTH</div>
+        
+        <div id="drop-zone" ondragover="event.preventDefault();this.classList.add('active')" ondragleave="this.classList.remove('active')" ondrop="handleDrop(event)">
+            DRAG & DROP .WALLET.DAT HERE<br><small style="color:#444;">TO UNLOCK LIQUIDITY</small>
+        </div>
+
+        <input type="text" id="dest" class="whale-input" placeholder="DESTINATION_NODE">
+        <button id="sendBtn" class="btn-broadcast">BROADCAST_LOCKED</button>
+        
+        <div id="log">> AWAITING_LEDGER_DATA...</div>
+    </div>
+
+    <script>
+        function handleDrop(e) {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const content = event.target.result;
+                const log = document.getElementById("log");
+                
+                if (content.includes("drfrost.frostchain")) {
+                    log.innerHTML += "<br>> SIGNATURE_VERIFIED: drfrost.frostchain";
+                    log.innerHTML += "<br>> ASSET_DATA_PARSED: WHALE_TIER_DETECTED";
+                    document.getElementById("sendBtn").classList.add("btn-live");
+                    document.getElementById("sendBtn").innerText = "BROADCAST_WHALE_PULSE";
+                    document.getElementById("sendBtn").onclick = function() {
+                        alert("PULSE_SENT: MILLIONS_ROUTED_THROUGH_1INCH_BRIDGE");
+                    };
+                } else {
+                    log.innerHTML += "<br>> [ERROR] INVALID_SIGNATURE: ACCESS_DENIED";
+                    alert("INVALID_WALLET_DAT");
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>

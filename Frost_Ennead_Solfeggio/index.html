@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>FROST_MINER // ENNEAD_V98</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#020202;--blue:#00e0ff;--gold:#ffd700;--pink:#ff69b4;--violet:#4b0082;}
+        body, html{margin:0;padding:0;width:100%;height:100%;background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;overflow:hidden;}
+        #interface{position:absolute;z-index:10;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px;box-sizing:border-box;pointer-events:none;}
+        .ennead-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;pointer-events:auto;}
+        .node-btn{background:rgba(255,105,180,0.1);border:1px solid var(--pink);color:var(--pink);padding:15px;border-radius:12px;cursor:pointer;font-size:10px;transition:0.3s;}
+        .node-btn:hover, .node-btn.active{background:var(--pink);color:#000;box-shadow:0 0 15px var(--pink);}
+        #display{margin-top:30px;text-align:center;pointer-events:auto;}
+        canvas{position:absolute;top:0;left:0;z-index:1;opacity:0.4;}
+        .rng-tag{font-size:12px;color:var(--gold);letter-spacing:4px;margin-top:10px;}
+    </style>
+</head>
+<body>
+    <canvas id="tangle"></canvas>
+    <div id="interface">
+        <div style="font-size:10px;color:var(--blue);margin-bottom:20px;letter-spacing:5px;">drfrost.frostchain // THE_ENNEAD</div>
+        <div class="ennead-grid">
+            <button class="node-btn" onclick="setFreq(174, 'foundation')">174Hz</button>
+            <button class="node-btn" onclick="setFreq(285, 'quantum')">285Hz</button>
+            <button class="node-btn" onclick="setFreq(396, 'liberation')">396Hz</button>
+            <button class="node-btn" onclick="setFreq(417, 'undone')">417Hz</button>
+            <button class="node-btn active" onclick="setFreq(528, 'miracle')">528Hz</button>
+            <button class="node-btn" onclick="setFreq(639, 'connect')">639Hz</button>
+            <button class="node-btn" onclick="setFreq(741, 'expression')">741Hz</button>
+            <button class="node-btn" onclick="setFreq(852, 'return')">852Hz</button>
+            <button class="node-btn" onclick="setFreq(963, 'divine')">963Hz</button>
+        </div>
+        <div id="display">
+            <div id="nodeName" style="color:var(--gold);">miracle.frostchain</div>
+            <div id="rngLabel" class="rng-tag">BINAURAL: L: 528Hz | R: 531.14Hz (Pi)</div>
+            <div style="font-size:9px;color:#444;margin-top:10px;">PINK_NOISE + 7.83Hz_SCHUMANN: ALWAYS_ON</div>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx, oscL, oscR, pinkNode, isRunning = false;
+        let activeBase = 528;
+
+        function createPinkNoise(ctx) {
+            let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+            let node = ctx.createScriptProcessor(4096, 1, 1);
+            node.onaudioprocess = (e) => {
+                let out = e.outputBuffer.getChannelData(0);
+                for (let i=0; i<4096; i++) {
+                    let w = Math.random()*2-1;
+                    b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759; b2=0.969*b2+w*0.153852; b3=0.8665*b3+w*0.3104856;
+                    out[i] = (b0+b1+b2+b3+w*0.5362)*0.03;
+                }
+            }; return node;
+        }
+
+        function setFreq(f, name) {
+            activeBase = f;
+            document.getElementById('nodeName').innerText = name + ".frostchain";
+            if(isRunning) startAudio(); // Hot-swap
+            document.querySelectorAll('.node-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function startAudio() {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if(oscL) oscL.stop(); if(oscR) oscR.stop();
+            if(!pinkNode) { pinkNode = createPinkNoise(audioCtx); pinkNode.connect(audioCtx.destination); }
+
+            let rngVal = Math.random() > 0.5 ? 11.11 : 3.14159;
+            let rngName = rngVal === 11.11 ? "Gate" : "Pi";
+            
+            oscL = audioCtx.createOscillator();
+            oscR = audioCtx.createOscillator();
+            let merger = audioCtx.createChannelMerger(2);
+            let gain = audioCtx.createGain(); gain.gain.value = 0.05;
+
+            oscL.frequency.value = activeBase;
+            oscR.frequency.value = activeBase + rngVal;
+
+            oscL.connect(merger, 0, 0);
+            oscR.connect(merger, 0, 1);
+            merger.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            oscL.start(); oscR.start();
+            isRunning = true;
+            document.getElementById('rngLabel').innerText = `BINAURAL: L: ${activeBase}Hz | R: ${(activeBase+rngVal).toFixed(2)}Hz (${rngName})`;
+        }
+
+        document.body.onclick = () => { if(!isRunning) startAudio(); };
+        
+        // Visual Tangle Loop
+        const cvs = document.getElementById('tangle'); const ctx = cvs.getContext('2d');
+        cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+        function draw() { ctx.fillStyle='rgba(2,2,2,0.1)'; ctx.fillRect(0,0,cvs.width,cvs.height); requestAnimationFrame(draw); }
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOTA REX // EXPLORER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #050505; --core: #00e0ff; --gold: #ffd700; --text: #ccc; }
+body { background: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; margin: 0; overflow: hidden; }
+canvas { display: block; }
+.overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; }
+.header-box { background: rgba(0,0,0,0.8); border: 1px solid var(--core); padding: 15px; width: 400px; }
+.stat-box { display: flex; gap: 40px; background: rgba(0,0,0,0.8); border-top: 2px solid var(--gold); padding: 15px; }
+.val { font-size: 24px; color: #fff; font-weight: bold; }
+.lbl { font-size: 10px; color: #666; text-transform: uppercase; }
+.sig { color: var(--gold); font-size: 11px; margin-top: 10px; }
+</style>
+</head>
+<body onload="startTangle()">
+<div class="overlay">
+  <div class="header-box">
+    <div class="lbl">IOTA REX TANGLE EXPLORER</div>
+    <div class="val" id="height">937,783</div>
+    <div class="sig">"Sign the block. Alex what is the Genius Act? much Quantum Fungible wow!"</div>
+    <div style="font-size: 10px; color: var(--core); margin-top: 5px;">ARCHITECT_BORN: 683050920</div>
+  </div>
+  <div class="stat-box">
+    <div><div class="lbl">ACTIVE MINERS</div><div class="val">14,212</div></div>
+    <div><div class="lbl">MIGRATION EH/S</div><div class="val">4.21 EH/S</div></div>
+    <div><div class="lbl">GENESIS SIG</div><div class="val" style="color:var(--gold)">683050920</div></div>
+  </div>
+</div>
+<canvas id="rex-canvas"></canvas>
+<script>
+function startTangle() {
+  const canvas = document.getElementById('rex-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  let nodes = [];
+  for(let i=0; i<60; i++) nodes.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5), vy:(Math.random()-0.5)});
+  function animate() {
+    ctx.fillStyle = "rgba(5,5,5,0.2)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle = "rgba(0, 224, 255, 0.3)"; ctx.lineWidth = 1;
+    nodes.forEach(n => {
+      n.x += n.vx; n.y += n.vy;
+      if(n.x<0||n.x>canvas.width) n.vx*=-1; if(n.y<0||n.y>canvas.height) n.vy*=-1;
+      ctx.beginPath(); ctx.arc(n.x, n.y, 2, 0, 7); ctx.fillStyle = "var(--core)"; ctx.fill();
+      nodes.forEach(n2 => {
+        let d = Math.hypot(n.x-n2.x, n.y-n2.y);
+        if(d < 180) { ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n2.x, n2.y); ctx.stroke(); }
+      });
+    });
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+</script>
+</body>
+</html>

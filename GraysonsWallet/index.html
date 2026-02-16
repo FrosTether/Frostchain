@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>GRAYSONS_WALLET // JOEY_QUORUM</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        :root { --bg: #000; --red: #ff0000; --gold: #ffd700; --core: #00e0ff; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; font-family: 'Share Tech Mono', monospace; color: #ccc; overflow: hidden; }
+        
+        /* THE SATOSHI SHADOW (UI SCANLINE) */
+        body::after { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(255,215,0,0.02) 0px, transparent 1px); background-size: 100% 3px; pointer-events: none; z-index: 1000; }
+        
+        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 220px; background: #050505; border-right: 1px solid #222; display: flex; flex-direction: column; padding: 20px 0; z-index: 2000; }
+        .tab-btn { padding: 15px 25px; color: #444; cursor: pointer; border-left: 3px solid transparent; font-size: 11px; text-transform: uppercase; transition: 0.2s; }
+        .tab-btn.active { color: #fff; border-left-color: var(--red); background: rgba(255,0,0,0.1); }
+
+        .content-area { margin-left: 220px; height: 100vh; padding: 40px; box-sizing: border-box; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card { background: rgba(5,5,5,0.98); border: 1px solid #1a1a1a; padding: 40px; border-top: 4px solid var(--gold); position: relative; }
+        
+        /* QUORUM GLITCH CORE */
+        .quorum-glitch { font-size: 52px; font-weight: 900; color: var(--gold); position: relative; text-align: center; margin: 30px 0; text-shadow: 0 0 20px rgba(255,215,0,0.3); }
+        .quorum-glitch::before { content: "QUORUM: x1.05"; position: absolute; left: 0; right: 0; color: var(--red); opacity: 0.7; z-index: -1; animation: glitch 0.3s infinite; }
+        
+        @keyframes glitch {
+            0% { transform: translate(2px, -2px); }
+            25% { transform: translate(-2px, 2px); }
+            50% { transform: translate(3px, 3px); }
+            75% { transform: translate(-3px, -3px); }
+            100% { transform: translate(2px, -2px); }
+        }
+
+        .data-stream { background: #000; border: 1px solid #111; padding: 20px; font-family: 'Share Tech Mono'; font-size: 11px; color: #333; line-height: 1.8; }
+        .highlight { color: var(--core); }
+        .red-alert { color: var(--red); }
+        
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.6; }
+    </style>
+</head>
+<body onload="init()">
+<canvas id="tangle"></canvas>
+
+<div class="sidebar">
+    <div style="padding: 0 25px 30px; color: var(--gold); font-weight: bold; letter-spacing: 2px;">GRAYSONS_PRO</div>
+    <div class="tab-btn" onclick="st(event,'wallet')">VAULT_ASSETS</div>
+    <div class="tab-btn active" onclick="st(event,'joey')">JOEY_QUORUM</div>
+    <div class="tab-btn" onclick="st(event,'masternode')">NODE_MESH</div>
+</div>
+
+<div class="content-area">
+    <div id="joey" class="tab-content active">
+        <div class="card">
+            <div style="font-size: 10px; color: var(--red); letter-spacing: 5px;">>> DRAKE_QUORUM_INJECTION_POINT</div>
+            <h1 style="color: #fff; margin-bottom: 0;">JOEY BONES + 1</h1>
+            <p style="color: #666; font-size: 12px; margin-top: 5px;">Synchronizing Satoshi Bones with Joey Logic. Parity: 14,212 Nodes.</p>
+            
+            <div class="quorum-glitch">QUORUM: x1.05</div>
+
+            <div class="data-stream">
+                <div>[STATUS] <span class="highlight">LATCHED_TO_GENESIS_ROOT_01</span></div>
+                <div>[ARCHIVE] <span class="highlight">82_MONTH_TRUTH_RECOGNIZED</span></div>
+                <div>[QUORUM] <span class="highlight">JOEY_BONES_GOVERNANCE_ACTIVE</span></div>
+                <div style="border-top: 1px solid #111; margin-top: 10px; padding-top: 10px;">
+                    <span class="red-alert">LOCKED_BONES:</span> SATOSHI_SHA256_ANCHOR_VERIFIED
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="wallet" class="tab-content">
+        <div class="card" style="border-top-color: var(--core);">
+            <h1>VAULT_OVERVIEW</h1>
+            <div style="font-size: 30px; color: var(--core);">31.4B wFRST</div>
+            <div style="font-size: 30px; color: var(--gold); margin-top: 10px;">1.33M FTC</div>
+        </div>
+    </div>
+    
+    <div id="masternode" class="tab-content">
+        <div class="card" style="border-top-color: var(--red);">
+            <h1>14,212_NODE_SYNC</h1>
+            <p>Satoshi Masternode Mesh is currently holding the Quorum constant.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let gF=1.0, mX=0, mY=0;
+    const c=document.getElementById('tangle'), x=c.getContext('2d');
+    function st(e,id){
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        e.currentTarget.classList.add('active');
+    }
+    function init(){
+        c.width=window.innerWidth; c.height=window.innerHeight;
+        let n=[]; for(let i=0;i<150;i++)n.push({x:Math.random()*c.width,y:Math.random()*c.height,vx:Math.random()-0.5,vy:Math.random()-0.5,s:Math.random()*2});
+        window.onmousemove=(e)=>{mX=e.clientX;mY=e.clientY;gF=Math.min(13.37,gF+0.2);};
+        function draw(){
+            x.fillStyle="rgba(0,0,0,0.15)"; x.fillRect(0,0,c.width,c.height);
+            n.forEach(i=>{
+                i.x+=i.vx*gF; i.y+=i.vy*gF;
+                if(i.x<0||i.x>c.width)i.vx*=-1; if(i.y<0||i.y>c.height)i.vy*=-1;
+                n.forEach(j=>{
+                    let d=Math.hypot(i.x-j.x,i.y-j.y);
+                    if(d<120){
+                        x.strokeStyle=`rgba(255,215,0,${0.2-d/600})`;
+                        x.beginPath(); x.moveTo(i.x,i.y); x.lineTo(j.x,j.y); x.stroke();
+                    }
+                });
+            });
+            gF=Math.max(1,gF-0.05);
+            requestAnimationFrame(draw);
+        }
+        draw();
+    }
+</script>
+</body>
+</html>

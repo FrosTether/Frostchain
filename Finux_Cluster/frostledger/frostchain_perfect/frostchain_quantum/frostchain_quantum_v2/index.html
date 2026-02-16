@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QUANTUM_TANGLE // FNR_HUM_MINER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+:root {
+  --core: #00fbff;     /* FRST Cyan */
+  --fnr: #ff6600;      /* FNR Orange */
+  --fai: #ff0055;      /* FAI Red */
+  --bg: #050505;
+  --glass: rgba(0, 20, 20, 0.95);
+  --flux: 1.0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+
+body {
+  background: var(--bg);
+  color: var(--core);
+  font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* QUANTUM HUM BACKGROUND */
+body::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: 
+    linear-gradient(90deg, rgba(0,0,0,0) 95%, var(--fnr) 100%),
+    linear-gradient(rgba(0,0,0,0) 95%, var(--core) 100%);
+  background-size: 40px 40px;
+  opacity: 0.1;
+  pointer-events: none; z-index: 0;
+  animation: hum-scroll 20s linear infinite;
+}
+
+@keyframes hum-scroll { 0% { background-position: 0 0; } 100% { background-position: 40px 40px; } }
+
+.ui-layer { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; padding: 15px; }
+
+/* TOP BAR */
+.top-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 2px solid var(--core); padding-bottom: 10px; margin-bottom: 10px;
+  background: var(--glass); box-shadow: 0 0 20px rgba(0, 251, 255, 0.1);
+}
+
+.stat-group { text-align: center; }
+.stat-label { font-size: 10px; color: #888; letter-spacing: 1px; }
+.stat-val { font-size: 16px; font-weight: bold; }
+
+/* GRID AREA */
+.game-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+.grid {
+  display: grid; grid-template-columns: repeat(9, 42px); grid-template-rows: repeat(9, 42px);
+  gap: 2px; background: rgba(0,0,0,0.8); padding: 4px;
+  border: 2px solid var(--core);
+  box-shadow: 0 0 30px rgba(0, 251, 255, 0.15);
+}
+
+.cell {
+  width: 42px; height: 42px; background: rgba(0, 251, 255, 0.05);
+  transition: all 0.1s; border: 1px solid rgba(0, 251, 255, 0.1);
+}
+
+/* DYNAMIC STYLES */
+.cell.filled {
+  background: var(--core); border-color: #fff;
+  box-shadow: 0 0 calc(var(--flux) * 10px) var(--core);
+  filter: brightness(calc(0.9 + (var(--flux) * 0.3)));
+}
+.cell.preview { background: rgba(0, 251, 255, 0.3); }
+
+/* GHOST MODE OVERRIDES */
+body.ghost-mode .cell.filled { background: var(--fai); box-shadow: 0 0 5px var(--fai); opacity: 0.5; }
+body.ghost-mode .grid { border-color: var(--fai); }
+body.ghost-mode { color: var(--fai); }
+
+/* DOCK */
+.dock { display: flex; gap: 15px; justify-content: center; margin-top: 15px; height: 80px; }
+.piece-box {
+  width: 70px; height: 70px; border: 1px dashed rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center; cursor: grab;
+}
+.piece-box:hover { border-color: var(--core); background: rgba(0,251,255,0.1); }
+.piece-box.selected { border: 2px solid var(--core); background: rgba(0,251,255,0.2); }
+
+.mini-block { width: 14px; height: 14px; background: var(--core); margin: 1px; }
+body.ghost-mode .mini-block { background: var(--fai); }
+
+/* CONTROLS - THE NEW INJECTIONS */
+.controls-bar {
+  display: flex; gap: 10px; margin-top: auto; padding-top: 10px; border-top: 1px solid #333;
+}
+
+.btn {
+  flex: 1; padding: 12px; font-family: 'Share Tech Mono'; font-size: 11px;
+  background: #111; border: 1px solid #444; color: #666; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: 0.2s;
+}
+
+/* FNR BUTTON (ALWAYS ON) */
+.btn.fnr.active {
+  border-color: var(--fnr); color: var(--fnr);
+  background: rgba(255, 102, 0, 0.1);
+  box-shadow: 0 0 15px rgba(255, 102, 0, 0.2);
+}
+
+/* FAI BUTTON */
+.btn.fai.active {
+  border-color: var(--fai); color: var(--fai);
+  background: rgba(255, 0, 85, 0.1);
+  box-shadow: inset 0 0 10px var(--fai);
+}
+
+/* MULLIGAN BUTTON */
+.btn.mulligan { border-color: #fff; color: #fff; }
+.btn.mulligan:hover { background: #fff; color: #000; box-shadow: 0 0 20px #fff; }
+
+.hum-visual { height: 4px; background: #222; margin-top: 5px; position: relative; overflow: hidden; }
+.hum-bar { height: 100%; background: var(--fnr); width: 0%; transition: width 0.1s; }
+
+</style>
+</head>
+<body onload="init()">
+
+<div class="ui-layer">
+  
+  <div class="top-bar">
+    <div class="stat-group">
+      <div class="stat-label">QUANTUM FLUX</div>
+      <div class="stat-val"><span id="flux-val">1.00</span>φ</div>
+    </div>
+    <div class="stat-group" style="color:var(--fnr);">
+      <div class="stat-label">FNR MINED</div>
+      <div class="stat-val"><span id="fnr-bal">0.00</span></div>
+    </div>
+    <div class="stat-group" style="text-align:right;">
+      <div class="stat-label">ASSETS (FRST/FTC)</div>
+      <div class="stat-val"><span id="frst-bal">0.00</span> / <span id="ftc-bal">0.00</span></div>
+    </div>
+  </div>
+
+  <div class="game-area">
+    <div class="grid" id="grid"></div>
+    <div class="dock" id="dock"></div>
+  </div>
+
+  <div class="hum-visual"><div class="hum-bar" id="hum-bar"></div></div>
+
+  <div class="controls-bar">
+    <button class="btn fnr active" onclick="toggleFNR()" id="btn-fnr">
+      <span>FNR HUM MINER</span>
+      <span style="font-size:9px;">● ENGAGED</span>
+    </button>
+
+    <button class="btn fai" onclick="toggleFAI()" id="btn-fai">
+      <span>FAI GHOST</span>
+      <span style="font-size:9px;">○ STEALTH</span>
+    </button>
+
+    <button class="btn mulligan" onclick="mulligan()">
+      <span>MULLIGAN</span>
+      <span style="font-size:9px;">↺ RE-ROLL</span>
+    </button>
+  </div>
+
+</div>
+
+<script>
+// CONFIG
+const REWARDS = { FRST: 314.15, FTC: 13.37, FNR_BASE: 0.05 };
+let state = {
+  grid: Array(81).fill(0),
+  frst: 0, ftc: 0, fnr: 0,
+  flux: 1.0,
+  fnrActive: true, // ENGAGED DEFAULT
+  faiActive: false
+};
+
+let currentPieces = [];
+let selectedPiece = null;
+
+// --- QUANTUM HUM LOOP ---
+setInterval(() => {
+  // Oscillate Flux
+  const time = Date.now() / 600;
+  state.flux = 1.0 + Math.sin(time) * 0.5;
+  
+  // Apply Flux to CSS
+  document.documentElement.style.setProperty('--flux', state.flux);
+  document.getElementById('flux-val').innerText = state.flux.toFixed(2);
+  
+  // Visual Bar
+  const pct = ((state.flux - 0.5) / 1.0) * 100;
+  document.getElementById('hum-bar').style.width = pct + '%';
+
+  // FNR PASSIVE MINING (If Engaged)
+  if(state.fnrActive) {
+    // Mining rate depends on Flux intensity
+    const mineAmt = REWARDS.FNR_BASE * state.flux * 0.1; 
+    state.fnr += mineAmt;
+    document.getElementById('fnr-bal').innerText = state.fnr.toFixed(4);
+  }
+
+}, 100);
+
+// --- GAME LOGIC ---
+function init() {
+  renderGrid();
+  spawnPieces();
+}
+
+function renderGrid() {
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  state.grid.forEach((val, i) => {
+    let d = document.createElement('div');
+    d.className = val ? 'cell filled' : 'cell';
+    d.onmouseover = () => preview(i);
+    d.onclick = () => place(i);
+    g.appendChild(d);
+  });
+}
+
+function spawnPieces() {
+  const d = document.getElementById('dock');
+  d.innerHTML = '';
+  currentPieces = [];
+  
+  const shapes = [
+    [[1]], [[1,1]], [[1],[1]], [[1,1],[1,1]], 
+    [[1,0],[1,0],[1,1]], [[1,1,1]]
+  ];
+  
+  for(let i=0; i<3; i++) {
+    let s = shapes[Math.floor(Math.random() * shapes.length)];
+    currentPieces.push({ shape: s, placed: false });
+    
+    let box = document.createElement('div');
+    box.className = 'piece-box';
+    box.onclick = (e) => select(e, i);
+    
+    let mini = document.createElement('div');
+    mini.style.display = 'grid';
+    mini.style.gridTemplateColumns = `repeat(${s[0].length}, 14px)`;
+    
+    s.forEach(row => {
+      row.forEach(b => {
+        let dv = document.createElement('div');
+        dv.className = b ? 'mini-block' : 'mini-block empty';
+        mini.appendChild(dv);
+      });
+    });
+    
+    box.appendChild(mini);
+    d.appendChild(box);
+  }
+}
+
+function select(e, idx) {
+  if(currentPieces[idx].placed) return;
+  document.querySelectorAll('.piece-box').forEach(b => b.classList.remove('selected'));
+  e.currentTarget.classList.add('selected');
+  selectedPiece = currentPieces[idx].shape;
+}
+
+function preview(idx) {
+  if(!selectedPiece) return;
+  document.querySelectorAll('.cell')[idx].classList.add('preview');
+  setTimeout(() => document.querySelectorAll('.cell')[idx].classList.remove('preview'), 100);
+}
+
+function place(idx) {
+  if(!selectedPiece) return;
+  
+  state.grid[idx] = 1;
+  
+  // Mining Logic
+  let mult = state.faiActive ? 0.45 : 1.0; // FAI reduces yield 55%
+  state.frst += REWARDS.FRST * mult;
+  state.ftc += REWARDS.FTC * mult;
+  
+  updateUI();
+  renderGrid();
+  
+  selectedPiece = null;
+  document.querySelectorAll('.piece-box').forEach(b => b.classList.remove('selected'));
+  
+  // Auto-clear
+  setTimeout(() => { state.grid[idx] = 0; renderGrid(); }, 500);
+}
+
+function updateUI() {
+  document.getElementById('frst-bal').innerText = state.frst.toFixed(2);
+  document.getElementById('ftc-bal').innerText = state.ftc.toFixed(2);
+}
+
+// --- BUTTON FUNCTIONS ---
+
+function toggleFNR() {
+  state.fnrActive = !state.fnrActive;
+  let btn = document.getElementById('btn-fnr');
+  if(state.fnrActive) {
+    btn.classList.add('active');
+    btn.innerHTML = '<span>FNR HUM MINER</span><span style="font-size:9px;">● ENGAGED</span>';
+  } else {
+    btn.classList.remove('active');
+    btn.innerHTML = '<span>FNR PAUSED</span><span style="font-size:9px;">○ OFF</span>';
+  }
+}
+
+function toggleFAI() {
+  state.faiActive = !state.faiActive;
+  let btn = document.getElementById('btn-fai');
+  if(state.faiActive) {
+    document.body.classList.add('ghost-mode');
+    btn.classList.add('active');
+    btn.innerHTML = '<span>FAI GHOST</span><span style="font-size:9px;">● ACTIVE</span>';
+  } else {
+    document.body.classList.remove('ghost-mode');
+    btn.classList.remove('active');
+    btn.innerHTML = '<span>FAI GHOST</span><span style="font-size:9px;">○ STEALTH</span>';
+  }
+}
+
+function mulligan() {
+  // Quantum Re-Roll
+  spawnPieces();
+  
+  // Visual feedback
+  let btn = document.querySelector('.btn.mulligan');
+  let originalText = btn.innerHTML;
+  btn.innerHTML = '<span>TIMELINE</span><span>RESET</span>';
+  setTimeout(() => { btn.innerHTML = originalText; }, 500);
+}
+
+</script>
+</body>
+</html>

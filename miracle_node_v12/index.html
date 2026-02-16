@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | v12</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --panel: rgba(20,20,20,0.95); --cyan: #00ffff; --gold: #ffd700; --blue: #00d4ff; }
+        body { background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; user-select: none; }
+
+        #dash { display: grid; grid-template-columns: 350px 1fr; height: 100vh; }
+        .sidebar { background: rgba(0,0,0,0.8); border-right: 1px solid var(--term); padding: 20px; display: flex; flex-direction: column; z-index: 10; }
+        .main { position: relative; display: flex; flex-direction: column; }
+        
+        #tangle-canvas { position: absolute; inset: 0; z-index: 0; }
+        
+        .stat-card { background: #111; border: 1px solid #333; padding: 15px; margin-bottom: 15px; border-left: 4px solid #fff; }
+        .val { font-size: 1.5rem; font-weight: bold; color: #fff; }
+        .lbl { font-size: 0.7rem; color: #888; text-transform: uppercase; }
+
+        .chat-overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 200px; background: rgba(0,0,0,0.8); border-top: 1px solid var(--cyan); display: flex; flex-direction: column; z-index: 10; }
+        .chat-log { flex: 1; padding: 10px; overflow-y: auto; font-size: 0.8rem; }
+        .chat-input { background: #000; border: none; border-top: 1px solid #333; color: #fff; padding: 15px; font-family: inherit; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dash">
+        <div class="sidebar">
+            <div style="font-size:1.2rem; font-weight:bold; margin-bottom:20px; color:var(--cyan);">MIRACLE NODE</div>
+            
+            <div class="stat-card" style="border-left-color: #ff00ff;">
+                <div class="val" id="frst">0.00</div>
+                <div class="lbl">FRST (Frost Token)</div>
+            </div>
+            
+            <div class="stat-card" style="border-left-color: gold;">
+                <div class="val" id="ftc">0.00</div>
+                <div class="lbl">FTC (Frostcoin)</div>
+            </div>
+            
+            <div class="stat-card" style="border-left-color: var(--blue);">
+                <div class="val" id="fnr">0.00</div>
+                <div class="lbl">FNR (Frost Node Reserve)</div>
+            </div>
+
+            <div style="margin-top:auto; font-size:0.7rem; color:#666;">
+                STATUS: MINING<br>
+                UPTIME: 99.9%
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="chat-overlay">
+                <div style="background:#000; padding:5px 10px; font-size:0.7rem; color:var(--cyan); border-bottom:1px solid #333;">FROSTCHAT PROTOCOL (ACTIVE)</div>
+                <div class="chat-log" id="log">
+                    <div style="color:var(--gold);">> System: FNR Mining Subroutine Loaded.</div>
+                    <div style="color:var(--gold);">> System: Node Connected to Mesh.</div>
+                </div>
+                <input class="chat-input" placeholder="Broadcast Command..." onkeypress="if(event.key==='Enter') send(this)">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- MINING SIM ---
+        let b = { frst: 0, ftc: 0, fnr: 0 };
+        setInterval(() => {
+            b.frst += 314.15;
+            b.ftc += 13.37;
+            b.fnr += 2.50; // FNR Increment
+            
+            document.getElementById('frst').innerText = b.frst.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('ftc').innerText = b.ftc.toFixed(2);
+            document.getElementById('fnr').innerText = b.fnr.toFixed(2);
+        }, 1000);
+
+        // --- CHAT ---
+        function send(el) {
+            const div = document.createElement('div');
+            div.style.color = "#fff";
+            div.innerText = "> " + el.value;
+            document.getElementById('log').appendChild(div);
+            el.value = "";
+        }
+
+        // --- TANGLE ---
+        const c = document.getElementById('tangle-canvas');
+        const x = c.getContext('2d');
+        c.width = window.innerWidth; c.height = window.innerHeight;
+        let pts = Array(40).fill().map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5),vy:(Math.random()-.5)}));
+        function anim(){
+            x.clearRect(0,0,c.width,c.height);
+            x.strokeStyle='rgba(0,255,255,0.1)';
+            pts.forEach(p=>{
+                p.x+=p.vx; p.y+=p.vy;
+                if(p.x<0||p.x>c.width)p.vx*=-1; if(p.y<0||p.y>c.height)p.vy*=-1;
+                pts.forEach(p2=>{
+                    if(Math.hypot(p.x-p2.x,p.y-p2.y)<100) { x.beginPath(); x.moveTo(p.x,p.y); x.lineTo(p2.x,p2.y); x.stroke(); }
+                });
+            });
+            requestAnimationFrame(anim);
+        }
+        anim();
+    </script>
+</body>
+</html>

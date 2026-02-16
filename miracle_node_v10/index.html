@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | v10.0</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --dim: #004400; --warn: #ff0055; --panel: rgba(10, 10, 10, 0.95); --gold: #ffd700; --pink: #ff00ff; --blue: #00d4ff; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; user-select: none; }
+        
+        /* GATE */
+        #gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gate-box { border: 2px solid var(--term); padding: 30px; width: 300px; text-align: center; box-shadow: 0 0 20px var(--dim); background: #050505; }
+        input { width: 90%; background: #111; border: 1px solid #333; color: #fff; padding: 12px; margin-bottom: 10px; font-family: inherit; text-align: center; outline: none; }
+        .btn-main { background: var(--term); color: #000; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+
+        /* DASHBOARD LAYOUT */
+        #dash { display: none; height: 100vh; grid-template-columns: 350px 1fr; grid-template-rows: 60px 1fr; }
+        #tangle { position: absolute; inset: 0; z-index: 0; opacity: 0.2; pointer-events: none; }
+
+        /* HEADER */
+        .header { grid-column: 1 / -1; background: var(--panel); border-bottom: 1px solid var(--dim); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; }
+        .master-key { font-size: 0.6rem; color: #666; font-family: monospace; border: 1px dashed #333; padding: 2px 5px; margin-right: 15px; }
+
+        .fs-btn { background: #111; border: 1px solid var(--term); color: var(--term); padding: 5px 10px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
+        .fs-btn:hover { background: var(--term); color: #000; }
+
+        /* LEFT PANEL: STATS & EXPLORER */
+        .left-panel { background: rgba(0,0,0,0.8); border-right: 1px solid var(--dim); display: flex; flex-direction: column; padding: 15px; z-index: 10; overflow-y: auto; }
+        
+        .timer-box { text-align: center; border: 1px solid var(--term); padding: 10px; margin-bottom: 15px; background: #001100; }
+        .timer-val { font-size: 1.5rem; font-weight: bold; color: #fff; }
+        .timer-label { font-size: 0.7rem; color: var(--term); }
+
+        .stat-card { background: #0a0a0a; border: 1px solid #222; padding: 15px; margin-bottom: 10px; border-left: 3px solid #fff; }
+        .stat-val { font-size: 1.2rem; font-weight: bold; }
+        .stat-label { font-size: 0.7rem; color: #888; }
+        
+        .explorer-box { flex: 1; border: 1px solid var(--dim); background: #000; overflow-y: auto; font-size: 0.7rem; margin-top: 10px; }
+        .block-row { padding: 8px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+        .block-new { animation: flash 1s; background: rgba(0,255,65,0.1); }
+        @keyframes flash { from { background: #fff; } to { background: rgba(0,255,65,0.1); } }
+
+        .withdraw-btn { background: #222; color: var(--gold); border: 1px solid var(--gold); padding: 15px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* RIGHT PANEL: FROSTCHAT OTR */
+        .chat-panel { display: flex; flex-direction: column; position: relative; z-index: 10; background: rgba(0,0,0,0.5); }
+        .chat-header { padding: 10px; border-bottom: 1px solid var(--dim); font-size: 0.8rem; color: #888; display: flex; justify-content: space-between; }
+        .otr-badge { background: var(--dim); color: var(--term); padding: 2px 5px; border-radius: 3px; font-size: 0.6rem; }
+        
+        .chat-log { flex: 1; overflow-y: auto; padding: 20px; }
+        .msg-row { margin-bottom: 10px; display: flex; flex-direction: column; }
+        .msg-bubble { background: #0a0a0a; border: 1px solid var(--dim); padding: 8px 12px; border-radius: 4px; display: inline-block; max-width: 80%; word-wrap: break-word; color: #ccc; }
+        .msg-bubble.me { align-self: flex-end; border-color: var(--term); color: #fff; background: rgba(0, 255, 65, 0.1); }
+        
+        .chat-input-area { padding: 15px; background: #000; border-top: 1px solid var(--dim); display: flex; gap: 10px; }
+        .chat-input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 10px; font-family: inherit; }
+        
+        /* AUDIO TOGGLES */
+        .audio-bar { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; }
+        .audio-btn { background: #000; border: 1px solid #444; color: #666; padding: 5px 10px; font-size: 0.6rem; cursor: pointer; }
+        .audio-btn.active { border-color: var(--term); color: var(--term); box-shadow: 0 0 5px var(--term); }
+
+        /* RESPONSIVE */
+        @media (max-width: 700px) {
+            #dash { grid-template-columns: 1fr; grid-template-rows: 50px 280px 1fr; }
+            .left-panel { border-right: none; border-bottom: 1px solid var(--dim); }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle"></canvas>
+
+    <div id="gate">
+        <div class="gate-box">
+            <div style="font-size:1.2rem; font-weight:bold; margin-bottom:5px;">MIRACLE NODE v10</div>
+            <div style="font-size:0.7rem; color:#888; margin-bottom:20px;">IMMERSIVE TERMINAL</div>
+            <input type="text" id="id-in" placeholder="identity.frostchain">
+            <input type="password" id="pin-in" placeholder="PIN (4-6 Digits)" maxlength="6">
+            <button class="btn-main" onclick="login()">SECURE LOGIN</button>
+            <div id="err" style="color:var(--warn); font-size:0.7rem; height:15px; margin-top:5px;"></div>
+        </div>
+    </div>
+
+    <div id="dash">
+        <div class="header">
+            <div>
+                <span id="user-display" style="font-weight:bold;">GUEST</span>
+                <span style="font-size:0.7rem; color:var(--term); margin-left:10px;">● ONLINE</span>
+            </div>
+            <div style="display:flex; align-items:center;">
+                <div class="master-key">BRIDGE: 4AEreX...</div>
+                <button class="fs-btn" onclick="toggleFS()">[ FULLSCREEN ]</button>
+            </div>
+        </div>
+
+        <div class="left-panel">
+            <div class="timer-box">
+                <div class="timer-val" id="countdown">300</div>
+                <div class="timer-label">SECONDS UNTIL NEXT BLOCK</div>
+            </div>
+            
+            <div class="stat-card" style="border-left-color: #ff00ff;">
+                <div class="stat-val" id="frst-val">0.00</div>
+                <div class="stat-label">FRST (31,415.9 / Block)</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #ffd700;">
+                <div class="stat-val" id="ftc-val">0.00</div>
+                <div class="stat-label">FTC (13.37 / Block)</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #00d4ff;">
+                <div class="stat-val" id="fnr-val">0.00</div>
+                <div class="stat-label">FNR (2.50 / Block)</div>
+            </div>
+
+            <div style="font-size:0.8rem; color:#888; margin:10px 0;">FROSTCHAIN EXPLORER</div>
+            <div class="explorer-box" id="block-list"></div>
+
+            <button class="withdraw-btn" onclick="withdraw()">
+                <span>WITHDRAW FUNDS</span>
+                <span style="font-size:0.7rem;">VIA GRAYSON API ↗</span>
+            </button>
+        </div>
+
+        <div class="chat-panel">
+            <div class="chat-header">
+                <span>SECURE CHANNEL: GLOBAL</span>
+                <span class="otr-badge">OTR ENCRYPTED</span>
+            </div>
+            <div class="audio-bar">
+                <button class="audio-btn" id="btn-alpha" onclick="toggleAudio('alpha')">ALPHA</button>
+                <button class="audio-btn" id="btn-delta" onclick="toggleAudio('delta')">DELTA</button>
+            </div>
+            <div class="chat-log" id="chat-box">
+                <div class="msg-row">
+                    <span class="msg-bubble" style="background:transparent; border:none; padding:0; color:#666;">> System: Frostchat OTR Initialized.</span>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="msg-input" class="chat-input" placeholder="Type encrypted message...">
+                <button class="btn-main" style="width:auto; margin:0; padding:0 20px;" onclick="sendMsg()">SEND</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- AUTH ---
+        function login() {
+            const id = document.getElementById('id-in').value;
+            const pin = document.getElementById('pin-in').value;
+            if(id.includes('.frostchain') && pin.length >= 4 && pin.length <= 6) {
+                document.getElementById('gate').style.display = 'none';
+                document.getElementById('dash').style.display = 'grid';
+                document.getElementById('user-display').innerText = id;
+                startConsensus(); // Start the 300s timer
+                initTangle();
+            } else {
+                document.getElementById('err').innerText = "INVALID CREDENTIALS";
+            }
+        }
+
+        // --- FULLSCREEN LOGIC ---
+        function toggleFS() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // --- CONSENSUS LOGIC (300s STRICT) ---
+        let balances = { frst: 0, ftc: 0, fnr: 0 };
+        let timeLeft = 300;
+        let blockCount = 938421;
+
+        function startConsensus() {
+            setInterval(() => {
+                timeLeft--;
+                document.getElementById('countdown').innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    mintBlock();
+                    timeLeft = 300; // Reset Timer
+                }
+            }, 1000);
+        }
+
+        function mintBlock() {
+            balances.frst += 31415.90;
+            balances.ftc += 13.37;
+            balances.fnr += 2.50;
+
+            document.getElementById('frst-val').innerText = balances.frst.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('ftc-val').innerText = balances.ftc.toFixed(2);
+            document.getElementById('fnr-val').innerText = balances.fnr.toFixed(2);
+
+            blockCount++;
+            const list = document.getElementById('block-list');
+            const div = document.createElement('div');
+            div.className = 'block-row block-new';
+            div.innerHTML = `
+                <span style="color:var(--term);">#${blockCount}</span>
+                <span style="color:#666;">HASH-${Math.random().toString(16).substr(2,6)}</span>
+                <span style="color:var(--gold);">+REWARD</span>
+            `;
+            list.prepend(div);
+            setTimeout(() => div.classList.remove('block-new'), 1000);
+        }
+
+        // --- WITHDRAWAL API ---
+        function withdraw() {
+            if(confirm("OPEN GRAYSON'S WALLET API FOR WITHDRAWAL?")) {
+                window.location.href = "https://graysonswallet.surge.sh";
+            }
+        }
+
+        // --- FROSTCHAT OTR ---
+        function sendMsg() {
+            const input = document.getElementById('msg-input');
+            const txt = input.value.trim();
+            if(!txt) return;
+
+            const box = document.getElementById('chat-box');
+            const row = document.createElement('div');
+            row.className = 'msg-row';
+            
+            const bubble = document.createElement('span');
+            bubble.className = 'msg-bubble me';
+            bubble.innerText = scramble(txt);
+            row.appendChild(bubble);
+            box.appendChild(row);
+            box.scrollTop = box.scrollHeight;
+            input.value = "";
+
+            let i = 0;
+            const t = setInterval(() => {
+                bubble.innerText = scramble(txt);
+                i++;
+                if(i > 8) { clearInterval(t); bubble.innerText = txt; bubble.style.borderColor = "var(--term)"; }
+            }, 50);
+        }
+
+        function scramble(str) {
+            const chars = "!@#$%^&*()?";
+            return str.split('').map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
+        }
+
+        // --- AUDIO ENGINE ---
+        let actx, osc;
+        function toggleAudio(mode) {
+            if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+            if(osc) { osc.stop(); osc = null; document.querySelectorAll('.audio-btn').forEach(b=>b.classList.remove('active')); return; }
+            const freq = mode === 'alpha' ? 11.11 : 3.14;
+            document.getElementById('btn-'+mode).classList.add('active');
+            osc = actx.createOscillator();
+            const g = actx.createGain();
+            g.gain.value = 0.1;
+            osc.connect(g).connect(actx.destination);
+            osc.frequency.value = 432; 
+            osc.start();
+            osc.stop = () => { osc.disconnect(); }; 
+        }
+
+        // --- TANGLE ---
+        function initTangle() {
+            const c = document.getElementById('tangle');
+            const ctx = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            let pts = Array(30).fill(0).map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5),vy:(Math.random()-.5)}));
+            function anim(){
+                ctx.clearRect(0,0,c.width,c.height);
+                ctx.strokeStyle='rgba(0,255,65,0.2)';
+                pts.forEach(p=>{
+                    p.x+=p.vx; p.y+=p.vy;
+                    if(p.x<0||p.x>c.width)p.vx*=-1; if(p.y<0||p.y>c.height)p.vy*=-1;
+                    pts.forEach(p2=>{
+                        if(Math.hypot(p.x-p2.x,p.y-p2.y)<100) { ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); }
+                    });
+                });
+                requestAnimationFrame(anim);
+            }
+            anim();
+        }
+    </script>
+</body>
+</html>

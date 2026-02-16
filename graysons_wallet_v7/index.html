@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grayson's Wallet | Studer Link</title>
+    <style>
+        :root { --bg: #000; --accent: #00ff41; --text: #fff; --panel: #111; --gold: #ffd700; --blue: #00d4ff; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; user-select: none; }
+
+        /* SCREENS */
+        .screen { position: fixed; inset: 0; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+        .screen.active { display: flex; }
+
+        /* INPUTS */
+        .input-box { background: #111; border: 1px solid #333; color: #fff; padding: 15px; margin-bottom: 15px; width: 250px; text-align: center; font-family: inherit; font-size: 1rem; outline: none; }
+        .input-box:focus { border-color: var(--accent); }
+        .pin-input { font-size: 1.5rem; letter-spacing: 5px; }
+
+        .btn { background: var(--accent); color: #000; border: none; padding: 15px 30px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 280px; margin-top: 10px; }
+        
+        /* APP HEADER */
+        .header { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; background: #0a0a0a; }
+        .user-badge { color: var(--accent); font-weight: bold; }
+        
+        /* ASSETS */
+        .content { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .asset-card { background: #111; border: 1px solid #333; padding: 15px; margin-bottom: 10px; border-left: 3px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
+        .asset-val { font-size: 1.2rem; font-weight: bold; }
+        
+        .status-bar { margin-top: auto; border-top: 1px solid #333; padding: 10px; font-size: 0.7rem; color: #666; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="screen-login" class="screen active">
+        <h2 style="color:var(--accent)">IDENTITY LOCK</h2>
+        <p style="color:#888; font-size:0.8rem; margin-bottom:20px;">ENTER PIN TO LOAD WALLET.DAT</p>
+        
+        <input type="password" id="login-pin" class="input-box pin-input" placeholder="****" maxlength="4">
+        <button class="btn" onclick="login()">UNLOCK VAULT</button>
+        
+        <div style="margin-top:30px; color:#444; font-size:0.7rem;">FROST PROTOCOL SECURE STORAGE</div>
+    </div>
+
+    <div id="screen-app" style="display:none;">
+        <div class="header">
+            <span id="app-username" class="user-badge">user.frostchain</span>
+            <span style="font-size:0.7rem; border:1px solid var(--accent); padding:3px 6px; color:var(--accent);">ONLINE</span>
+        </div>
+
+        <div class="content">
+            <div style="text-align:center; margin-bottom:30px;">
+                <div style="font-size:0.8rem; color:#888;">TOTAL PORTFOLIO VALUE</div>
+                <div style="font-size:2rem; font-weight:bold;" id="total-val">$0.00</div>
+            </div>
+
+            <div id="asset-list">
+                </div>
+            
+            <div class="status-bar">
+                <div>CONNECTED TO NODE: 13.37.0.1</div>
+                <div>ENCRYPTION: OTR-256</div>
+            </div>
+
+            <button class="btn" style="background:#222; color:#fff; margin-top:20px;" onclick="location.reload()">LOCK TERMINAL</button>
+        </div>
+    </div>
+
+    <script>
+        function login() {
+            const pin = document.getElementById('login-pin').value;
+            
+            // SPECIAL STUDER ACCESS
+            if (pin === "2007") {
+                loadWallet("studer_boys.frostchain", {
+                    ftc: 200000,
+                    fnr: 10000,
+                    frst: 0,
+                    btc: 0
+                });
+            } 
+            // DEFAULT / SAVED USER
+            else if (pin === (localStorage.getItem('frost_pin') || "0000")) {
+                 loadWallet(localStorage.getItem('frost_user') || "drfrost.frostchain", {
+                    ftc: 3100000,
+                    fnr: 40000,
+                    frst: 31415900,
+                    btc: 30.337
+                 });
+            } 
+            else {
+                alert("ACCESS DENIED: INVALID PIN");
+                document.getElementById('login-pin').value = "";
+            }
+        }
+
+        function loadWallet(user, assets) {
+            document.getElementById('screen-login').classList.remove('active');
+            document.getElementById('screen-app').style.display = 'block';
+            document.getElementById('app-username').innerText = user;
+
+            // Render Assets
+            const list = document.getElementById('asset-list');
+            list.innerHTML = ""; // Clear
+            
+            // Helper to add card
+            const addCard = (sym, name, bal, color) => {
+                if(bal > 0) {
+                    list.innerHTML += `
+                        <div class="asset-card" style="border-left-color: ${color};">
+                            <div>
+                                <div style="font-weight:bold;">${sym}</div>
+                                <div style="font-size:0.7rem; color:#888;">${name}</div>
+                            </div>
+                            <div class="asset-val">${bal.toLocaleString()}</div>
+                        </div>
+                    `;
+                }
+            };
+
+            addCard("FTC", "Frost Token (Airdrop)", assets.ftc, "gold");
+            addCard("FNR", "Frost Node Reserve", assets.fnr, "#00d4ff");
+            addCard("FRST", "Frostcoin", assets.frst, "#ff00ff");
+            addCard("BTC", "Bitcoin Legacy", assets.btc, "#f7931a");
+            
+            // Estimate Total Value (Mock Pricing)
+            let total = (assets.ftc * 1.5) + (assets.fnr * 10) + (assets.frst * 0.4) + (assets.btc * 95000);
+            document.getElementById('total-val').innerText = "$" + total.toLocaleString(undefined, {maximumFractionDigits: 0});
+        }
+    </script>
+</body>
+</html>

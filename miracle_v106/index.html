@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Miracle Node | Public Aggregator</title>
+    <style>
+        :root { 
+            --bg: #010105; --ice: #00ffff; --term: #00ff41; --xmr: #ff6600; 
+            --btc: #f7931a; --bch: #8dc351;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        /* HDR TANGLE BACKGROUND */
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.4; filter: blur(1px); }
+        .hdr-glow { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, rgba(0,255,255,0.05) 0%, transparent 70%); }
+
+        /* DASHBOARD LAYOUT */
+        #dashboard { width: 95%; height: 90vh; display: grid; grid-template-rows: 100px 1fr 60px; gap: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(0,0,0,0.8); border-bottom: 1px solid rgba(0,255,255,0.2); }
+        .main { display: grid; grid-template-columns: 400px 1fr 400px; gap: 20px; padding: 20px; overflow: hidden; }
+
+        /* GLASS PANELS */
+        .panel { background: rgba(10, 15, 25, 0.85); border: 1px solid rgba(255,255,255,0.08); padding: 30px; border-radius: 24px; backdrop-filter: blur(15px); display: flex; flex-direction: column; }
+        
+        .stat-lbl { font-size: 0.6rem; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-val { font-size: 2.5rem; font-weight: 900; color: #fff; letter-spacing: -1px; }
+
+        /* SHADOW METER */
+        .shadow-box { border: 1px solid var(--xmr); padding: 15px; border-radius: 12px; background: rgba(255,102,0,0.05); text-align: center; margin-bottom: 20px; box-shadow: 0 0 15px rgba(255,102,0,0.2); }
+        .xmr-tag { background: var(--xmr); color: #000; font-size: 0.5rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; vertical-align: middle; margin-left: 10px; }
+
+        /* LOG */
+        #log { margin-top: auto; font-size: 0.6rem; color: #444; height: 120px; overflow: hidden; line-height: 1.6; border-top: 1px solid #222; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="hdr-glow"></div>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="stat-lbl">Mining Aggregator</div>
+                <div style="font-size: 1.8rem; font-weight: 900; letter-spacing: 6px;">MIRACLE<span style="color:var(--ice)">NODE</span></div>
+            </div>
+            <div style="text-align: right;">
+                <div class="stat-lbl" style="color:var(--term);">DRAKE QUORUM x1.05 ACTIVE</div>
+                <div class="stat-val" id="total-hash" style="font-size: 1.8rem;">842.11 PH/s</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="stat-group" style="margin-bottom:30px;">
+                    <div class="stat-lbl">BTC/BCH POOL POWER</div>
+                    <div class="stat-val" style="font-size: 2rem;">731.25 PH/s</div>
+                </div>
+
+                <div class="shadow-box">
+                    <div class="stat-lbl" style="color:var(--xmr);">SHADOW DIVERSION <span class="xmr-tag">XMR</span></div>
+                    <div style="font-size: 2.2rem; font-weight: 900; color:var(--xmr);">13.37%</div>
+                    <div style="font-size: 0.6rem; color: #666; margin-top: 5px;">POINTED TO DRFROST PRIVATE VAULT</div>
+                </div>
+
+                <div id="log">
+                    <div>> Global aggregate sync: OK</div>
+                    <div>> Applying 1.05x efficiency multiplier...</div>
+                    <div>> Finalizing 13.37% bleed to shadow layer...</div>
+                </div>
+            </div>
+
+            <div></div>
+
+            <div class="panel">
+                <div class="stat-lbl" style="margin-bottom:20px;">Current Distribution</div>
+                
+                <div style="border-left: 3px solid var(--btc); padding-left: 20px; margin-bottom: 25px;">
+                    <div class="stat-lbl">Bitcoin (BTC)</div>
+                    <div class="stat-val" style="font-size: 1.5rem;">450.00 BTC</div>
+                </div>
+
+                <div style="border-left: 3px solid var(--bch); padding-left: 20px; margin-bottom: 25px;">
+                    <div class="stat-lbl">Bitcoin Cash (BCH)</div>
+                    <div class="stat-val" style="font-size: 1.5rem;">2,100.00 BCH</div>
+                </div>
+
+                <div style="border-left: 3px solid var(--xmr); padding-left: 20px; margin-top: auto;">
+                    <div class="stat-lbl" style="color:var(--xmr);">Monero (XMR) Shadow Yield</div>
+                    <div class="stat-val" style="font-size: 1.5rem; color: var(--xmr);" id="xmr-yield">0.0000</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer" style="padding: 0 40px; background: rgba(0,0,0,0.9); border-top: 1px solid #222; display:flex; align-items:center; justify-content:space-between; font-size: 0.65rem; color: #444;">
+            <div>MIRACLE NODE // v106.0 // PUBLIC AGGREGATOR // NEWKIRK ASSETS</div>
+            <div style="color:var(--ice)">741.frostchain.network</div>
+        </div>
+    </div>
+
+    <script>
+        let xmr = 0;
+        
+        function update() {
+            // Simulated global hashrate
+            const hash = 842.11 + (Math.random() - 0.5) * 10;
+            document.getElementById('total-hash').innerText = hash.toFixed(2) + " PH/s";
+            
+            // XMR Accumulation logic
+            xmr += (hash * 0.00000002);
+            document.getElementById('xmr-yield').innerText = xmr.toFixed(6) + " XMR";
+
+            if(Math.random() > 0.8) {
+                const l = document.getElementById('log');
+                const d = document.createElement('div');
+                d.innerText = `> Shadow block batched for drfrost.frostchain`;
+                d.style.color = "var(--xmr)";
+                l.prepend(d);
+            }
+        }
+        setInterval(update, 2000); update();
+
+        // TANGLE VISUALS
+        const canvas = document.getElementById('tangle-canvas');
+        const x = canvas.getContext('2d');
+        let pts = [];
+        function init() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            for(let i=0; i<80; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.2, vy: (Math.random()-0.5)*0.2 });
+        }
+        function draw() {
+            x.clearRect(0,0,canvas.width,canvas.height);
+            pts.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                pts.slice(i+1).forEach(p2 => {
+                    const d = Math.hypot(p.x-p2.x, p.y-p2.y);
+                    if(d < 200) {
+                        x.strokeStyle = `rgba(0,255,255,${0.1 * (1-d/200)})`;
+                        x.beginPath(); x.moveTo(p.x,p.y); x.lineTo(p2.x,p2.y); x.stroke();
+                    }
+                });
+            });
+            requestAnimationFrame(draw);
+        }
+        init(); draw(); window.onresize = init;
+    </script>
+</body>
+</html>

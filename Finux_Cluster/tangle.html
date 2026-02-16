@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FINUX | REZ_HD_TANGLE</title>
+<style>
+  :root { --bg: #050505; --blue: #00fbff; --orange: #ff4500; --green: #00ff41; --purple: #bc13fe; }
+  body { background: var(--bg); color: #fff; font-family: 'Arial Black', sans-serif; margin: 0; overflow: hidden; text-transform: uppercase; }
+  #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; padding: 30px; box-sizing: border-box; z-index: 20; }
+  .rez-header { font-size: 32px; color: var(--blue); letter-spacing: 10px; text-shadow: 0 0 20px var(--blue); }
+  .stats-panel { position: absolute; bottom: 30px; left: 30px; border-left: 4px solid var(--orange); padding-left: 20px; }
+  .stat { font-size: 14px; margin: 5px 0; letter-spacing: 2px; }
+  .controls { position: absolute; top: 30px; right: 30px; pointer-events: auto; }
+  .btn { background: none; border: 2px solid var(--blue); color: var(--blue); padding: 10px 20px; font-weight: 900; cursor: pointer; margin-left: 10px; }
+  .btn:hover { background: var(--blue); color: #000; box-shadow: 0 0 15px var(--blue); }
+  canvas { display: block; position: relative; z-index: 10; }
+  body::before { content: " "; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%); z-index: 30; background-size: 100% 2px; pointer-events: none; opacity: 0.2; }
+</style>
+</head>
+<body>
+<canvas id="rezCanvas"></canvas>
+<div id="overlay">
+  <div class="rez-header">REZ_HD_TANGLE // DAG_CORE</div>
+  <div class="stats-panel">
+    <div class="stat">GENESIS: 13,370,000 FTC</div>
+    <div class="stat">VAULT: 12,370,000 FTC (LOCKED)</div>
+    <div class="stat" id="nodes-count">NODES: 3</div>
+    <div class="stat" id="sync">SYNC: AUTHORIZED</div>
+  </div>
+  <div class="controls">
+    <button class="btn" onclick="addNode()">NEW TX</button>
+    <button class="btn" onclick="location.href='index.html'">HUB</button>
+  </div>
+</div>
+<script>
+  const canvas = document.getElementById('rezCanvas');
+  const ctx = canvas.getContext('2d');
+  let nodes = [], camera = { x: 0, y: 0, zoom: 1 };
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+
+  class RezNode {
+    constructor(id, x, y, z, type, label) {
+      this.id = id; this.x = x; this.y = y; this.z = z; this.type = type; this.label = label;
+      this.color = { genesis: '#00fbff', ico: '#ff4500', vault: '#00ff41', tx: '#bc13fe' }[type];
+      this.angle = 0;
+    }
+    draw() {
+      const scale = 600 / (600 + this.z * camera.zoom);
+      const px = (this.x + camera.x) * scale + canvas.width / 2;
+      const py = (this.y + camera.y) * scale + canvas.height / 2;
+      const size = 15 * scale;
+      this.angle += 0.02;
+      ctx.strokeStyle = this.color; ctx.lineWidth = 2 * scale;
+      ctx.beginPath();
+      for(let i=0; i<4; i++) {
+        ctx.lineTo(px + Math.cos(this.angle + i * Math.PI/2) * size, py + Math.sin(this.angle + i * Math.PI/2) * size);
+      }
+      ctx.closePath(); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = `${10 * scale}px Arial Black`;
+      ctx.fillText(this.label, px + size + 5, py + 5);
+    }
+  }
+
+  nodes.push(new RezNode("A", 0, -150, 0, 'genesis', "BLOCK_A_GENESIS (13.37M)"));
+  nodes.push(new RezNode("V", -200, 100, 50, 'vault', "VAULT_RESERVE (12.37M)"));
+  nodes.push(new RezNode("B", 200, 100, -50, 'ico', "BLOCK_B_ICO (1M)"));
+
+  function addNode() {
+    nodes.push(new RezNode("TX", Math.random()*800-400, Math.random()*400-100, Math.random()*200-100, 'tx', "TX_NODE"));
+    document.getElementById('nodes-count').innerText = "NODES: " + nodes.length;
+  }
+
+  function animate() {
+    ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    nodes.forEach(n => n.draw());
+    requestAnimationFrame(animate);
+  }
+  animate();
+</script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostMiner | View-Miner Node</title>
+    <style>
+        :root { 
+            --bg: #010105; --ice: #00ffff; --term: #00ff41; --xmr: #ff6600; 
+            --alpha: #ff00ff; --theta: #00ffff; --delta: #ffff00;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        /* NEURAL TANGLE BACKGROUND */
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.5; filter: blur(1.5px); }
+
+        /* LOGIN SCREEN */
+        #login-screen {
+            position: fixed; inset: 0; z-index: 999; background: #000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 1s;
+        }
+        .login-box { 
+            background: rgba(10,12,18,0.9); border: 2px solid var(--ice); padding: 40px; 
+            border-radius: 24px; text-align: center; width: 400px;
+            box-shadow: 0 0 50px rgba(0,255,255,0.1); backdrop-filter: blur(20px);
+        }
+        .login-input { 
+            width: 100%; background: #000; border: 1px solid #333; color: var(--ice); 
+            padding: 15px; margin: 20px 0; border-radius: 8px; font-family: inherit; 
+            text-align: center; font-size: 1.1rem; outline: none;
+        }
+        .login-btn { 
+            width: 100%; padding: 15px; border: none; border-radius: 8px; 
+            background: var(--ice); color: #000; font-weight: 900; 
+            cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
+        }
+
+        /* MAIN DASHBOARD */
+        #dashboard { display: none; width: 100%; height: 100vh; grid-template-rows: 90px 1fr 50px; opacity: 0; transition: opacity 1s; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--ice); }
+        .main { display: grid; grid-template-columns: 400px 1fr 400px; gap: 20px; padding: 20px; overflow: hidden; }
+
+        .panel { background: rgba(5, 10, 20, 0.9); border: 1px solid rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; backdrop-filter: blur(20px); display: flex; flex-direction: column; }
+        .stat-val { font-size: 2.2rem; font-weight: 900; color: #fff; }
+        .stat-lbl { font-size: 0.6rem; color: #666; letter-spacing: 3px; text-transform: uppercase; }
+
+        /* WAVE OSCILLATORS */
+        .wave-box { border: 1px solid #222; padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .wave-pulse { width: 30px; height: 6px; background: #111; border-radius: 3px; overflow: hidden; position: relative; }
+        .wave-fill { height: 100%; width: 50%; position: absolute; }
+
+        #log { margin-top: auto; font-size: 0.55rem; color: #444; height: 100px; overflow: hidden; border-top: 1px solid #222; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <div style="font-size: 0.6rem; letter-spacing: 5px; color: #666;">FROST_MINER_V109</div>
+            <input type="text" id="username" class="login-input" placeholder="identity.frostchain" value="drfrost.frostchain">
+            <button class="login-btn" onclick="login()">Connect to Pool</button>
+            <div id="login-msg" style="margin-top:15px; font-size:0.6rem; color:#444;">Ready for Quantum Settlement</div>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="stat-lbl">Settlement View-Miner</div>
+                <div style="font-size: 1.5rem; font-weight: 900; letter-spacing: 6px;" id="disp-id">--</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="stat-lbl" style="color:var(--term);">DRAKE QUORUM x1.05</div>
+                <div class="stat-val" id="total-hash" style="font-size: 1.8rem;">842.11 PH/s</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="stat-lbl" style="color:var(--ice); margin-bottom: 15px;">Hardware Allocation</div>
+                <div class="wave-box" style="border-color:var(--alpha)"><span>ALPHA SYNC</span><div class="wave-pulse"><div class="wave-fill" style="background:var(--alpha); width: 80%"></div></div></div>
+                <div class="wave-box" style="border-color:var(--theta)"><span>THETA SYNC</span><div class="wave-pulse"><div class="wave-fill" style="background:var(--theta); width: 60%"></div></div></div>
+                
+                <div style="margin-top: 20px; padding: 15px; border: 1px solid var(--xmr); background: rgba(255,102,0,0.05); border-radius: 12px; text-align: center;">
+                    <div class="stat-lbl" style="color:var(--xmr)">13.37% Reward Split</div>
+                    <div style="font-size: 1.2rem; color: #fff; margin-top: 5px;">POINTED TO SHADOW</div>
+                </div>
+            </div>
+
+            <div></div>
+
+            <div class="panel">
+                <div class="stat-lbl" style="margin-bottom: 15px;">Pro-Rata Settlement</div>
+                <div style="margin-bottom: 20px;">
+                    <div class="stat-lbl">Your Reward Share (Est)</div>
+                    <div class="stat-val" style="color:var(--term); font-size: 1.5rem;" id="reward-share">0.0000 BCH</div>
+                </div>
+                
+                <div class="stat-lbl">Network Peers</div>
+                <div style="font-size: 0.7rem; color: #444; margin-top: 5px;">
+                    <div style="display:flex; justify-content:space-between;"><span>drfrost.frostchain</span><span>Active</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>newkirk.settle</span><span>Mining</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>alpha.theta</span><span>Synced</span></div>
+                </div>
+
+                <div id="log">
+                    <div>> Rewards calculated by hashrate...</div>
+                    <div>> 1.05x efficiency override active...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer" style="padding: 0 40px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display:flex; align-items:center; justify-content:space-between; font-size: 0.6rem; color: #444;">
+            <div>FROSTMINER // IDENTITY_AUTH_ACTIVE // NEWKIRK MINER SYNC</div>
+            <div>STATUS: ONLINE</div>
+        </div>
+    </div>
+
+    <script>
+        let reward = 0;
+        
+        function login() {
+            const user = document.getElementById('username').value;
+            if(!user.includes('.frostchain')) {
+                document.getElementById('login-msg').innerText = "ERROR: INVALID_FROST_ID";
+                document.getElementById('login-msg').style.color = "var(--xmr)";
+                return;
+            }
+
+            document.getElementById('login-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('disp-id').innerText = user.toUpperCase();
+                const dash = document.getElementById('dashboard');
+                dash.style.display = 'grid';
+                setTimeout(() => dash.style.opacity = '1', 50);
+                initTangle(); drawTangle();
+            }, 800);
+        }
+
+        setInterval(() => {
+            const hash = 842.11 + (Math.random() - 0.5) * 10;
+            document.getElementById('total-hash').innerText = hash.toFixed(2) + " PH/s";
+            
+            // Pro-Rata Reward Splitting Logic
+            // Split = (Hashrate * Quorum_Override) - 13.37% Bleed
+            reward += (hash * 0.00000001) * 1.05 * 0.8663;
+            document.getElementById('reward-share').innerText = reward.toFixed(8) + " BCH";
+        }, 2000);
+
+        // --- QUANTUM TANGLE VISUALS ---
+        const canvas = document.getElementById('tangle-canvas');
+        const x = canvas.getContext('2d');
+        let pts = [];
+        function initTangle() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            for(let i=0; i<80; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.2, vy: (Math.random()-0.5)*0.2 });
+        }
+        function drawTangle() {
+            x.clearRect(0,0,canvas.width,canvas.height);
+            pts.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                pts.slice(i+1).forEach(p2 => {
+                    const d = Math.hypot(p.x-p2.x, p.y-p2.y);
+                    if(d < 180) {
+                        x.strokeStyle = `rgba(0,255,255,${0.1 * (1-d/180)})`;
+                        x.beginPath(); x.moveTo(p.x,p.y); x.lineTo(p2.x,p2.y); x.stroke();
+                    }
+                });
+            });
+            requestAnimationFrame(drawTangle);
+        }
+        window.onresize = initTangle;
+    </script>
+</body>
+</html>

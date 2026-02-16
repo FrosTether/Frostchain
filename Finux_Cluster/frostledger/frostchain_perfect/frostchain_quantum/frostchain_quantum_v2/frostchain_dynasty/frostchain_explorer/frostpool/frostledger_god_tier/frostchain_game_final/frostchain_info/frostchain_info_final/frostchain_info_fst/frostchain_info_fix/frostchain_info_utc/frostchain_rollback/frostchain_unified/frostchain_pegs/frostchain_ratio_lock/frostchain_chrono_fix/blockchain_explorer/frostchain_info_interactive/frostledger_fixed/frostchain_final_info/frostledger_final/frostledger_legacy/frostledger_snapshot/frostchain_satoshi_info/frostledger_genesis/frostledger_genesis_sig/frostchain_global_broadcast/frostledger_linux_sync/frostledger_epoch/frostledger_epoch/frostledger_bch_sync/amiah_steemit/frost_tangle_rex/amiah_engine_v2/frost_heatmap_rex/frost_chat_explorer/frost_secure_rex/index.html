@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOTA REX // CRYPTO_FROST</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #000; --core: #00e0ff; --gold: #ffd700; --warn: #ff0055; --cryo: #b0f2ff; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; margin: 0; height: 100vh; display: grid; grid-template-columns: 1fr 400px; }
+
+/* TANGLE VIEW */
+.main-view { position: relative; border-right: 1px solid #222; overflow: hidden; }
+canvas { width: 100%; height: 100%; filter: blur(0.5px); }
+
+/* CRYO TERMINAL */
+.terminal { background: #050505; display: flex; flex-direction: column; border-left: 1px solid #111; }
+.term-header { background: #111; border-bottom: 2px solid var(--cryo); padding: 15px; font-size: 11px; display: flex; justify-content: space-between; }
+.fotr-status { color: var(--cryo); text-shadow: 0 0 5px var(--cryo); animation: pulse 2s infinite; }
+
+.chat-log { flex-grow: 1; padding: 15px; overflow-y: auto; font-size: 10px; background: linear-gradient(180deg, #050505 0%, #000 100%); }
+.packet { margin-bottom: 15px; border-left: 1px solid #333; padding-left: 10px; }
+.hex-data { color: #444; font-size: 8px; overflow-wrap: break-word; margin-top: 4px; }
+.tag { font-weight: bold; margin-bottom: 2px; }
+
+/* INPUT */
+.input-area { background: #0a0a0a; border-top: 1px solid #222; padding: 20px; }
+.compression-bar { height: 2px; background: #222; width: 100%; margin-bottom: 10px; position: relative; }
+.compression-fill { height: 100%; background: var(--cryo); width: 0%; transition: width 0.3s; }
+input { background: #000; border: 1px solid #333; color: var(--cryo); width: 100%; padding: 12px; font-family: inherit; font-size: 12px; }
+
+@keyframes pulse { 50% { opacity: 0.5; } }
+</style>
+</head>
+<body onload="init()">
+
+<div class="main-view">
+  <canvas id="tangle"></canvas>
+  <div style="position:absolute; top:20px; left:20px; background:rgba(0,0,0,0.8); padding:15px; border:1px solid var(--cryo);">
+    <div style="font-size: 9px; color: #555;">IOTA REX HEIGHT</div>
+    <div style="font-size: 24px; color: #fff;">937,783</div>
+    <div style="color: var(--gold); font-size: 10px;">FNR_PROTOCOL: ENABLED</div>
+  </div>
+</div>
+
+<div class="terminal">
+  <div class="term-header">
+    <span>FROST_COMPRESSION_ENGINE_V4</span>
+    <span class="fotr-status">● FROZEN_OTR</span>
+  </div>
+  <div class="chat-log" id="log">
+    <div class="packet">
+      <div class="tag" style="color:var(--gold)">[ARCHITECT_GENESIS]</div>
+      <div style="color:#eee">Establishing FNR-Encrypted Signal...</div>
+    </div>
+  </div>
+  <div class="input-area">
+    <div class="compression-bar"><div class="compression-fill" id="c-fill"></div></div>
+    <input type="text" id="userInput" placeholder="TYPE MESSAGE TO COMPRESS & FREEZE..." onkeypress="handleKey(event)" oninput="showCompression()">
+  </div>
+</div>
+
+<script>
+function init() {
+  const c = document.getElementById('tangle'); const ctx = c.getContext('2d');
+  c.width = c.parentElement.clientWidth; c.height = c.parentElement.clientHeight;
+  let nodes = []; for(let i=0; i<45; i++) nodes.push({x:Math.random()*c.width, y:Math.random()*c.height, vx:Math.random()-0.5, vy:Math.random()-0.5});
+  function draw() {
+    ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,c.width,c.height);
+    ctx.strokeStyle = "rgba(176, 242, 255, 0.15)";
+    nodes.forEach(n => {
+      n.x += n.vx; n.y += n.vy;
+      if(n.x<0||n.x>c.width) n.vx*=-1; if(n.y<0||n.y>c.height) n.vy*=-1;
+      nodes.forEach(n2 => {
+        if(Math.hypot(n.x-n2.x, n.y-n2.y) < 160) {
+          ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n2.x, n2.y); ctx.stroke();
+        }
+      });
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function showCompression() {
+  const val = document.getElementById('userInput').value;
+  const fill = document.getElementById('c-fill');
+  fill.style.width = Math.min(val.length * 5, 100) + "%";
+}
+
+function handleKey(e) { if(e.key === 'Enter') freezeMessage(); }
+
+function freezeMessage() {
+  const input = document.getElementById('userInput');
+  const log = document.getElementById('log');
+  if(!input.value) return;
+
+  const hex = Array.from(input.value).map(c => c.charCodeAt(0).toString(16)).join('');
+  const compressed = hex.substr(0, 16) + "..."; // Visual Frost Compression
+
+  const pack = document.createElement('div');
+  pack.className = 'packet';
+  pack.innerHTML = `
+    <div class="tag" style="color:var(--cryo)">[ARCHITECT]</div>
+    <div style="color:#fff">${input.value}</div>
+    <div class="hex-data">FNR_ENC: ${hex} | COMPRESSED: ${compressed}</div>
+  `;
+  
+  log.appendChild(pack);
+  log.scrollTop = log.scrollHeight;
+  input.value = '';
+  document.getElementById('c-fill').style.width = "0%";
+
+  // Simulate Tangle Response
+  setTimeout(() => {
+    const r = document.createElement('div');
+    r.className = 'packet';
+    r.innerHTML = `<div class="tag" style="color:#555">[RIG_NODE]</div><div style="color:#888">Packet Fragment Received (OTR). Fragment Refrozen.</div>`;
+    log.appendChild(r);
+    log.scrollTop = log.scrollHeight;
+  }, 1500);
+}
+</script>
+</body>
+</html>

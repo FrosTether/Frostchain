@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FROSTCHAIN // RATIO_LOCKED</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { 
+  --core: #00fbff; --gold: #ffd700; --bch: #8dc351; --doge: #ba9f33; 
+  --frst: #ffffff; --fnr: #ff6600; --ico: #ff0055;
+  --bg: #020202; --panel: #0a0a0a; --border: #1a1a1a; 
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; font-size: 12px; }
+
+.nav { background: #000; border-bottom: 2px solid var(--core); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+.brand { font-size: 1.4em; color: var(--core); letter-spacing: 2px; font-weight: bold; }
+.ratio-tag { color: var(--gold); font-size: 10px; border: 1px solid var(--gold); padding: 3px 8px; }
+
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; display: grid; gap: 20px; }
+
+/* PRICE TILES */
+.price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+.card { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-left: 4px solid #333; }
+
+.card.frst { border-left-color: var(--frst); }
+.card.fnr { border-left-color: var(--fnr); }
+.card.ftc { border-left-color: var(--ico); }
+
+.lbl { font-size: 10px; color: #666; letter-spacing: 1px; margin-bottom: 10px; }
+.val { font-size: 2.2em; color: #fff; font-weight: bold; }
+.formula { font-size: 10px; color: #888; margin-top: 15px; border-top: 1px solid #222; padding-top: 10px; }
+
+/* RECENT LEDGER */
+.ledger-view { background: var(--panel); border: 1px solid var(--border); padding: 20px; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th { text-align: left; padding: 10px; background: #000; color: #555; font-size: 9px; }
+td { padding: 10px; border-bottom: 1px solid #111; font-family: monospace; font-size: 11px; }
+
+@keyframes flash { 50% { opacity: 0.5; } }
+.live { color: var(--core); animation: flash 1s infinite; margin-left: 5px; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="brand">FROSTCHAIN // UNIFIED_EXPLORER</div>
+  <div class="ratio-tag">1 DOGE = 3.1459 FRST</div>
+</div>
+
+<div class="container">
+  
+  <div class="price-grid">
+    <div class="card frst">
+      <div class="lbl">FRST (FROST TOKEN) <span class="live">● LIVE PEG</span></div>
+      <div class="val" id="frst-p">$0.0000</div>
+      <div class="formula">
+        PEG: <span style="color:var(--doge)">DOGE MARKET</span> / <span style="color:var(--gold)">3.1459</span><br>
+        CURRENT DOGE: <span id="doge-p">$0.0000</span>
+      </div>
+    </div>
+
+    <div class="card fnr">
+      <div class="lbl">FNR (NETWORK RESOURCE)</div>
+      <div class="val">$455.00</div>
+      <div class="formula">
+        PEG: <span style="color:var(--bch)">BCH ICO HISTORIC</span><br>
+        STATUS: NETWORK GAS LIQUIDITY SECURED
+      </div>
+    </div>
+
+    <div class="card ftc">
+      <div class="lbl">FTC (FROST TOKEN COIN)</div>
+      <div class="val">$1.00</div>
+      <div class="formula">
+        ICO BASELINE: <span style="color:var(--ico)">$1.00 USD</span><br>
+        MINING YIELD: 13.37 FTC / 300s
+      </div>
+    </div>
+  </div>
+
+  <div class="ledger-view">
+    <div style="color:var(--core); font-size:14px; margin-bottom:10px;">>> NETWORK LEDGER (UTC_SYNC)</div>
+    <table>
+      <thead><tr><th>HEIGHT</th><th>CHAIN</th><th>REWARD</th><th>TIME (UTC)</th><th>STATUS</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+const RATIO = 3.1459;
+let dogeBase = 0.0815;
+
+function updateEconomics() {
+  // Simulate live DOGE movement
+  let currentDoge = dogeBase + (Math.random() * 0.002 - 0.001);
+  let currentFrst = currentDoge / RATIO;
+
+  document.getElementById('doge-p').innerText = "$" + currentDoge.toFixed(4);
+  document.getElementById('frst-p').innerText = "$" + currentFrst.toFixed(4);
+}
+
+// LEDGER SIM
+let h = 1675400;
+function addBlock() {
+  const tbody = document.getElementById('rows');
+  const tr = document.createElement('tr');
+  const now = new Date().toUTCString().split(' ')[4];
+  
+  tr.innerHTML = `
+    <td style="color:#fff">${h}</td>
+    <td style="color:var(--core)">FST_BLOCK</td>
+    <td>13.37 FTC</td>
+    <td>${now}</td>
+    <td style="color:var(--bch)">CONFIRMED</td>
+  `;
+  tbody.prepend(tr);
+  if(tbody.children.length > 8) tbody.removeChild(tbody.lastChild);
+  h++;
+}
+
+setInterval(updateEconomics, 2000);
+setInterval(addBlock, 6000);
+updateEconomics();
+addBlock();
+
+</script>
+</body>
+</html>

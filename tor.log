@@ -1,18 +1,38 @@
-Feb 09 11:51:16.756 [notice] Tor 0.4.8.22 running on Linux with Libevent 2.1.12-stable, OpenSSL 3.6.1, Zlib 1.3.1, Liblzma 5.8.2, Libzstd N/A and Unknown N/A as libc.
-Feb 09 11:51:16.757 [notice] Tor can't help you if you use it wrong! Learn how to be safe at https://support.torproject.org/faq/staying-anonymous/
-Feb 09 11:51:16.758 [notice] Read configuration file "/data/data/com.termux/files/usr/etc/tor/torrc".
-Feb 09 11:51:16.761 [notice] Opening Socks listener on 127.0.0.1:9050
-Feb 09 11:51:16.761 [notice] Opened Socks listener connection (ready) on 127.0.0.1:9050
-Feb 09 11:51:16.000 [notice] Parsing GEOIP IPv4 file /data/data/com.termux/files/usr/share/tor/geoip.
-Feb 09 11:51:16.000 [notice] Parsing GEOIP IPv6 file /data/data/com.termux/files/usr/share/tor/geoip6.
-Feb 09 11:51:17.000 [notice] Set list of supported TLS groups to: ?*X25519MLKEM768 / ?SecP256r1MLKEM768 / *P-256:?X25519:P-224
-Feb 09 11:51:17.000 [notice] Bootstrapped 0% (starting): Starting
-Feb 09 11:51:17.000 [notice] Starting with guard context "default"
-Feb 09 11:51:18.000 [notice] Bootstrapped 5% (conn): Connecting to a relay
-Feb 09 11:51:18.000 [notice] Bootstrapped 10% (conn_done): Connected to a relay
-Feb 09 11:51:18.000 [notice] Bootstrapped 14% (handshake): Handshaking with a relay
-Feb 09 11:51:19.000 [notice] Bootstrapped 15% (handshake_done): Handshake with a relay done
-Feb 09 11:51:19.000 [notice] Bootstrapped 75% (enough_dirinfo): Loaded enough directory info to build circuits
-Feb 09 11:51:19.000 [notice] Bootstrapped 90% (ap_handshake_done): Handshake finished with a relay to build circuits
-Feb 09 11:51:19.000 [notice] Bootstrapped 95% (circuit_create): Establishing a Tor circuit
-Feb 09 11:51:19.000 [notice] Bootstrapped 100% (done): Done
+Feb 14 18:17:02.853 [notice] Tor 0.4.8.22 running on Linux with Libevent 2.1.12-stable, OpenSSL 3.6.1, Zlib 1.3.1, Liblzma 5.8.2, Libzstd N/A and Unknown N/A as libc.
+Feb 14 18:17:02.853 [notice] Tor can't help you if you use it wrong! Learn how to be safe at https://support.torproject.org/faq/staying-anonymous/
+Feb 14 18:17:02.854 [notice] Read configuration file "/data/data/com.termux/files/usr/etc/tor/torrc".
+Feb 14 18:17:02.856 [notice] Opening Socks listener on 127.0.0.1:9050
+Feb 14 18:17:02.856 [notice] Opened Socks listener connection (ready) on 127.0.0.1:9050
+Feb 14 18:17:02.000 [notice] Parsing GEOIP IPv4 file /data/data/com.termux/files/usr/share/tor/geoip.
+Feb 14 18:17:03.000 [notice] Parsing GEOIP IPv6 file /data/data/com.termux/files/usr/share/tor/geoip6.
+Feb 14 18:17:03.000 [notice] Set list of supported TLS groups to: ?*X25519MLKEM768 / ?SecP256r1MLKEM768 / *P-256:?X25519:P-224
+Feb 14 18:17:03.000 [notice] Bootstrapped 0% (starting): Starting
+Feb 14 18:17:04.000 [notice] Starting with guard context "default"
+Feb 14 18:17:05.000 [notice] Bootstrapped 5% (conn): Connecting to a relay
+Feb 14 18:17:05.000 [notice] Bootstrapped 10% (conn_done): Connected to a relay
+Feb 14 18:17:05.000 [notice] Bootstrapped 14% (handshake): Handshaking with a relay
+Feb 14 18:17:05.000 [notice] Bootstrapped 15% (handshake_done): Handshake with a relay done
+Feb 14 18:17:05.000 [notice] Bootstrapped 75% (enough_dirinfo): Loaded enough directory info to build circuits
+Feb 14 18:17:05.000 [notice] Bootstrapped 90% (ap_handshake_done): Handshake finished with a relay to build circuits
+Feb 14 18:17:05.000 [notice] Bootstrapped 95% (circuit_create): Establishing a Tor circuit
+Feb 14 18:17:05.000 [notice] Bootstrapped 100% (done): Done
+Feb 14 19:04:39.000 [notice] Our IP address has changed.  Rotating keys...
+Feb 14 19:08:24.000 [notice] Guard e40 ($0244BAB61C42B4279D6B465937DBD3431F0F2ED1) is failing more circuits than usual. Most likely this means the Tor network is overloaded. Success counts are 89/151. Use counts are 1/1. 149 circuits completed, 0 were unusable, 60 collapsed, and 117 timed out. For reference, your timeout cutoff is 60 seconds.
+Feb 14 19:09:24.000 [warn] Guard e40 ($0244BAB61C42B4279D6B465937DBD3431F0F2ED1) is failing a very large amount of circuits. Most likely this means the Tor network is overloaded, but it could also mean an attack against you or potentially the guard itself. Success counts are 90/181. Use counts are 1/1. 179 circuits completed, 0 were unusable, 89 collapsed, and 146 timed out. For reference, your timeout cutoff is 60 seconds.
+Feb 15 00:17:05.000 [notice] Heartbeat: Tor's uptime is 6:00 hours, with 23 circuits open. I've sent 5.24 MB and received 4.72 MB. I've received 0 connections on IPv4 and 0 on IPv6. I've made 31 connections with IPv4 and 0 with IPv6.
+Feb 15 00:17:05.000 [notice] While not bootstrapping, fetched this many bytes: 70192 (consensus network-status fetch); 126862 (microdescriptor fetch)
+Feb 15 00:17:05.000 [notice] Heartbeat: Our onion service received 0 v3 INTRODUCE2 cells and attempted to launch 0 rendezvous circuits.
+Feb 15 01:05:28.000 [notice] Your network connection speed appears to have changed. Resetting timeout to 60000ms after 18 timeouts and 1000 buildtimes.
+Feb 15 06:17:05.000 [notice] Heartbeat: Tor's uptime is 12:00 hours, with 14 circuits open. I've sent 9.34 MB and received 12.22 MB. I've received 0 connections on IPv4 and 0 on IPv6. I've made 40 connections with IPv4 and 0 with IPv6.
+Feb 15 06:17:05.000 [notice] While not bootstrapping, fetched this many bytes: 848747 (consensus network-status fetch); 1775 (authority cert fetch); 3279590 (microdescriptor fetch)
+Feb 15 06:17:05.000 [notice] Heartbeat: Our onion service received 0 v3 INTRODUCE2 cells and attempted to launch 0 rendezvous circuits.
+Feb 15 12:17:05.000 [notice] Heartbeat: Tor's uptime is 18:00 hours, with 15 circuits open. I've sent 13.37 MB and received 16.16 MB. I've received 0 connections on IPv4 and 0 on IPv6. I've made 40 connections with IPv4 and 0 with IPv6.
+Feb 15 12:17:05.000 [notice] While not bootstrapping, fetched this many bytes: 896593 (consensus network-status fetch); 1775 (authority cert fetch); 3466169 (microdescriptor fetch)
+Feb 15 12:17:05.000 [notice] Heartbeat: Our onion service received 0 v3 INTRODUCE2 cells and attempted to launch 0 rendezvous circuits.
+Feb 15 13:35:16.000 [notice] Our IP address has changed.  Rotating keys...
+Feb 15 18:17:05.000 [notice] Heartbeat: Tor's uptime is 1 day 0:00 hours, with 23 circuits open. I've sent 18.60 MB and received 20.35 MB. I've received 0 connections on IPv4 and 0 on IPv6. I've made 60 connections with IPv4 and 0 with IPv6.
+Feb 15 18:17:05.000 [notice] While not bootstrapping, fetched this many bytes: 944379 (consensus network-status fetch); 1775 (authority cert fetch); 3778900 (microdescriptor fetch)
+Feb 15 18:17:05.000 [notice] Heartbeat: Our onion service received 0 v3 INTRODUCE2 cells and attempted to launch 0 rendezvous circuits.
+Feb 16 00:17:05.000 [notice] Heartbeat: Tor's uptime is 1 day 6:00 hours, with 15 circuits open. I've sent 21.96 MB and received 23.39 MB. I've received 0 connections on IPv4 and 0 on IPv6. I've made 65 connections with IPv4 and 0 with IPv6.
+Feb 16 00:17:05.000 [notice] While not bootstrapping, fetched this many bytes: 985844 (consensus network-status fetch); 3554 (authority cert fetch); 3889737 (microdescriptor fetch)
+Feb 16 00:17:05.000 [notice] Heartbeat: Our onion service received 0 v3 INTRODUCE2 cells and attempted to launch 0 rendezvous circuits.

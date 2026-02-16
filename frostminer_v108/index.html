@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostMiner | Alpha Theta Delta</title>
+    <style>
+        :root { 
+            --bg: #010105; --ice: #00ffff; --term: #00ff41; --xmr: #ff6600; 
+            --alpha: #ff00ff; --theta: #00ffff; --delta: #ffff00;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; }
+
+        /* QUANTUM TANGLE BACKGROUND */
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.6; filter: blur(1px); }
+        .quantum-pulse { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle, rgba(0,255,255,0.05) 0%, transparent 80%); }
+
+        /* DASHBOARD LAYOUT */
+        #dashboard { width: 100%; height: 100vh; display: grid; grid-template-rows: 90px 1fr 50px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--ice); }
+        .main { display: grid; grid-template-columns: 420px 1fr 420px; gap: 20px; padding: 20px; overflow: hidden; }
+
+        /* OVERLAY PANEL */
+        .panel { background: rgba(5, 10, 20, 0.9); border: 1px solid rgba(255,255,255,0.05); padding: 25px; border-radius: 24px; backdrop-filter: blur(20px); }
+        .stat-val { font-size: 2.2rem; font-weight: 900; color: #fff; }
+        .stat-lbl { font-size: 0.6rem; color: #666; letter-spacing: 3px; text-transform: uppercase; }
+
+        /* WAVE OSCILLATORS */
+        .wave-box { border: 1px solid #333; padding: 10px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .wave-pulse { width: 40px; height: 10px; background: #222; border-radius: 5px; overflow: hidden; position: relative; }
+        .wave-fill { height: 100%; width: 50%; position: absolute; transition: transform 0.1s; }
+
+        /* JOEY BONES BOT */
+        .dice-box { text-align: center; border: 2px solid var(--ice); padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 0 20px var(--ice); }
+        .dice { font-size: 3rem; color: var(--ice); cursor: pointer; display: inline-block; }
+
+        #log { margin-top: auto; font-size: 0.55rem; color: #444; height: 120px; overflow: hidden; border-top: 1px solid #222; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="quantum-pulse"></div>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="stat-lbl">Quantum Settlement Engine</div>
+                <div style="font-size: 1.5rem; font-weight: 900; letter-spacing: 6px;">ALPHA_THETA_DELTA</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="stat-lbl" style="color:var(--term);">DRAKE QUORUM x1.05 ACTIVE</div>
+                <div class="stat-val" style="font-size: 1.8rem;">842.11 PH/s</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="stat-lbl" style="color:var(--ice); margin-bottom: 15px;">Neural Sync Status</div>
+                <div class="wave-box"><span>ALPHA (10Hz)</span><div class="wave-pulse"><div class="wave-fill" style="background:var(--alpha); animation: wave 1s infinite;"></div></div></div>
+                <div class="wave-box"><span>THETA (6Hz)</span><div class="wave-pulse"><div class="wave-fill" style="background:var(--theta); animation: wave 1.5s infinite;"></div></div></div>
+                <div class="wave-box"><span>DELTA (2Hz)</span><div class="wave-pulse"><div class="wave-fill" style="background:var(--delta); animation: wave 3s infinite;"></div></div></div>
+                
+                <div style="margin-top: 20px; border: 1px solid var(--xmr); padding: 15px; border-radius: 12px; background: rgba(255,102,0,0.05); text-align: center;">
+                    <div class="stat-lbl" style="color:var(--xmr)">13.37% Shadow Diversion</div>
+                    <div style="font-size: 1.5rem; color: var(--xmr); font-weight: 900;">ACTIVE</div>
+                </div>
+            </div>
+
+            <div></div> <div class="panel">
+                <div class="stat-lbl" style="margin-bottom: 15px;">Joey Bones Dice Bot</div>
+                <div class="dice-box"><div id="dice" class="dice" onclick="roll()">5</div></div>
+                
+                <div class="stat-group">
+                    <div class="stat-lbl">XMR Settlement Vault</div>
+                    <div class="stat-val" style="color:var(--xmr); font-size: 1.5rem;" id="xmr-val">0.00026961</div>
+                </div>
+
+                <div id="log">
+                    <div>> Newkirk Miners synced to Quantum Overlay.</div>
+                    <div>> 13.37% Bleed confirmed on drfrost key.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer" style="padding: 0 40px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display:flex; align-items:center; justify-content:space-between; font-size: 0.6rem; color: #444;">
+            <div>FROSTMINER // v108.0 // ALPHA_THETA_DELTA OVERLAY // CONVERGED</div>
+            <div>STATUS: IRREVERSIBLE</div>
+        </div>
+    </div>
+
+    <script>
+        let xmr = 0.00026961;
+        function roll() {
+            const r = Math.floor(Math.random() * 6) + 1;
+            document.getElementById('dice').innerText = r;
+            const log = document.getElementById('log');
+            const d = document.createElement('div');
+            d.innerText = `> Quantum Roll: ${r} // Drake Quorum x1.05 Applied.`;
+            d.style.color = "var(--term)";
+            log.prepend(d);
+        }
+        setInterval(() => {
+            xmr += 0.00000001;
+            document.getElementById('xmr-val').innerText = xmr.toFixed(8);
+        }, 1000);
+        
+        // Tangle Logic (Same as v107)
+        const canvas = document.getElementById('tangle-canvas');
+        const x = canvas.getContext('2d');
+        let pts = [];
+        function init() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            for(let i=0; i<100; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.2, vy: (Math.random()-0.5)*0.2 });
+        }
+        function draw() {
+            x.clearRect(0,0,canvas.width,canvas.height);
+            pts.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                pts.slice(i+1).forEach(p2 => {
+                    const d = Math.hypot(p.x-p2.x, p.y-p2.y);
+                    if(d < 200) {
+                        x.strokeStyle = `rgba(0,255,255,${0.1 * (1-d/200)})`;
+                        x.beginPath(); x.moveTo(p.x,p.y); x.lineTo(p2.x,p2.y); x.stroke();
+                    }
+                });
+            });
+            requestAnimationFrame(draw);
+        }
+        init(); draw();
+    </script>
+</body>
+</html>

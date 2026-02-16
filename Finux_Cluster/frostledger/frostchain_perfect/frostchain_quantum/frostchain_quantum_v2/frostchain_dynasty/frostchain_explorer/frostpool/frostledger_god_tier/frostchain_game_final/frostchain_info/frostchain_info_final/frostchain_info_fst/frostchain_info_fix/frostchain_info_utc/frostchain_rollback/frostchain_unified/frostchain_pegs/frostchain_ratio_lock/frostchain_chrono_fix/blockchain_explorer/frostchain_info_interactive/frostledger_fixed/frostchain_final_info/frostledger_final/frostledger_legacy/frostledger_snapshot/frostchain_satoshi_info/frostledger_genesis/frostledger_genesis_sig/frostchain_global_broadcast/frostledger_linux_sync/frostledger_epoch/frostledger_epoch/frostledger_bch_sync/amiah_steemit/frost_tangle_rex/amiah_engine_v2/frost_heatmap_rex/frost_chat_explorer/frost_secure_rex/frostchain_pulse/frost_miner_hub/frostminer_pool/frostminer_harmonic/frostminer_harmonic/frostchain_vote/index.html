@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOTA REZ // QUANTUM_MIXINS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #000; --core: #00e0ff; --gold: #ffd700; --mixin: #ff4500; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; overflow: hidden; height: 100vh; margin: 0; }
+
+/* THE HUM */
+body::before {
+  content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, rgba(0, 224, 255, 0.04) 0px, transparent 2px);
+  background-size: 100% 4px; pointer-events: none; z-index: 100; animation: v 0.1s infinite;
+}
+@keyframes v { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1px); } }
+
+canvas { display: block; filter: contrast(120%) brightness(80%); }
+
+.overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 30px; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
+.panel { background: rgba(0,0,0,0.9); border-left: 3px solid var(--mixin); padding: 20px; width: 350px; }
+.audio-btn { background: var(--mixin); color: #fff; border: none; padding: 10px; font-family: inherit; font-weight: bold; cursor: pointer; pointer-events: auto; width: 100%; margin-top: 10px; box-shadow: 0 0 10px var(--mixin); }
+.status { font-size: 10px; color: #555; margin-top: 15px; }
+.footer { background: rgba(0,0,0,0.95); padding: 15px; border-top: 1px solid var(--gold); font-size: 11px; color: #888; pointer-events: auto; }
+</style>
+</head>
+<body onload="init()">
+<canvas id="rez"></canvas>
+<div class="overlay">
+  <div class="panel">
+    <div style="font-size: 9px; color: var(--gold);">FNR_MINTING_LOGIC: QUANTUM_MIXINS</div>
+    <div style="font-size: 20px; color: #fff; margin: 5px 0;">BLOCK: <span id="height">937,783</span></div>
+    <div style="font-size: 14px; color: var(--mixin);">ACTIVE TONE: <span id="tone">...</span></div>
+    <button id="btn" class="audio-btn" onclick="toggle()">INITIALIZE HARMONICS</button>
+    <div class="status">
+      L_OFFSET: 11.11Hz | R_OFFSET: 7.83Hz + 40Hz<br>
+      CARRIER: 432Hz (Pure IOTA)
+    </div>
+  </div>
+
+  <div class="footer">
+    <span style="color:var(--gold);">82 MONTHS SERVED.</span> "Satoshi key was the shield. Support the Restoration: bitcoincash:pr2a6fcv7usyq97eh9an0782x9txdzwl0y30mz7gup"
+  </div>
+</div>
+
+<script>
+let ctx, oscs = [];
+const solfeggios = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+const names = ["Foundation", "Cognition", "Liberation", "Change", "Transformation", "Connection", "Solutions", "Intuition", "Consciousness"];
+
+function toggle() {
+    if (!ctx) {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const block = 937783;
+        const currentTone = solfeggios[block % 9];
+        document.getElementById('tone').innerText = currentTone + "Hz (" + names[block % 9] + ")";
+        
+        // Carrier & Mixin
+        createOsc(432, 0, 0.15); // IOTA Base
+        createOsc(currentTone, 0, 0.1); // Block Mixin
+        
+        // Binaural Stack
+        createOsc(11.11, -1, 0.2); // Left
+        createOsc(7.83, 1, 0.2);  // Right
+        createOsc(40, 1, 0.1);    // Right Gamma
+        
+        document.getElementById('btn').innerText = "MIXINS_SYNCED";
+    } else {
+        ctx.state === 'running' ? ctx.suspend() : ctx.resume();
+    }
+}
+
+function createOsc(f, p, v) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    const pan = ctx.createStereoPanner();
+    o.frequency.value = f; g.gain.value = v; pan.pan.value = p;
+    o.connect(g).connect(pan).connect(ctx.destination);
+    o.start();
+}
+
+function init() {
+    const c = document.getElementById('rez'); const x = c.getContext('2d');
+    c.width = window.innerWidth; c.height = window.innerHeight;
+    let n = []; for(let i=0; i<50; i++) n.push({x:Math.random()*c.width, y:Math.random()*c.height, vx:Math.random()-0.5, vy:Math.random()-0.5});
+    function d() {
+        x.fillStyle = "rgba(0,0,0,0.1)"; x.fillRect(0,0,c.width,c.height);
+        x.strokeStyle = "rgba(0, 224, 255, 0.2)";
+        n.forEach(p => {
+            p.x += p.vx; p.y += p.vy;
+            if(p.x<0||p.x>c.width) p.vx*=-1; if(p.y<0||p.y>c.height) p.vy*=-1;
+            n.forEach(p2 => { if(Math.hypot(p.x-p2.x, p.y-p2.y) < 150) { x.beginPath(); x.moveTo(p.x, p.y); x.lineTo(p2.x, p2.y); x.stroke(); }});
+        });
+        requestAnimationFrame(d);
+    }
+    d();
+}
+</script>
+</body>
+</html>

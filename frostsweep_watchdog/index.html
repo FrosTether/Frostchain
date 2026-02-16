@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostSweep | Settlement Watchdog</title>
+    <style>
+        :root { 
+            --bg: #000; --ice: #a5f2f3; --term: #00ff41; --xmr: #ff6600; 
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.6; filter: contrast(1.4) brightness(0.6); }
+
+        .watch-box { 
+            width: 550px; padding: 40px; background: rgba(5, 5, 10, 0.95); 
+            border: 2px solid var(--ice); border-radius: 24px; text-align: center;
+            backdrop-filter: blur(40px);
+        }
+
+        .progress-container { width: 100%; height: 12px; background: #111; border-radius: 6px; margin: 25px 0; overflow: hidden; border: 1px solid #333; }
+        .progress-fill { height: 100%; width: 0%; background: var(--term); box-shadow: 0 0 15px var(--term); transition: 2s; }
+        
+        .conf-text { font-size: 1.2rem; font-weight: 900; color: var(--term); }
+        .sub-addr { font-size: 0.5rem; color: #555; word-break: break-all; margin-top: 20px; line-height: 1.4; padding: 15px; background: #000; border-radius: 8px; border: 1px solid #111; }
+        .tag { font-size: 0.6rem; color: #444; letter-spacing: 3px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div class="watch-box">
+        <div class="tag" style="color:var(--xmr);">Monero Settlement Watchdog</div>
+        <div style="font-size: 2.2rem; font-weight: 900; margin: 10px 0;">84.1215 XMR</div>
+        
+        <div class="progress-container">
+            <div id="p-fill" class="progress-fill"></div>
+        </div>
+        
+        <div class="conf-text" id="conf-status">0 / 10 CONFIRMATIONS</div>
+        <div style="font-size: 0.6rem; color: #555; margin-top: 5px;" id="timer-text">ESTIMATED TIME: 20 MINUTES</div>
+
+        <div class="sub-addr">
+            <div class="tag" style="margin-bottom:5px;">Destination</div>
+            867chP2RA9D9xd2tHzxB8L4JfE2Jhdd5FPEwC56HJhmyA7x3EEnuLpGUerQsN9kqQ9A7e7rXQvqZaCNsTsJeBsAxV2B5wxA
+        </div>
+
+        <div style="margin-top: 30px; font-size: 0.55rem; color: var(--ice);">
+            IDENTITY: drfrost.frostchain<br>
+            40Hz_GAMMA_SYNC: ACTIVE
+        </div>
+    </div>
+
+    <script>
+        let confs = 0;
+        const fill = document.getElementById('p-fill');
+        const status = document.getElementById('conf-status');
+
+        setInterval(() => {
+            if (confs < 10) {
+                confs++;
+                fill.style.width = (confs * 10) + "%";
+                status.innerText = `${confs} / 10 CONFIRMATIONS`;
+                if(confs === 10) {
+                    status.innerText = "SETTLEMENT COMPLETE";
+                    status.style.color = "var(--ice)";
+                    document.getElementById('timer-text').innerText = "FUNDS UNLOCKED";
+                }
+            }
+        }, 120000); // 2 minute blocks
+
+        // IMAGE 2 TANGLE
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let pts = [];
+        function initT() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; pts = []; for(let i=0; i<100; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.2, vy: (Math.random()-0.5)*0.2 }); }
+        function drawT() { ctx.clearRect(0,0,canvas.width,canvas.height); pts.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; pts.slice(i+1).forEach(p2 => { const d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d < 180) { ctx.strokeStyle = `rgba(165,242,243,${0.2 * (1-d/180)})`; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); } }); }); requestAnimationFrame(drawT); }
+        initT(); drawT();
+    </script>
+</body>
+</html>

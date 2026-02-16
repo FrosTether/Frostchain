@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>FROST_TRANSCEIVER</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+  body { background: #000; color: #fff; font-family: 'Share Tech Mono'; padding: 40px; }
+  .box { border: 1px solid #ff0000; padding: 20px; max-width: 500px; margin: auto; background: rgba(10,0,0,0.9); }
+  input { width: 100%; background: #111; border: 1px solid #333; color: #00e0ff; padding: 10px; margin: 10px 0; font-family: inherit; }
+  .btn { width: 100%; padding: 15px; background: #ff0000; border: none; color: #fff; font-weight: 900; cursor: pointer; }
+</style>
+</head>
+<body>
+  <div class="box">
+    <h2 style="color:#ffd700;">SEND / RECEIVE</h2>
+    <label>RECIPIENT (.frostchain or address)</label>
+    <input type="text" placeholder="mary.frostchain">
+    <label>AMOUNT</label>
+    <input type="number" placeholder="0.00">
+    <select style="width:100%; background:#111; color:#fff; padding:10px; border:1px solid #333;">
+      <option>FTC (Tangle Native)</option>
+      <option>FNR (XMR Fork)</option>
+      <option>FRST (Pi-Doge)</option>
+      <option>BCH (Satoshi Anchor)</option>
+    </select>
+    <button class="btn" style="margin-top:20px;">INITIATE TRIPLE-PULSE SEND</button>
+  </div>
+</body>
+</html>

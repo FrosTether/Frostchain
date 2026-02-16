@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frost ICO | Atomic Gateway</title>
+    <style>
+        :root { --bg: #000; --term: #33ff00; --gold: #ffd700; --doge: #ba9f33; --xmr: #ff6600; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; }
+        #app { max-width: 500px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+
+        .header { text-align: center; border-bottom: 2px solid var(--term); padding-bottom: 15px; }
+        .ico-card { background: #080808; border: 1px solid #222; padding: 20px; border-radius: 12px; text-align: center; }
+        
+        /* PAYMENT SELECTOR */
+        .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .pay-btn { background: #111; border: 1px solid #333; color: #888; padding: 12px; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 0.7rem; }
+        .pay-btn.active { border-color: #fff; color: #fff; background: #1a1a1a; }
+
+        /* ADDRESS BOX */
+        .address-box { background: #000; border: 1px dashed #444; padding: 15px; border-radius: 8px; margin-top: 10px; word-break: break-all; font-size: 0.7rem; color: #ccc; cursor: pointer; position: relative; }
+        .address-box::after { content: "CLICK TO COPY"; position: absolute; bottom: 2px; right: 5px; font-size: 0.5rem; color: #444; }
+
+        .price-tag { background: #111; padding: 10px; border-radius: 5px; margin: 10px 0; border: 1px solid #222; }
+        .btn-mint { background: var(--term); color: #000; border: none; width: 100%; padding: 18px; border-radius: 8px; font-weight: bold; text-transform: uppercase; cursor: pointer; margin-top: 15px; }
+        
+        .log { font-size: 0.6rem; color: #555; height: 80px; overflow-y: auto; border-top: 1px solid #111; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div style="font-weight:bold; font-size:1.3rem; color:var(--term);">FRSTICO GATEWAY</div>
+            <div style="font-size:0.6rem; color:#666; margin-top:5px;">OFFICIAL PREMINE DISTRIBUTION</div>
+        </div>
+
+        <div class="ico-card">
+            <div style="font-size:0.7rem; color:#888;">FTC UNIT PRICE</div>
+            <div style="font-size:1.8rem; font-weight:bold; color:var(--gold);">$18.23</div>
+            
+            <div class="pay-grid">
+                <button id="doge-tab" class="pay-btn active" onclick="setAsset('doge')">DOGE BRIDGE</button>
+                <button id="xmr-tab" class="pay-btn" onclick="setAsset('xmr')">XMR BRIDGE</button>
+            </div>
+
+            <div id="bridge-ui">
+                <div class="address-box" onclick="copyAddr()" id="addr">DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s</div>
+                <div style="font-size:0.6rem; color:#555; margin-top:10px;" id="rate">ESTIMATE: 100 DOGE ≈ 0.44 FTC</div>
+            </div>
+
+            <input type="number" id="amt" style="background:#000; border:1px solid #333; color:#fff; width:100%; padding:15px; margin-top:15px; box-sizing:border-box;" placeholder="Amount of FTC to Mint">
+            
+            <button class="btn-mint" onclick="initiateAtomic()">Initiate Atomic Swap</button>
+        </div>
+
+        <div class="log" id="log">
+            <div>> ICO Terminal Online. Waiting for Entropy.</div>
+            <div>> Syncing with kanefrostchain.surge.sh exchange...</div>
+        </div>
+    </div>
+
+    <script>
+        const ADDRS = {
+            doge: "DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s",
+            xmr: "4AEreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab"
+        };
+        const PRICES = { doge: 0.08, xmr: 329.12 }; // Fixed base for fair value calc
+        let activeAsset = 'doge';
+
+        function setAsset(asset) {
+            activeAsset = asset;
+            document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(asset + '-tab').classList.add('active');
+            document.getElementById('addr').innerText = ADDRS[asset];
+            updateRate();
+        }
+
+        function updateRate() {
+            const ftcPrice = 18.23;
+            const assetPrice = PRICES[activeAsset];
+            const ratio = (assetPrice / ftcPrice).toFixed(4);
+            document.getElementById('rate').innerText = `1 ${activeAsset.toUpperCase()} ≈ ${ratio} FTC`;
+        }
+
+        function copyAddr() {
+            const addr = document.getElementById('addr').innerText;
+            navigator.clipboard.writeText(addr);
+            alert("Bridge Address Copied to Clipboard.");
+        }
+
+        function initiateAtomic() {
+            const amt = document.getElementById('amt').value;
+            if(!amt) return;
+            const log = document.getElementById('log');
+            log.innerHTML += `<div style="color:var(--gold)">> Atomic Swap Locked: ${amt} FTC requested...</div>`;
+            log.innerHTML += `<div>> Awaiting confirmation on ${activeAsset.toUpperCase()} ledger...</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        updateRate();
+    </script>
+</body>
+</html>

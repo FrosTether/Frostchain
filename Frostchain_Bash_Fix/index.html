@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>FROST_WALLET // V84_STABLE</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#050505;--gold:#ffd700;--blue:#00e0ff;--pink:#ff69b4;--green:#0f0;}
+        body{background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;margin:0;display:flex;justify-content:center;align-items:center;height:100vh;}
+        #frame{width:100%;max-width:480px;background:#0d0d0d;border:2px solid var(--gold);padding:30px;border-radius:20px;text-align:center;box-shadow:0 0 60px rgba(255,215,0,0.15);}
+        h1{color:var(--gold);letter-spacing:2px;font-size:20px;margin:0 0 20px 0;}
+        .asset-row{display:flex;justify-content:space-between;background:#111;padding:15px;margin-bottom:10px;border:1px solid #222;cursor:pointer;transition:0.2s;}
+        .asset-row:hover{border-color:var(--blue);background:#1a1a1a;}
+        .name{font-weight:bold;color:var(--blue);}
+        .amt{color:#fff;}
+        .btn-mint{width:100%;padding:20px;background:var(--gold);color:#000;border:none;border-radius:12px;font-weight:bold;cursor:pointer;margin-top:20px;font-family:inherit;font-size:16px;box-shadow:0 0 20px rgba(255,215,0,0.3);}
+    </style>
+</head>
+<body>
+    <div id="frame">
+        <h1>LEDGER_MINTING_V84</h1>
+        <div style="font-size:10px;color:var(--pink);margin-bottom:20px;">ADMIN_ID: drfrost.frostchain</div>
+        
+        <div class="asset-row" onclick="sel('FTC', '12,370,000')">
+            <span class="name">FTC</span><span class="amt">12,370,000</span>
+        </div>
+        <div class="asset-row" onclick="sel('FNR', '4,412,100')">
+            <span class="name">FNR</span><span class="amt">4,412,100 (13.37%)</span>
+        </div>
+        <div class="asset-row" onclick="sel('FRST', '13.37%')">
+            <span class="name">FRST</span><span class="amt">13.37%_SUPPLY</span>
+        </div>
+        <div class="asset-row" onclick="sel('AMD', '3.37%')">
+            <span class="name">AMD</span><span class="amt">3.37%_SUPPLY</span>
+        </div>
+
+        <button class="btn-mint" onclick="mint()">EXECUTE_SECURE_MINT</button>
+        <div id="status" style="margin-top:20px;font-size:10px;color:#555;">[ AWAITING_SELECTION ]</div>
+    </div>
+
+    <script>
+        let activeAsset = "";
+        let activeAmt = "";
+
+        function sel(a, v){
+            activeAsset = a;
+            activeAmt = v;
+            document.getElementById("status").innerText = "[ READY: " + a + " ]";
+            document.getElementById("status").style.color = "var(--green)";
+        }
+
+        function mint(){
+            if(activeAsset === ""){
+                alert("SELECT_ASSET_FIRST");
+                return;
+            }
+            try {
+                const timestamp = new Date().toISOString();
+                const dataString = `--- FROSTCHAIN_SECURE_LEDGER_V84 ---\nADMIN: drfrost.frostchain\nASSET: ${activeAsset}\nVOLUME: ${activeAmt}\nTIMESTAMP: ${timestamp}\nPHASE_LOCK: 7.83Hz\nSTATUS: IMMUTABLE_BCH_FORK\n-----------------------------------`;
+                
+                const blob = new Blob([dataString], {type: "text/plain"});
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `${activeAsset}_verified.wallet.dat`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+                
+                alert("SUCCESS: " + activeAsset + " WALLET.DAT GENERATED.");
+            } catch(e) {
+                alert("MINT_ERROR: " + e);
+            }
+        }
+    </script>
+</body>
+</html>

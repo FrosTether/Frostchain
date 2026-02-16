@@ -1,0 +1,22 @@
+{
+  "wallet_name": "Satoshi_Frost_Inheritance",
+  "network": "frostchain_mainnet",
+  "remote_nodes": [
+    {
+      "address": "straub.global.node:18081",
+      "label": "Straub-Handcock Diversion Node",
+      "priority": 1
+    }
+  ],
+  "stealth_addressing": true,
+  "quantum_fungibility": {
+    "carrier_frequency": 963.0,
+    "binaural_bridge": 11.11,
+    "observer_effect": "enabled"
+  },
+  "asset_mappings": {
+    "FNR": "BCH_1:1_PARITY",
+    "FTC": "SATOSHI_BTC_COLLATERAL"
+  },
+  "authority_signature": "FAreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab"
+}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOTA REX // HASH_HEATMAP</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #000; --core: #00e0ff; --gold: #ffd700; --warn: #ff0055; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; margin: 0; overflow: hidden; display: flex; }
+
+/* LEFT PANEL: TANGLE REX */
+.rex-view { flex-grow: 1; position: relative; border-right: 1px solid #222; }
+canvas { width: 100%; height: 100%; display: block; }
+
+/* RIGHT PANEL: HEATMAP & RADAR */
+.heatmap-view { width: 400px; background: #050505; padding: 20px; overflow-y: auto; }
+.radar { width: 100%; height: 200px; border: 1px solid #333; position: relative; background: radial-gradient(circle, #111 0%, #000 100%); margin-bottom: 20px; }
+.radar::after { content:''; position:absolute; top:50%; left:50%; width:2px; height:50%; background:var(--core); transform-origin: top; animation: sweep 4s linear infinite; }
+
+.stat-row { border-bottom: 1px solid #1a1a1a; padding: 10px 0; display: flex; justify-content: space-between; }
+.lbl { font-size: 9px; color: #555; }
+.val { font-size: 14px; color: #fff; font-weight: bold; }
+
+@keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes blink { 50% { opacity: 0; } }
+.alert { color: var(--warn); animation: blink 1s infinite; }
+</style>
+</head>
+<body onload="init()">
+<div class="rex-view">
+  <div style="position: absolute; top:20px; left:20px; background:rgba(0,0,0,0.8); padding:15px; border:1px solid var(--core);">
+    <div class="lbl">IOTA REX HEIGHT</div>
+    <div style="font-size:24px; color:#fff; font-weight:bold;">937,783</div>
+    <div style="color:var(--gold); font-size:10px;">SIGNATURE: 683050920</div>
+  </div>
+  <canvas id="tangle"></canvas>
+</div>
+
+<div class="heatmap-view">
+  <div style="color:var(--core); margin-bottom:15px; font-size:14px;">>> GLOBAL HASH_HEATMAP</div>
+  <div class="radar" id="radar"></div>
+  
+  <div class="stat-row">
+    <span class="lbl">TOTAL SHA-256 POWER</span>
+    <span class="val">4.21 EH/S</span>
+  </div>
+  <div class="stat-row">
+    <span class="lbl">ACTIVE RIGS</span>
+    <span class="val">14,212</span>
+  </div>
+  <div class="stat-row">
+    <span class="lbl">BCH MIGRATION STATUS</span>
+    <span class="val alert">CRITICAL_PIVOT</span>
+  </div>
+
+  <div style="margin-top:20px; font-size:10px; color:#666;">
+    <div style="color:var(--gold); margin-bottom:5px;">LATEST MIGRATION VECTORS:</div>
+    <div id="logs"></div>
+  </div>
+</div>
+
+<script>
+function init() {
+  // Canvas Tangle Rex Logic
+  const c = document.getElementById('tangle'); const ctx = c.getContext('2d');
+  c.width = c.parentElement.clientWidth; c.height = c.parentElement.clientHeight;
+  let nodes = []; for(let i=0; i<50; i++) nodes.push({x:Math.random()*c.width, y:Math.random()*c.height, vx:Math.random()-0.5, vy:Math.random()-0.5});
+  function draw() {
+    ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,c.width,c.height);
+    ctx.strokeStyle = "rgba(0, 224, 255, 0.2)";
+    nodes.forEach(n => {
+      n.x += n.vx; n.y += n.vy;
+      if(n.x<0||n.x>c.width) n.vx*=-1; if(n.y<0||n.y>c.height) n.vy*=-1;
+      nodes.forEach(n2 => {
+        if(Math.hypot(n.x-n2.x, n.y-n2.y) < 150) {
+          ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n2.x, n2.y); ctx.stroke();
+        }
+      });
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  // Radar Dots
+  setInterval(() => {
+    const r = document.getElementById('radar');
+    const dot = document.createElement('div');
+    dot.style.cssText = `position:absolute; width:4px; height:4px; background:var(--warn); left:${Math.random()*100}%; top:${Math.random()*100}%; border-radius:50%; box-shadow: 0 0 10px var(--warn);`;
+    r.appendChild(dot);
+    setTimeout(() => r.removeChild(dot), 2000);
+    
+    const logs = document.getElementById('logs');
+    const p = ["AntPool", "F2Pool", "ViaBTC", "Poolin"];
+    logs.innerHTML = `> [${p[Math.floor(Math.random()*4)]}] REDIRECTING ${Math.random().toFixed(2)} EH/S...<br>` + logs.innerHTML;
+  }, 3000);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+nohup: ignoring input
+INFO [02-09|22:22:36.165] Maximum peer count                       ETH=50 total=50
+INFO [02-09|22:22:36.166] Smartcard socket not found, disabling    err="stat /run/pcscd/pcscd.comm: no such file or directory"
+WARN [02-09|22:22:36.166] Option --allow-insecure-unlock is deprecated and has no effect
+WARN [02-09|22:22:36.168] Option --miner.etherbase is deprecated as the etherbase is set by the consensus client post-merge
+WARN [02-09|22:22:36.169] The flag --mine is deprecated and will be removed
+INFO [02-09|22:22:36.170] Set global gas cap                       cap=50,000,000
+INFO [02-09|22:22:36.171] Initializing the KZG library             backend=gokzg
+INFO [02-09|22:22:36.177] Allocated trie memory caches             clean=154.00MiB dirty=256.00MiB
+INFO [02-09|22:22:36.177] Using pebble as the backing database
+INFO [02-09|22:22:36.177] Allocated cache and file handles         database=/data/data/com.termux/files/home/frostchain/geth/chaindata cache=512.00MiB handles=16384
+INFO [02-09|22:22:36.234] Opened ancient database                  database=/data/data/com.termux/files/home/frostchain/geth/chaindata/ancient/chain readonly=false
+INFO [02-09|22:22:36.234] Opened Era store                         datadir=/data/data/com.termux/files/home/frostchain/geth/chaindata/ancient/chain/era
+INFO [02-09|22:22:36.235] State scheme set to already existing     scheme=path
+INFO [02-09|22:22:36.240] Initialising Ethereum protocol           network=1337 dbversion=<nil>
+INFO [02-09|22:22:36.240] Load database journal from disk
+INFO [02-09|22:22:36.240] Failed to load journal, discard it       err="journal not found"
+INFO [02-09|22:22:36.241] Opened ancient database                  database=/data/data/com.termux/files/home/frostchain/geth/chaindata/ancient/state readonly=false
+INFO [02-09|22:22:36.241] Initialized path database                triecache=154.00MiB statecache=102.00MiB buffer=256.00MiB state-history="last 90000 blocks" journal-dir=/data/data/com.termux/files/home/frostchain/geth/triedb
+INFO [02-09|22:22:36.241] 
+INFO [02-09|22:22:36.241] ---------------------------------------------------------------------------------------------------------------------------------------------------------
+INFO [02-09|22:22:36.241] Chain ID:  1337 (unknown)
+INFO [02-09|22:22:36.241] Consensus: Beacon (proof-of-stake), merged from Clique (proof-of-authority)
+INFO [02-09|22:22:36.241] 
+INFO [02-09|22:22:36.241] Pre-Merge hard forks (block based):
+INFO [02-09|22:22:36.241]  - Homestead:                   #0       
+INFO [02-09|22:22:36.241]  - Tangerine Whistle (EIP 150): #0       
+INFO [02-09|22:22:36.241]  - Spurious Dragon/1 (EIP 155): #0       
+INFO [02-09|22:22:36.241]  - Spurious Dragon/2 (EIP 158): #0       
+INFO [02-09|22:22:36.241]  - Byzantium:                   #0       
+INFO [02-09|22:22:36.241]  - Constantinople:              #0       
+INFO [02-09|22:22:36.241]  - Petersburg:                  #0       
+INFO [02-09|22:22:36.241]  - Istanbul:                    #0       
+INFO [02-09|22:22:36.241]  - Berlin:                      #0       
+INFO [02-09|22:22:36.241]  - London:                      #0       
+INFO [02-09|22:22:36.241] 
+INFO [02-09|22:22:36.241] Merge configured:
+INFO [02-09|22:22:36.241]  - Total terminal difficulty:  0
+INFO [02-09|22:22:36.241] 
+INFO [02-09|22:22:36.241] Post-Merge hard forks (timestamp based):
+INFO [02-09|22:22:36.241] 
+INFO [02-09|22:22:36.241] All fork specifications can be found at https://ethereum.github.io/execution-specs/src/ethereum/forks/
+INFO [02-09|22:22:36.241] 
+INFO [02-09|22:22:36.241] ---------------------------------------------------------------------------------------------------------------------------------------------------------
+INFO [02-09|22:22:36.241] 
+INFO [02-09|22:22:36.242] Loaded most recent local block           number=0 hash=fa91b3..dcd15a age=56y11mo3d
+INFO [02-09|22:22:36.242] Initialized transaction indexer          range="last 2350000 blocks"
+INFO [02-09|22:22:36.269] Enabled snap sync                        head=0 hash=fa91b3..dcd15a
+INFO [02-09|22:22:36.271] Gasprice oracle is ignoring threshold set threshold=2
+INFO [02-09|22:22:36.272] Registered sync override service
+INFO [02-09|22:22:36.273] Starting peer-to-peer node               instance=Geth/v1.16.8-stable/android-arm64/go1.25.4
+INFO [02-09|22:22:36.291] New local node record                    seq=1,770,675,756,288 id=20777abde5f8244c ip=127.0.0.1 udp=30303 tcp=30303
+INFO [02-09|22:22:36.292] Started P2P networking                   self=enode://21d53f6064299206fb7bc64d17c81a72715eb78e72e174a16f3ab40642fe9d9e5db55a8da492a1e115607e97e5b226a5f940531a57745b24a39d1ed9da6817b7@127.0.0.1:30303
+ERROR[02-09|22:22:36.293] Unavailable modules in HTTP API list     unavailable="[personal clique]" available="[admin debug web3 eth txpool miner net]"
+INFO [02-09|22:22:36.293] Generated JWT secret                     path=/data/data/com.termux/files/home/frostchain/geth/jwtsecret
+INFO [02-09|22:22:36.294] HTTP server started                      endpoint=[::]:8545 auth=false prefix= cors=* vhosts=*
+INFO [02-09|22:22:36.320] WebSocket enabled                        url=ws://127.0.0.1:8551
+INFO [02-09|22:22:36.320] HTTP server started                      endpoint=127.0.0.1:8551 auth=true  prefix= cors=localhost vhosts=localhost
+WARN [02-09|22:22:36.321] The "unlock" flag has been deprecated and has no effect
+INFO [02-09|22:22:36.321] Started log indexer
+INFO [02-09|22:22:37.381] New local node record                    seq=1,770,675,756,289 id=20777abde5f8244c ip=168.75.182.148 udp=30303 tcp=30303
+WARN [02-09|22:23:11.275] Beacon client online, but no consensus updates received in a while. Please fix your beacon client to follow the chain!

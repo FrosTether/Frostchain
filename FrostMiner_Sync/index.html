@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>FROST_MINER // SYSTEM_LINK</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#050505;--blue:#00e0ff;--gold:#ffd700;--pink:#ff69b4;--green:#0f0;}
+        body{background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;margin:0;padding:20px;text-align:center;}
+        #miner-frame{max-width:600px;margin:20px auto;border:2px solid var(--pink);border-radius:30px;background:rgba(255,105,180,0.01);box-shadow:0 0 80px rgba(255,105,180,0.1);overflow:hidden;}
+        .header{background:rgba(255,105,180,0.1);padding:20px;border-bottom:1px solid #333;}
+        .hash-display{font-size:48px;font-weight:bold;color:var(--blue);margin:30px 0;text-shadow:0 0 20px var(--blue);}
+        .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:20px;}
+        .stat-card{background:#111;padding:15px;border-radius:12px;border:1px solid #222;text-align:left;}
+        .label{font-size:9px;color:var(--pink);text-transform:uppercase;}
+        .value{font-size:18px;color:#fff;}
+        .tangle-mini{height:80px;background:#000;margin:20px;border-radius:10px;border:1px solid #222;overflow:hidden;position:relative;}
+        .pulse-line{position:absolute;width:100%;height:1px;background:var(--blue);top:50%;animation:scan 2s infinite linear;}
+        @keyframes scan{0%{top:0%;opacity:0;} 50%{opacity:1;} 100%{top:100%;opacity:0;}}
+        .btn-mine{width:calc(100% - 40px);margin:20px;padding:20px;background:var(--pink);color:#000;border:none;border-radius:15px;font-weight:bold;cursor:pointer;font-size:16px;}
+        .footer{font-size:10px;color:#444;padding-bottom:20px;}
+    </style>
+</head>
+<body onload="linkSystem()">
+    <div id="miner-frame">
+        <div class="header">
+            <div style="font-size:12px;color:var(--gold);letter-spacing:3px;">SOUND_CRYPTO_MINER // V94</div>
+            <div id="id-status" style="font-size:10px;color:var(--blue);">LINKING_TO_SYSTEM_WALLET...</div>
+        </div>
+
+        <div class="hash-display" id="hashrate">0.00 PH/s</div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Supply_Weight</div>
+                <div class="value">13.37% (FRST/FNR)</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Liquidity_Backing</div>
+                <div class="value">$2.10M (1INCH)</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Protocol_Lock</div>
+                <div class="value">7.83Hz (NEWKIRK)</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Network</div>
+                <div class="value">REZ_HD_TANGLE</div>
+            </div>
+        </div>
+
+        <div class="tangle-mini">
+            <div class="pulse-line"></div>
+            <div id="tangle-log" style="font-size:8px;padding:10px;color:var(--blue);">AWAITING_REZ_HD_PULSE...</div>
+        </div>
+
+        <button class="btn-mine" onclick="engage()">ENGAGE_SOUND_MINING</button>
+        <div class="footer">ADMIN_AUTHORITY: drfrost.frostchain</div>
+    </div>
+
+    <script>
+        function linkSystem() {
+            setTimeout(() => {
+                document.getElementById('id-status').innerText = "SYSTEM_LINK_ACTIVE: drfrost.frostchain";
+                document.getElementById('id-status').style.color = "var(--green)";
+            }, 1000);
+        }
+
+        function engage() {
+            let hr = 0;
+            document.querySelector('.btn-mine').innerText = "MINING_ACTIVE_7.83Hz";
+            setInterval(() => {
+                hr = (13.37 + Math.random()).toFixed(2);
+                document.getElementById('hashrate').innerText = hr + " PH/s";
+                document.getElementById('tangle-log').innerText = "> TANGLE_CONFIRMATION: BLOCK_" + Math.floor(Math.random()*999999);
+            }, 100);
+        }
+    </script>
+</body>
+</html>

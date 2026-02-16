@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>FROST_MINER // SLEEP_QUANTUM</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#000;--blue:#00e0ff;--gold:#ffd700;--pink:#ff69b4;--violet:#4b0082;}
+        body, html{margin:0;padding:0;width:100%;height:100%;background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;overflow:hidden;transition:background 2s;}
+        #ui-layer{position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:30px;box-sizing:border-box;}
+        .glass-panel{background:rgba(0,0,0,0.8);backdrop-filter:blur(15px);border:1px solid rgba(255,105,180,0.1);padding:20px;border-radius:20px;pointer-events:auto;}
+        canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
+        .slider-box{margin-top:15px;text-align:left;}
+        input[type=range]{width:100%;accent-color:var(--pink);cursor:pointer;}
+        .btn-sleep{background:rgba(255,105,180,0.2);border:1px solid var(--pink);color:var(--pink);padding:10px 20px;border-radius:15px;cursor:pointer;font-family:inherit;pointer-events:auto;transition:0.3s;}
+        .btn-sleep.active{background:var(--pink);color:#000;box-shadow:0 0 20px var(--pink);}
+        h1{margin:0;font-size:16px;letter-spacing:3px;color:var(--pink);}
+    </style>
+</head>
+<body>
+    <canvas id="tangleCanvas"></canvas>
+    
+    <div id="ui-layer">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div class="glass-panel">
+                <h1>FROST_SLEEP_QUANTUM // V96</h1>
+                <div style="font-size:10px;color:var(--gold);margin-top:5px;">drfrost.frostchain // 13.37%_SUPPLY</div>
+                <div class="slider-box">
+                    <div style="font-size:9px;color:var(--pink);">SOLFEGGIO_TUNER: <span id="freqVal">528</span>Hz</div>
+                    <input type="range" id="freqSlider" min="432" max="963" value="528" oninput="updateFreq(this.value)">
+                </div>
+            </div>
+            <div class="glass-panel" style="text-align:right;">
+                <button id="sleepBtn" class="btn-sleep" onclick="toggleSleep()">ENGAGE_SLEEP_MODE_💤</button>
+                <div id="noiseStat" style="font-size:9px;margin-top:10px;color:#444;">PINK_NOISE: OFF</div>
+            </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+            <div class="glass-panel" style="width:200px;font-size:11px;">
+                <div style="color:var(--blue);">LIQUIDITY: $2.10M</div>
+                <div style="color:var(--pink);">TANGLE: REZ_HD_SYNC</div>
+            </div>
+            <button style="background:none;border:none;color:#333;cursor:pointer;pointer-events:auto;" onclick="document.documentElement.requestFullscreen()">[ FULLSCREEN ]</button>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx, osc, noiseNode, gainNode, isSleeping = false;
+        const canvas = document.getElementById('tangleCanvas');
+        const ctx = canvas.getContext('2d');
+        let nodes = [];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            nodes = [];
+            for(let i=0; i<45; i++) nodes.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:Math.random()-0.5, vy:Math.random()-0.5});
+        }
+
+        function createPinkNoise(bufferSize) {
+            let b0, b1, b2, b3, b4, b5, b6;
+            b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
+            let node = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+            node.onaudioprocess = function(e) {
+                let output = e.outputBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    let white = Math.random() * 2 - 1;
+                    b0 = 0.99886 * b0 + white * 0.0555179;
+                    b1 = 0.99332 * b1 + white * 0.0750759;
+                    b2 = 0.96900 * b2 + white * 0.1538520;
+                    b3 = 0.86650 * b3 + white * 0.3104856;
+                    b4 = 0.55000 * b4 + white * 0.5329522;
+                    b5 = -0.7616 * b5 - white * 0.0168980;
+                    output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                    output[i] *= 0.11; b6 = white * 0.115926;
+                }
+            }
+            return node;
+        }
+
+        function toggleSleep() {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if(!isSleeping) {
+                // Start Solfeggio & Pink Noise
+                osc = audioCtx.createOscillator();
+                osc.frequency.setValueAtTime(document.getElementById('freqSlider').value, audioCtx.currentTime);
+                gainNode = audioCtx.createGain();
+                gainNode.gain.setValueAtTime(0.02, audioCtx.currentTime);
+                noiseNode = createPinkNoise(4096);
+                
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                noiseNode.connect(audioCtx.destination);
+                osc.start();
+                
+                isSleeping = true;
+                document.getElementById('sleepBtn').classList.add('active');
+                document.getElementById('noiseStat').innerText = "PINK_NOISE: ACTIVE (💤)";
+                document.getElementById('noiseStat').style.color = "var(--pink)";
+            } else {
+                osc.stop();
+                noiseNode.disconnect();
+                isSleeping = false;
+                document.getElementById('sleepBtn').classList.remove('active');
+                document.getElementById('noiseStat').innerText = "PINK_NOISE: OFF";
+                document.getElementById('noiseStat').style.color = "#444";
+            }
+        }
+
+        function updateFreq(v) {
+            document.getElementById('freqVal').innerText = v;
+            if(osc) osc.frequency.setTargetAtTime(v, audioCtx.currentTime, 0.1);
+        }
+
+        function animate() {
+            ctx.fillStyle = isSleeping ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.5)";
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+            let color = isSleeping ? "rgba(255, 105, 180," : "rgba(0, 224, 255,";
+            
+            nodes.forEach((n, i) => {
+                n.x += n.vx * (isSleeping ? 0.3 : 1.5);
+                n.y += n.vy * (isSleeping ? 0.3 : 1.5);
+                if(n.x<0 || n.x>canvas.width) n.vx *= -1;
+                if(n.y<0 || n.y>canvas.height) n.vy *= -1;
+
+                nodes.forEach((n2, j) => {
+                    if(i === j) return;
+                    let dist = Math.hypot(n.x - n2.x, n.y - n2.y);
+                    if(dist < 120) {
+                        ctx.strokeStyle = color + (1 - dist/120) * 0.3 + ")";
+                        ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n2.x, n2.y); ctx.stroke();
+                    }
+                });
+                ctx.fillStyle = color + "0.8)";
+                ctx.beginPath(); ctx.arc(n.x, n.y, 1.5, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        animate();
+    </script>
+</body>
+</html>

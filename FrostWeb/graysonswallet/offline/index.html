@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FNS | OFFLINE PAPER CREATOR</title>
+<style>
+  :root { --bg: #000; --gold: #ffd700; --cyan: #00ffff; }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; padding: 20px; text-align: center; }
+  .paper-wallet { 
+    border: 3px double var(--gold); padding: 20px; background: #fff; color: #000; 
+    margin: 20px auto; max-width: 400px; display: none; text-align: left;
+  }
+  .secret { font-size: 0.6em; word-break: break-all; background: #eee; padding: 5px; }
+  .handle { font-size: 1.5em; font-weight: bold; color: var(--gold); text-align: center; margin-bottom: 10px; }
+  .btn { padding: 15px; border: 2px solid var(--gold); background: transparent; color: var(--gold); cursor: pointer; width: 100%; font-weight: bold; }
+  input { width: 100%; padding: 10px; margin: 10px 0; background: #111; border: 1px solid #333; color: var(--cyan); text-align: center; }
+</style>
+</head>
+<body>
+
+<div id="setup">
+  <h2 style="color:var(--gold)">FROSTCHAIN IDENTITY GEN</h2>
+  <p style="font-size: 0.7em;">ENTER YOUR DESIRED HANDLE TO MASK YOUR PUBLIC KEY</p>
+  <input type="text" id="name" placeholder="grayson" maxlength="15">
+  <div style="color:var(--gold); margin-bottom:10px;">.frostchain</div>
+  <button class="btn" onclick="generate()">CREATE SECURE IDENTITY</button>
+</div>
+
+<div id="wallet" class="paper-wallet">
+  <div class="handle" id="disp-name"></div>
+  <div style="font-size:0.5em; text-align:center; border-bottom:1px solid #000; margin-bottom:10px; padding-bottom:5px;">FNS IDENTITY CERTIFICATE</div>
+  
+  <strong>PUBLIC ADDRESS (MASKED):</strong>
+  <div class="secret" id="pub"></div>
+  
+  <br><strong>PRIVATE SEED (NEVER SHARE):</strong>
+  <div class="secret" style="color:red" id="priv"></div>
+  
+  <div style="font-size:0.4em; margin-top:20px;">
+    * This identity is linked to the Monroeville Alpha Cluster.
+    * Print this page and store it offline.
+  </div>
+  <button class="btn" style="background:#000; margin-top:10px;" onclick="window.print()">PRINT PAPER WALLET</button>
+</div>
+
+<script>
+function generate() {
+  const name = document.getElementById('name').value || 'anonymous';
+  const entropy = Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2,'0')).join('');
+  const priv = 'f-' + entropy;
+  const pub = '0x' + entropy.substring(0, 40); // MoveVM Mock Address
+
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('wallet').style.display = 'block';
+  document.getElementById('disp-name').innerText = name.toLowerCase() + ".frostchain";
+  document.getElementById('pub').innerText = pub;
+  document.getElementById('priv').innerText = priv;
+}
+</script>
+</body>
+</html>

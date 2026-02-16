@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://$dir.surge.sh/sitemap.xml

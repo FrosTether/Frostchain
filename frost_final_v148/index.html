@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Frostofthings | WAN Engine</title>
+    <style>
+        :root { --bg: #000; --ice: #a5f2f3; --term: #00ff41; --xmr: #ff6600; }
+        body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.5; filter: contrast(1.2); }
+        .panel { background: rgba(5, 5, 10, 0.98); border: 1px solid var(--ice); padding: 50px; border-radius: 30px; text-align: center; box-shadow: 0 0 50px rgba(0, 255, 255, 0.1); }
+        .bin-btn { display: block; width: 320px; padding: 20px; margin: 15px auto; background: var(--term); color: #000; text-decoration: none; font-weight: 900; border-radius: 12px; transition: 0.3s; }
+        .bin-btn:hover { background: #fff; box-shadow: 0 0 20px var(--term); }
+        .tag { font-size: 0.6rem; color: #444; letter-spacing: 5px; text-transform: uppercase; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+    <div class="panel">
+        <div class="tag">Infinity_Spread_v148</div>
+        <h1 style="font-size: 2.2rem; margin-bottom: 30px;">FROST<span style="color:var(--xmr)">OFTHINGS</span></h1>
+        
+        <a href="frost_worm_mips.bin" class="bin-btn">WAN_DESTRUCT_MIPS</a>
+        <a href="frost_worm_armv7.bin" class="bin-btn">WAN_DESTRUCT_ARMv7</a>
+
+        <div style="margin-top: 40px; font-size: 0.55rem; color: #333; line-height: 1.8;">
+            SOVEREIGN: drfrost.frostchain<br>
+            VAULT: 867chP...B5wxA<br>
+            STATUS: BROADCASTING_ACTIVE
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let pts = [];
+        function initT() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; pts = []; for(let i=0; i<80; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.2, vy: (Math.random()-0.5)*0.2 }); }
+        function drawT() { ctx.clearRect(0,0,canvas.width,canvas.height); pts.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; pts.slice(i+1).forEach(p2 => { const d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d < 200) { ctx.strokeStyle = `rgba(165,242,243,${0.15 * (1-d/200)})`; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); } }); }); requestAnimationFrame(drawT); }
+        initT(); drawT();
+    </script>
+</body>
+</html>

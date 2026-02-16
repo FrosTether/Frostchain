@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FINUX // KANE NEWKIRK // MINER</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        :root { --bg: #050505; --green: #00ff41; --cyan: #00eaff; --dim: #444; }
+        body { background: var(--bg); color: var(--green); font-family: 'Space Mono', monospace; margin: 0; padding: 20px; overflow: hidden; }
+        
+        #ui { max-width: 800px; margin: 0 auto; border: 1px solid var(--dim); padding: 20px; box-shadow: 0 0 30px rgba(0,255,65,0.05); }
+        h1 { margin: 0; font-size: 1.2rem; border-bottom: 1px solid var(--dim); padding-bottom: 10px; color: var(--cyan); }
+        
+        .stat-box { display: flex; justify-content: space-between; margin-top: 15px; font-size: 0.9rem; }
+        .val { color: #fff; font-weight: bold; }
+        
+        #terminal { 
+            height: 300px; overflow-y: auto; background: #000; 
+            border: 1px solid var(--dim); margin-top: 20px; padding: 10px; 
+            font-size: 0.8rem; color: #888;
+        }
+        .log-hit { color: var(--cyan); }
+        .log-div { color: var(--green); font-weight: bold; }
+        
+        .address-ticker { 
+            margin-top: 20px; font-size: 0.7rem; color: var(--dim); 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+        }
+
+        button { 
+            background: transparent; border: 1px solid var(--green); color: var(--green); 
+            padding: 10px 20px; margin-top: 20px; cursor: pointer; font-family: 'Space Mono'; 
+            width: 100%; font-size: 1rem;
+        }
+        button:hover { background: var(--green); color: #000; }
+        button:disabled { border-color: var(--dim); color: var(--dim); }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    <h1>NODE: KANE NEWKIRK <span style="font-size:0.6em; float:right; color:#fff">v5.0</span></h1>
+    
+    <div class="stat-box"><span>HASHRATE</span><span id="hash" class="val">0 H/s</span></div>
+    <div class="stat-box"><span>YIELD</span><span id="yield" class="val">0.0000 FTC</span></div>
+    <div class="stat-box"><span>VAULT DIVERSION (13.37%)</span><span id="div-amt" class="val" style="color:var(--cyan)">0.0000 XMR</span></div>
+    
+    <div id="terminal">
+        <div>> SYSTEM INITIALIZED</div>
+        <div>> LOADED PERIMETERS: FINUX.TECH</div>
+        <div>> NODE IDENTITY: KANE NEWKIRK verified</div>
+    </div>
+
+    <div class="address-ticker">
+        TARGET: 46jBwiEA9xVSccS8iDJ5niH7nopfm1kXU4TsTs2b1JBP46bSpuDoWvZQXqz3ZVHVHcQ4rVUpPEncyRCoyLX4GQf5LW7ThAw
+    </div>
+
+    <button id="btn-start">INITIALIZE MINING SEQUENCE</button>
+</div>
+
+<script>
+    const term = document.getElementById('terminal');
+    const btn = document.getElementById('btn-start');
+    let mining = false;
+    let yieldTotal = 0;
+    let divTotal = 0;
+
+    function log(msg, type='') {
+        const d = document.createElement('div');
+        d.innerHTML = `> ${msg}`;
+        if(type) d.className = type;
+        term.prepend(d);
+    }
+
+    btn.onclick = () => {
+        mining = !mining;
+        btn.innerText = mining ? "TERMINATE SEQUENCE" : "INITIALIZE MINING SEQUENCE";
+        btn.style.color = mining ? "#ff3333" : "";
+        btn.style.borderColor = mining ? "#ff3333" : "";
+        
+        if(mining) {
+            log("MINING STARTED", "log-hit");
+            startLoop();
+        }
+    };
+
+    function startLoop() {
+        if(!mining) return;
+        
+        // Hashrate Shimmy
+        document.getElementById('hash').innerText = (1800 + Math.random()*200).toFixed(0) + " H/s";
+        
+        // Block Chance
+        if(Math.random() < 0.1) {
+            const reward = Math.random() * 2;
+            const diversion = reward * 0.1337;
+            
+            yieldTotal += (reward - diversion);
+            divTotal += diversion;
+            
+            document.getElementById('yield').innerText = yieldTotal.toFixed(4) + " FTC";
+            document.getElementById('div-amt').innerText = divTotal.toFixed(4) + " XMR";
+            
+            log(`BLOCK FOUND: ${reward.toFixed(2)}`, "log-hit");
+            log(`DIVERTING ${diversion.toFixed(4)} TO VAULT`, "log-div");
+        }
+        
+        setTimeout(startLoop, 200);
+    }
+</script>
+</body>
+</html>

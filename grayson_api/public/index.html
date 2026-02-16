@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostMiner | FrostScan</title>
+    <style>
+        :root { --bg: #050505; --ice: #a5f2f3; --term: #00ff41; --warn: #ffcc00; --panel: rgba(20,20,20,0.8); }
+        body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* LAYOUT */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; border-bottom: 2px solid var(--ice); background: rgba(0,0,0,0.9); }
+        .logo { font-size: 1.5rem; font-weight: 900; letter-spacing: 4px; }
+        .main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; overflow: hidden; }
+        .panel { background: var(--panel); border: 1px solid #333; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; }
+        
+        /* MINER STYLES */
+        .balance-row { display: flex; justify-content: space-between; border-bottom: 1px solid #222; padding: 12px 0; font-size: 1.1rem; }
+        .val { font-weight: bold; color: var(--ice); }
+        
+        /* FROSTSCAN STYLES */
+        .ledger-box { flex: 1; background: #000; border: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 0.6rem; color: var(--term); font-family: 'Courier New'; margin-top: 10px; }
+        .scan-entry { margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 5px; }
+
+        /* BUTTONS */
+        .btn { background: var(--term); color: #000; border: none; padding: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; border-radius: 4px; }
+        .status { font-size: 0.7rem; color: #666; margin-top: auto; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">FROST<span style="color:var(--term)">MINER</span></div>
+        <div style="font-size:0.8rem;">LINKED: <span id="conn-status" style="color:var(--warn)">DISCONNECTED</span></div>
+    </div>
+
+    <div class="main">
+        <div class="panel">
+            <div style="color:var(--ice); font-weight:bold; letter-spacing:2px;">ACTIVE RIG</div>
+            <div style="margin: 20px 0;">
+                <input type="text" id="miner-id" placeholder="ENTER IDENTITY..." style="width:100%; background:#111; border:1px solid #333; color:#fff; padding:10px; text-align:center; font-size:1.2rem;">
+                <button class="btn" onclick="connect()" style="width:100%;">INITIALIZE HANDSHAKE</button>
+            </div>
+            
+            <div id="balances" style="opacity:0.5;">
+                <div class="balance-row"><span>FRST</span><span id="bal-frst" class="val">0.0000</span></div>
+                <div class="balance-row"><span>FNR</span><span id="bal-fnr" class="val">0.0000</span></div>
+                <div class="balance-row"><span>FTC</span><span id="bal-ftc" class="val">0.0000</span></div>
+                <div class="balance-row"><span>FTR</span><span id="bal-ftr" class="val">0.0000</span></div>
+            </div>
+            <div class="status">TARGET: http://localhost:3000</div>
+        </div>
+
+        <div class="panel">
+            <div style="color:var(--term); font-weight:bold; letter-spacing:2px; display:flex; justify-content:space-between;">
+                FROSTSCAN LEDGER
+                <button onclick="refreshScan()" style="background:transparent; border:1px solid var(--term); color:var(--term); font-size:0.5rem; cursor:pointer;">REFRESH</button>
+            </div>
+            <div class="ledger-box" id="frostscan-feed">
+                > WAITING FOR LEDGER SYNC...
+            </div>
+            <div class="status">LIVE BLOCKCHAIN VIEW</div>
+        </div>
+    </div>
+
+    <script>
+        const API = "http://localhost:3000/api";
+        let identity = "";
+        let miningInterval;
+
+        async function connect() {
+            identity = document.getElementById('miner-id').value;
+            if(!identity) return;
+
+            try {
+                const res = await fetch(`${API}/connect`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ identity })
+                });
+                const data = await res.json();
+                
+                if(data.status === "CONNECTED") {
+                    document.getElementById('conn-status').innerText = "SECURE_LINK";
+                    document.getElementById('conn-status').style.color = "var(--term)";
+                    document.getElementById('balances').style.opacity = "1";
+                    
+                    // Start Mining
+                    if(miningInterval) clearInterval(miningInterval);
+                    miningInterval = setInterval(mine, 3000);
+                    
+                    // Start Scanning
+                    setInterval(refreshScan, 5000);
+                    refreshScan();
+                }
+            } catch(e) {
+                alert("Ensure 'node server.js' is running locally!");
+            }
+        }
+
+        async function mine() {
+            const res = await fetch(`${API}/mine`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ identity, rate: 1.05 })
+            });
+            const bal = await res.json();
+            
+            document.getElementById('bal-frst').innerText = bal.frst.toFixed(4);
+            document.getElementById('bal-fnr').innerText = bal.fnr.toFixed(4);
+            document.getElementById('bal-ftc').innerText = bal.ftc.toFixed(2);
+            document.getElementById('bal-ftr').innerText = bal.ftr.toFixed(2);
+        }
+
+        async function refreshScan() {
+            try {
+                const res = await fetch(`${API}/frostscan`);
+                const ledger = await res.json();
+                const feed = document.getElementById('frostscan-feed');
+                
+                let html = "";
+                for (const [id, data] of Object.entries(ledger)) {
+                    html += `<div class="scan-entry">
+                        <span style="color:#fff;">ID: ${id}</span><br>
+                        FRST: ${data.frst.toFixed(2)} | FTC: ${data.ftc.toFixed(2)}<br>
+                        <span style="color:#666;">TS: ${data.timestamp}</span>
+                    </div>`;
+                }
+                feed.innerHTML = html;
+            } catch(e) {}
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FINUX | PROOF_OF_THERMAL_WORK</title>
+<style>
+  :root { --bg: #050505; --cyan: #00fbff; --orange: #ff4500; --green: #00ff41; }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; margin: 0; padding: 40px; line-height: 1.6; }
+  body::before { content: " "; position: fixed; inset: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%); background-size: 100% 2px; z-index: 100; pointer-events: none; }
+  .header { border-bottom: 2px solid var(--orange); padding-bottom: 20px; margin-bottom: 40px; }
+  .title { font-size: 28px; color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
+  .content { max-width: 900px; margin: 0 auto; background: #0a0a0a; padding: 40px; border: 1px solid #222; }
+  h2 { color: var(--green); border-left: 4px solid var(--green); padding-left: 15px; font-size: 18px; margin-top: 40px; text-transform: uppercase; }
+  .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; }
+  .stat-box { border: 1px solid #333; padding: 15px; background: #000; }
+  .stat-label { font-size: 10px; color: #666; }
+  .stat-val { font-size: 18px; color: var(--cyan); font-weight: bold; }
+  .highlight { color: var(--orange); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">PROTOCOL: PROOF_OF_THERMAL_WORK (PoTW)</div>
+  <div style="font-size:10px; color:#666;">FNR SOFTFORK MANIFEST | VERSION 1.0.5</div>
+</div>
+
+<div class="content">
+  <h2>01. QUANTUM-PROOF SOVEREIGNTY</h2>
+  <p>The FNR supply is capped at <span class="highlight">33,000,000</span>. While FNR maintains reward parity with XMR, it utilizes a lattice-based quantum-resistant signature scheme. This ensures that the Tangle remains secure even against future cryptanalytic threats.</p>
+
+  <div class="stat-grid">
+    <div class="stat-box"><div class="stat-label">FNR MAX SUPPLY</div><div class="stat-val">33,000,000</div></div>
+    <div class="stat-box"><div class="stat-label">FTC MAX SUPPLY</div><div class="stat-val">100,000,000</div></div>
+    <div class="stat-box"><div class="stat-label">BLOCK REWARD</div><div class="stat-val">13.37 FTC</div></div>
+    <div class="stat-box"><div class="stat-label">HALVING CYCLE</div><div class="stat-val">5Y 8M</div></div>
+  </div>
+
+  <h2>02. PROOF OF THERMAL WORK (PoTW)</h2>
+  <p>Standard PoW encourages wasteful over-clocking. <span class="highlight">PoTW</span> introduces a "Thermal Ceiling" consensus. Miners must validate blocks using a specific CPU percentage (60% Cap). Efficiency, not raw heat, determines the block winner. This protocol prioritizes hardware longevity and sustainable decentralization.</p>
+
+  
+
+  <h2>03. THE HALVING & BLOCK 0</h2>
+  <p>Block 0 contains the Mining Reserve of 86.6M FTC. To ensure long-term scarcity, the reward of <span class="highlight">13.37 FTC</span> halves every 5 years and 8 months. This cycle mimics the natural growth of the REZ-HD DAG, ensuring that as more nodes join, the individual token value scales accordingly.</p>
+
+  <div style="margin-top:40px; border-top:1px solid #333; padding-top:20px; text-align:center;">
+    <a href="index.html" style="color:var(--cyan); text-decoration:none;">[ BACK_TO_HUB ]</a>
+  </div>
+</div>
+
+</body>
+</html>

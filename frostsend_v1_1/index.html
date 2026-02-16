@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FrostSend | v1.1</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        #app { max-width: 400px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
+        .header { border-bottom: 2px solid var(--term); padding-bottom: 10px; margin-bottom: 20px; font-weight: bold; }
+        .card { background: #0a0a0a; border: 1px solid #333; padding: 15px; margin-bottom: 20px; text-align: center; }
+        .bal-val { font-size: 1.8rem; color: #fff; font-weight: bold; }
+        .input-group { margin-bottom: 15px; }
+        input { width: 100%; background: #111; border: 1px solid #444; color: #fff; padding: 12px; margin-top: 5px; box-sizing: border-box; font-family: inherit; }
+        
+        /* FLEX PIN SCREEN */
+        #pin-screen { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        .dot-container { display: flex; gap: 10px; margin-bottom: 30px; }
+        .pin-dot { height: 12px; width: 12px; border: 1px solid var(--gold); border-radius: 50%; }
+        .pin-dot.filled { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+        .keypad { display: grid; grid-template-columns: repeat(3, 85px); gap: 15px; }
+        .key { height: 75px; border: 1px solid #222; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; }
+        .key:active { background: #111; border-color: var(--gold); }
+        .btn-send { width: 100%; padding: 20px; background: var(--term); color: #000; font-weight: bold; border: none; cursor: pointer; margin-top: auto; }
+    </style>
+</head>
+<body>
+
+    <div id="pin-screen">
+        <div style="color:var(--gold); margin-bottom:10px; font-size:0.8rem;">ENTER 4-6 DIGIT PIN</div>
+        <div class="dot-container" id="dot-wrap">
+            <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+        </div>
+        <div class="keypad" id="keypad"></div>
+    </div>
+
+    <div id="app">
+        <div class="header">FROSTSEND <span style="color:var(--gold)">v1.1</span></div>
+        <div class="card">
+            <div style="font-size:0.6rem; color:#666; margin-bottom:5px;">FTC BALANCE</div>
+            <div class="bal-val">11,870,000.00</div>
+        </div>
+        <div class="input-group">
+            <input type="text" id="dest" placeholder="Recipient: user.frostchain">
+            <input type="number" id="amt" placeholder="Amount: 0.00">
+        </div>
+        <button class="btn-send" onclick="showPin()">SEND TRANSACTION</button>
+    </div>
+
+    <script>
+        let pin = "";
+        const keypad = document.getElementById('keypad');
+        const dots = document.querySelectorAll('.pin-dot');
+
+        function showPin() { 
+            if(!document.getElementById('dest').value || !document.getElementById('amt').value) return alert("Missing Data");
+            document.getElementById('pin-screen').style.display = 'flex'; 
+        }
+
+        [1,2,3,4,5,6,7,8,9,'CLR',0,'SEND'].forEach(v => {
+            const k = document.createElement('div');
+            k.className = 'key';
+            k.innerText = v;
+            k.onclick = () => {
+                if(v === 'CLR') { pin = ""; }
+                else if(v === 'SEND') { submit(); }
+                else if(pin.length < 6) { pin += v; }
+                updateDots();
+            };
+            keypad.appendChild(k);
+        });
+
+        function updateDots() {
+            dots.forEach((d, i) => d.className = i < pin.length ? 'pin-dot filled' : 'pin-dot');
+        }
+
+        function submit() {
+            if(pin.length >= 4 && pin.length <= 6) {
+                alert("STF LEDGER BROADCAST: " + document.getElementById('amt').value + " FTC sent to " + document.getElementById('dest').value);
+                location.reload();
+            } else {
+                alert("INVALID PIN: 4-6 DIGITS REQUIRED");
+                pin = "";
+                updateDots();
+            }
+        }
+    </script>
+</body>
+</html>

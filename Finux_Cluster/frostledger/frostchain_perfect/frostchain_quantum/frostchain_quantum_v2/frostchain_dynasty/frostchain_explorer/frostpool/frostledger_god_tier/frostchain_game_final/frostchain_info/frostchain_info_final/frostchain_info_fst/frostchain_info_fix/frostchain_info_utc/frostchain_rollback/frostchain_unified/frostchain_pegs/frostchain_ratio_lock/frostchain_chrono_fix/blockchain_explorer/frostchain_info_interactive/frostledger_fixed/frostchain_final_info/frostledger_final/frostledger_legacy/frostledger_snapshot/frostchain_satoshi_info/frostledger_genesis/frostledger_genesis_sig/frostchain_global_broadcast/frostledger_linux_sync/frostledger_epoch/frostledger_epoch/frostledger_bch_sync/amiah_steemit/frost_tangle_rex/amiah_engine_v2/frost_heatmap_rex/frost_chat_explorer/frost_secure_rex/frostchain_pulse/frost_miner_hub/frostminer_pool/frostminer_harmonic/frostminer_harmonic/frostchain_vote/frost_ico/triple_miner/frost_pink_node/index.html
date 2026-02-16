@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FROSTMINER // PINK_TANGLE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #000; --core: #00e0ff; --gold: #ffd700; --pink: #ff007f; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; margin: 0; overflow: hidden; height: 100vh; }
+.hum { position: fixed; top:0; left:0; width:100%; height:100%; background: repeating-linear-gradient(0deg, rgba(255,0,127,0.02) 0px, transparent 2px); pointer-events: none; z-index: 100; }
+canvas { display: block; filter: brightness(0.6) sepia(0.2); }
+.ui { position: absolute; top:0; left:0; width:100%; height:100%; padding:25px; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; }
+.panel { background: rgba(0,0,0,0.92); border-left: 3px solid var(--pink); padding: 25px; width: 420px; pointer-events: auto; box-shadow: 0 0 30px rgba(255,0,127,0.1); }
+.btn-pink { background: var(--pink); color: #fff; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; margin-top: 20px; font-family: inherit; }
+.asset-row { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; border-bottom: 1px solid #111; padding-bottom: 5px; }
+.footer { background: rgba(0,0,0,0.95); padding: 15px; border-top: 1px solid var(--gold); font-size: 11px; pointer-events: auto; }
+</style>
+</head>
+<body onload="initVis()">
+<div class="hum"></div>
+<canvas id="rez"></canvas>
+<div class="ui">
+  <div class="panel">
+    <div style="font-size: 9px; color: var(--pink); letter-spacing: 2px;">STATUS: PINK_NOISE_RESONANCE</div>
+    <div style="font-size: 22px; color: #fff; margin: 10px 0;">TRIPLE_MINING: <span id="h">0.00</span> TH/S</div>
+    
+    <div class="asset-row"><span>FTC (NATIVE)</span> <span id="ftc">0.00000</span></div>
+    <div class="asset-row"><span>FNR (XMR_33M)</span> <span id="fnr">0.000000</span></div>
+    <div class="asset-row"><span>FRST (DOGE_TUNNEL)</span> <span id="frst">0.00</span></div>
+
+    <button class="btn-pink" onclick="toggleResonance()" id="pbtn">ACTIVATE PINK HUM</button>
+    <div style="margin-top: 15px; font-size: 9px; color: #555;">AUDIO: PINK_NOISE + 432Hz CARRIER</div>
+  </div>
+  
+  <div class="footer">
+    <div style="display:flex; justify-content:space-between;">
+      <span style="color:var(--gold);">ARCHITECT: 82 MONTHS SERVED</span>
+      <span><a href="https://frstico.surge.sh" style="color:var(--core); text-decoration:none;">ICO_NEXUS >></a></span>
+    </div>
+    <div style="margin-top: 5px; color: var(--gold); font-size: 10px;">DONATE_BCH: bitcoincash:pr2a6fcv7usyq97eh9an0782x9txdzwl0y30mz7gup</div>
+  </div>
+</div>
+
+<script>
+let a, m = false; let b = [0,0,0];
+function toggleResonance() {
+  if(!a) {
+    a = new (window.AudioContext || window.webkitAudioContext)();
+    // Pink Noise Generation (Voss-McCartney Algorithm)
+    const bufferSize = 2 * a.sampleRate;
+    const noiseBuffer = a.createBuffer(1, bufferSize, a.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    let b0, b1, b2, b3, b4, b5, b6; b0=b1=b2=b3=b4=b5=b6=0.0;
+    for (let i = 0; i < bufferSize; i++) {
+        let white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179; b1 = 0.99332 * b1 + white * 0.0750312;
+        b2 = 0.96900 * b2 + white * 0.1538520; b3 = 0.86650 * b3 + white * 0.3104856;
+        b4 = 0.55000 * b4 + white * 0.5329522; b5 = -0.7616 * b5 - white * 0.0168980;
+        output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+        output[i] *= 0.11; b6 = white * 0.115926;
+    }
+    const pink = a.createBufferSource(); pink.buffer = noiseBuffer; pink.loop = true;
+    const g = a.createGain(); g.gain.value = 0.07; pink.connect(g).connect(a.destination);
+    pink.start();
+    
+    // 432Hz Foundation
+    const o = a.createOscillator(); const og = a.createGain(); o.frequency.value = 432;
+    og.gain.value = 0.05; o.connect(og).connect(a.destination); o.start();
+    
+    document.getElementById('pbtn').innerText = "CEASE EXTRACTION"; m = true;
+  } else { a.state === 'running' ? a.suspend() : a.resume(); m = !m; }
+}
+
+setInterval(() => {
+  if(!m) return;
+  document.getElementById('h').innerText = (Math.random()*90+10).toFixed(2);
+  b[0] += 0.0001337; b[1] += 0.000033; b[2] += 1.337;
+  document.getElementById('ftc').innerText = b[0].toFixed(5);
+  document.getElementById('fnr').innerText = b[1].toFixed(6);
+  document.getElementById('frst').innerText = b[2].toFixed(2);
+}, 1000);
+
+function initVis() {
+  const c = document.getElementById('rez'); const x = c.getContext('2d');
+  c.width = window.innerWidth; c.height = window.innerHeight;
+  let n = []; for(let i=0; i<45; i++) n.push({x:Math.random()*c.width, y:Math.random()*c.height, vx:Math.random()-0.3, vy:Math.random()-0.3});
+  function d() {
+    x.fillStyle = "rgba(0,0,0,0.2)"; x.fillRect(0,0,c.width,c.height);
+    x.strokeStyle = "rgba(255, 0, 127, 0.15)";
+    n.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if(p.x<0||p.x>c.width) p.vx*=-1; if(p.y<0||p.y>c.height) p.vy*=-1;
+      n.forEach(p2 => { if(Math.hypot(p.x-p2.x, p.y-p2.y) < 200) { x.beginPath(); x.moveTo(p.x, p.y); x.lineTo(p2.x, p2.y); x.stroke(); }});
+    });
+    requestAnimationFrame(d);
+  }
+  d();
+}
+</script>
+</body>
+</html>

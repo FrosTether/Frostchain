@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frostchain | v49.0 Layer-2</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --ln: #7d00ff; --btc: #f7931a; --cyan: #00ffff; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #gamma-overlay { position: fixed; inset: 0; z-index: 100; pointer-events: none; background: #fff; opacity: 0; display: none; }
+        @keyframes strobe40 { 0% { opacity: 0; } 50% { opacity: 0.12; } 100% { opacity: 0; } }
+        body.alpha-active.strobe-on #gamma-overlay { display: block; animation: strobe40 0.025s infinite; }
+
+        #tangle-canvas { position: fixed; inset: 0; z-index: 5; filter: contrast(2) brightness(1.2); opacity: 0.35; }
+        #dash { display: grid; grid-template-columns: 340px 1fr 340px; height: 100vh; position: relative; z-index: 10; }
+        
+        .panel { background: rgba(5,5,5,0.94); border: 1px solid #222; padding: 15px; overflow-y: auto; backdrop-filter: blur(15px); }
+        .header { grid-column: 1 / -1; height: 60px; background: #000; border-bottom: 2px solid var(--term); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 100; }
+        
+        .stat-card { background: rgba(10,10,10,0.9); border: 1px solid #333; padding: 12px; margin-bottom: 12px; border-left: 4px solid var(--term); }
+        .val { font-size: 1.3rem; font-weight: bold; color: #fff; }
+        .lbl { font-size: 0.6rem; color: #666; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* LIGHTNING UI */
+        .ln-box { background: rgba(20,0,40,0.8); border: 1px solid var(--ln); padding: 10px; margin-top: 20px; border-left: 4px solid var(--ln); }
+        .conf-badge { font-size: 0.55rem; padding: 2px 6px; border-radius: 3px; font-weight: bold; }
+        .conf-wait { background: #444; color: #fff; }
+        .conf-ok { background: var(--term); color: #000; }
+    </style>
+</head>
+<body>
+
+    <div id="gamma-overlay"></div>
+    <canvas id="tangle-canvas"></canvas>
+    
+    <div id="dash">
+        <div class="header">
+            <div>FROSTOISE_KERNEL_v49 | <span style="color:var(--cyan)">SEGWIT_ENABLED</span></div>
+            <div style="font-size:0.75rem; color:var(--ln);">LN_BRIDGE: ACTIVE [STF-LN]</div>
+        </div>
+
+        <div class="panel">
+            <div class="stat-card" style="border-left-color: var(--btc);">
+                <div class="lbl">SHA-256 STRATUM</div>
+                <div class="val" id="hash">42.8 EH/s</div>
+            </div>
+
+            <div class="ln-box">
+                <div class="lbl" style="color:var(--ln)">DCP MONITOR (2-CONF)</div>
+                <div style="margin-top:10px;">
+                    <div style="font-size:0.7rem; color:#fff;">Last TX: 0x8FA...<span class="conf-badge conf-wait" id="conf-status">1/2 CONF</span></div>
+                </div>
+            </div>
+
+            <div style="margin-top:20px;">
+                <button onclick="setMode('alpha')" style="width:100%; padding:10px; background:#000; border:1px solid var(--cyan); color:var(--cyan); font-weight:bold; cursor:pointer;">ALPHA [40Hz]</button>
+            </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; background:rgba(0,0,0,0.6); padding:15px; z-index:60;">
+            <div id="log" style="flex:1; overflow-y:auto; font-size:0.7rem; color:#888;">
+                <div>> SegWit Witness field initialized...</div>
+                <div>> Lightning Payment Channels: READY</div>
+                <div>> Anti-DoubleSpend Patch v1.0 applied.</div>
+            </div>
+            <input type="text" style="background:#000; border:1px solid var(--gold); color:#fff; padding:12px; font-family:inherit;" placeholder="Secure TX Message..." id="chat-in" onkeydown="if(event.key==='Enter') send()">
+        </div>
+
+        <div class="panel">
+            <div class="stat-card" style="border-left-color: var(--gold);">
+                <div class="lbl">wallet.dat Balance</div>
+                <div class="val">11,870,000.00 FTC</div>
+                <div style="font-size:0.5rem; color:#555;">(SegWit Balance)</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--cyan);">
+                <div class="lbl">FNR (Reserve)</div>
+                <div class="val">4,412,100.00</div>
+            </div>
+
+            <div style="text-align:center; padding:20px; border:1px solid #222; margin-top:30px;">
+                <div class="lbl">BLOCK CLOCK</div>
+                <div style="font-size:2.5rem; color:#fff;" id="clock">300</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let t = 300;
+        setInterval(() => {
+            t--; document.getElementById('clock').innerText = t;
+            if(t <= 0) { 
+                t = 300;
+                document.getElementById('conf-status').innerText = "2/2 CONF";
+                document.getElementById('conf-status').className = "conf-badge conf-ok";
+            }
+            document.getElementById('hash').innerText = (42 + Math.random()).toFixed(1) + " EH/s";
+        }, 1000);
+
+        function send() {
+            const i = document.getElementById('chat-in');
+            const l = document.getElementById('log');
+            if(!i.value) return;
+            const d = document.createElement('div');
+            d.innerHTML = `<span style="color:var(--term)">[TX]</span> ${i.value}`;
+            l.appendChild(d); i.value = ""; l.scrollTop = l.scrollHeight;
+        }
+
+        // HDR TANGLE ENGINE
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let p = Array(60).fill().map(()=>({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-.5)*1.2, vy:(Math.random()-.5)*1.2, clr: ["#00ff41", "#00ffff", "#ff00ff"][Math.floor(Math.random()*3)]}));
+        function loop() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            p.forEach(n => {
+                n.x+=n.vx; n.y+=n.vy;
+                if(n.x<0||n.x>canvas.width)n.vx*=-1; if(n.y<0||n.y>canvas.height)n.vy*=-1;
+                p.forEach(n2 => {
+                    let d = Math.hypot(n.x-n2.x, n.y-n2.y);
+                    if(d < 150) {
+                        ctx.strokeStyle = n.clr; ctx.globalAlpha = 1 - d/150;
+                        ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                    }
+                });
+            });
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+</html>

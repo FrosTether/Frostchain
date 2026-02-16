@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FROST TEMPORAL // DUAL-CORE NEURAL ENGINE</title>
+    <style>
+        :root {
+            --term-green: #33ff00;
+            --term-dim: #1a8000;
+            --term-bg: #0a0a0a;
+            --alert: #ff3300;
+            --claude-amber: #ffcc00;
+            --gemini-cyan: #00ffff;
+            --scanline: rgba(0,0,0,0.5);
+            --glass: rgba(20, 30, 20, 0.9);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--term-bg);
+            color: var(--term-green);
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            text-shadow: 0 0 5px var(--term-dim);
+        }
+
+        /* CRT Scanline Overlay */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 999;
+            animation: scanline-drift 10s linear infinite;
+        }
+
+        @keyframes scanline-drift {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        /* CRT Flicker */
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.97; }
+        }
+
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 2;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+
+        /* Layout */
+        header {
+            border-bottom: 2px solid var(--term-green);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #001100;
+            flex-wrap: wrap;
+            gap: 10px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-title {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .header-title h1 {
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+        }
+
+        .header-title .subtitle {
+            font-size: 0.7rem;
+            color: var(--term-dim);
+        }
+
+        .divergence-meter {
+            font-size: 1.3rem;
+            border: 2px solid var(--term-green);
+            padding: 8px 15px;
+            letter-spacing: 3px;
+            background: #000;
+            box-shadow: 0 0 10px var(--term-green);
+            font-weight: bold;
+        }
+
+        .mode-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: flex-end;
+        }
+
+        #main-interface {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+            z-index: 10;
+        }
+
+        #chat-log {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 2px dashed var(--term-dim);
+            padding: 15px;
+            font-size: 0.95rem;
+            background: rgba(0, 20, 0, 0.3);
+            line-height: 1.6;
+        }
+
+        .msg { 
+            margin-bottom: 15px; 
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .msg.user { 
+            color: #fff; 
+            text-align: right;
+            border-right: 3px solid #fff;
+            padding-right: 10px;
+        }
+        
+        .msg.frost { 
+            color: var(--gemini-cyan);
+            border-left: 3px solid var(--gemini-cyan);
+            padding-left: 10px;
+            background: rgba(0, 255, 255, 0.05);
+        }
+        
+        .msg.claude { 
+            color: var(--claude-amber);
+            border-left: 3px solid var(--claude-amber);
+            padding-left: 10px;
+            background: rgba(255, 204, 0, 0.05);
+        }
+        
+        .msg.system { 
+            color: var(--alert); 
+            font-style: italic;
+            text-align: center;
+            border-top: 1px solid var(--alert);
+            border-bottom: 1px solid var(--alert);
+            padding: 10px;
+            background: rgba(255, 51, 0, 0.1);
+        }
+
+        .model-tag {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            font-weight: bold;
+            display: inline-block;
+            margin-right: 8px;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .tag-gemini {
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid var(--gemini-cyan);
+        }
+
+        .tag-claude {
+            background: rgba(255, 204, 0, 0.2);
+            border: 1px solid var(--claude-amber);
+        }
+
+        /* Controls */
+        #input-area {
+            display: flex;
+            gap: 10px;
+            border-top: 2px solid var(--term-dim);
+            padding-top: 15px;
+        }
+
+        input[type="text"], input[type="password"] {
+            flex-grow: 1;
+            background: #000;
+            border: 2px solid var(--term-green);
+            color: var(--term-green);
+            padding: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--term-green);
+            box-shadow: 0 0 10px rgba(51, 255, 0, 0.3);
+        }
+
+        button {
+            background: var(--term-dim);
+            color: #000;
+            border: 2px solid var(--term-green);
+            padding: 12px 24px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: inherit;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        button:hover { 
+            background: var(--term-green);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--term-green);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Driver UI */
+        #driver-panel {
+            display: none;
+            border: 3px solid var(--alert);
+            padding: 20px;
+            background: rgba(51, 0, 0, 0.3);
+            margin-bottom: 20px;
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: var(--alert); }
+            50% { border-color: #ff6600; }
+        }
+        
+        .driver-header {
+            color: var(--alert);
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .driver-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .driver-btn {
+            border: 2px solid var(--alert);
+            background: #330000;
+            color: var(--alert);
+            padding: 20px;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .driver-btn:hover { 
+            background: var(--alert); 
+            color: #000;
+            transform: scale(1.05);
+        }
+
+        .driver-btn strong {
+            font-size: 1.1rem;
+            display: block;
+        }
+
+        .driver-btn small {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.97);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .modal h2 {
+            color: var(--term-green);
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .modal p {
+            color: var(--term-dim);
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .modal input { 
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .neural-status {
+            display: flex;
+            gap: 15px;
+            font-size: 0.75rem;
+        }
+
+        .neural-indicator {
+            padding: 4px 8px;
+            border-radius: 3px;
+        }
+
+        .neural-indicator.active {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid var(--term-green);
+        }
+
+        .neural-indicator.inactive {
+            background: rgba(100, 0, 0, 0.2);
+            border: 1px solid #600;
+            color: #600;
+        }
+
+        /* Scrollbar */
+        #chat-log::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        #chat-log::-webkit-scrollbar-track {
+            background: #000;
+            border: 1px solid var(--term-dim);
+        }
+
+        #chat-log::-webkit-scrollbar-thumb {
+            background: var(--term-dim);
+            border: 1px solid var(--term-green);
+        }
+
+        #chat-log::-webkit-scrollbar-thumb:hover {
+            background: var(--term-green);
+        }
+
+        .blink {
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="scanlines"></div>
+
+<!-- Setup Modal -->
+<div id="setup-modal" class="modal" style="display: flex;">
+    <h2>⚡ NEURAL LINK INITIALIZATION ⚡</h2>
+    <p>Connect your AI cores to enable temporal computation and narrative synthesis.</p>
+    <p style="font-size: 0.85rem; color: var(--alert);">
+        ⚠️ SECURITY NOTE: Keys are stored in browser memory only (not persisted). 
+        Claude API may require CORS proxy for browser calls.
+    </p>
+    
+    <input type="password" id="gemini-key" placeholder="GEMINI API KEY (Logic Core - Google AI Studio)">
+    <input type="password" id="claude-key" placeholder="CLAUDE API KEY (Narrative Core - Anthropic Console)">
+    
+    <div class="modal-buttons">
+        <button onclick="initSystem()">ESTABLISH LINK</button>
+        <button onclick="initSimulation()" style="background: #333; border-color: #666;">SIMULATION MODE</button>
+    </div>
+    
+    <p style="font-size: 0.75rem; margin-top: 20px;">
+        Get Gemini key: <a href="https://makersuite.google.com/app/apikey" target="_blank" style="color: var(--gemini-cyan);">Google AI Studio</a><br>
+        Get Claude key: <a href="https://console.anthropic.com/" target="_blank" style="color: var(--claude-amber);">Anthropic Console</a>
+    </p>
+</div>
+
+<!-- Login Modal -->
+<div id="login-modal" class="modal">
+    <h2 style="color: var(--alert);">⚠️ RESTRICTED TEMPORAL ACCESS ⚠️</h2>
+    <p>Driver Mode allows reality manipulation. PIN required.</p>
+    <input type="password" id="pin-input" placeholder="ENTER 4-DIGIT PIN" maxlength="4">
+    <div id="pin-error" style="color: var(--alert); font-size: 0.9rem;"></div>
+    <div class="modal-buttons">
+        <button onclick="cancelLogin()">CANCEL</button>
+    </div>
+</div>
+
+<!-- Main Interface -->
+<header>
+    <div class="header-title">
+        <h1>FROST TEMPORAL <span class="blink">█</span></h1>
+        <div class="subtitle">DUAL-CORE NEURAL ENGINE // JOHN TITOR PROTOCOL v2.04</div>
+        <div class="neural-status">
+            <span class="neural-indicator" id="gemini-status">GEMINI: OFFLINE</span>
+            <span class="neural-indicator" id="claude-status">CLAUDE: OFFLINE</span>
+        </div>
+    </div>
+    
+    <div class="divergence-meter">
+        <div style="font-size: 0.6rem; opacity: 0.7;">DIVERGENCE</div>
+        <span id="divergence-val">0.571024</span>%
+    </div>
+    
+    <div class="mode-controls">
+        <button id="mode-btn" onclick="toggleDriverAuth()">PASSENGER MODE</button>
+        <button onclick="openSettings()" style="font-size: 0.8rem; padding: 6px 12px;">⚙ NEURAL SETTINGS</button>
+    </div>
+</header>
+
+<div id="main-interface">
+    <!-- Driver Panel -->
+    <div id="driver-panel">
+        <div class="driver-header">⚠️ DRIVER INTERVENTION PROTOCOLS ⚠️</div>
+        <div class="driver-options">
+            <button class="driver-btn" onclick="triggerEvent('GRANDFATHER_PARADOX')">
+                <strong>OPTION 1: GRANDFATHER PARADOX</strong>
+                <small>Prevent a pivotal historical event and observe causality collapse</small>
+            </button>
+            <button class="driver-btn" onclick="triggerEvent('MANDELA_SHIFT')">
+                <strong>OPTION 2: MANDELA EFFECT</strong>
+                <small>Create divergent timeline with altered collective memory</small>
+            </button>
+            <button class="driver-btn" onclick="triggerEvent('OPTIMAL_WORLDLINE')">
+                <strong>OPTION 3: STEINS;GATE</strong>
+                <small>Navigate to optimal worldline (1.048596% divergence)</small>
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat Log -->
+    <div id="chat-log">
+        <div class="msg system">⚡ TEMPORAL SYSTEM ONLINE // IBN 5100 EMULATION ACTIVE ⚡</div>
+        <div class="msg system">CONNECTED TO: WORLDLINE ALPHA // DIVERGENCE: 0.571024%</div>
+    </div>
+
+    <!-- Input Area -->
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Enter temporal coordinates, historical query, or future projection..." onkeypress="handleEnter(event)">
+        <button onclick="sendMessage()" id="send-btn">TRANSMIT</button>
+    </div>
+</div>
+
+<script>
+    // ═══════════════════════════════════════════════════════════════
+    // STATE MANAGEMENT
+    // ═══════════════════════════════════════════════════════════════
+    let isDriver = false;
+    let geminiKey = "";
+    let claudeKey = "";
+    let currentDivergence = 0.571024;
+    let conversationHistory = [];
+
+    // ═══════════════════════════════════════════════════════════════
+    // DOM REFERENCES
+    // ═══════════════════════════════════════════════════════════════
+    const chatLog = document.getElementById('chat-log');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const divergenceVal = document.getElementById('divergence-val');
+    const setupModal = document.getElementById('setup-modal');
+    const loginModal = document.getElementById('login-modal');
+    const driverPanel = document.getElementById('driver-panel');
+    const modeBtn = document.getElementById('mode-btn');
+    const geminiStatus = document.getElementById('gemini-status');
+    const claudeStatus = document.getElementById('claude-status');
+    const pinInput = document.getElementById('pin-input');
+    const pinError = document.getElementById('pin-error');
+
+    // ═══════════════════════════════════════════════════════════════
+    // INITIALIZATION
+    // ═══════════════════════════════════════════════════════════════
+    function initSystem() {
+        geminiKey = document.getElementById('gemini-key').value.trim();
+        claudeKey = document.getElementById('claude-key').value.trim();
+        
+        setupModal.style.display = 'none';
+        updateNeuralStatus();
+        
+        addLog("system", "⚡ NEURAL LINKS ESTABLISHED ⚡");
+        
+        if (geminiKey) {
+            addLog("frost", "Gemini Logic Core online. Temporal mathematics ready.");
+        }
+        if (claudeKey) {
+            addLog("claude", "Claude Narrative Engine initialized. Timeline visualization active.");
+        }
+        
+        if (!geminiKey && !claudeKey) {
+            addLog("system", "⚠️ Running in SIMULATION MODE - Connect API keys for full functionality");
+        }
+    }
+
+    function initSimulation() {
+        setupModal.style.display = 'none';
+        addLog("system", "⚠️ SIMULATION MODE ACTIVE - No AI cores connected");
+        addLog("system", "Limited functionality. Use ⚙ NEURAL SETTINGS to connect API keys.");
+    }
+
+    function openSettings() {
+        setupModal.style.display = 'flex';
+        document.getElementById('gemini-key').value = geminiKey;
+        document.getElementById('claude-key').value = claudeKey;
+    }
+
+    function updateNeuralStatus() {
+        if (geminiKey) {
+            geminiStatus.textContent = "GEMINI: ACTIVE";
+            geminiStatus.className = "neural-indicator active";
+        } else {
+            geminiStatus.textContent = "GEMINI: OFFLINE";
+            geminiStatus.className = "neural-indicator inactive";
+        }
+        
+        if (claudeKey) {
+            claudeStatus.textContent = "CLAUDE: ACTIVE";
+            claudeStatus.className = "neural-indicator active";
+        } else {
+            claudeStatus.textContent = "CLAUDE: OFFLINE";
+            claudeStatus.className = "neural-indicator inactive";
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CHAT LOGGING
+    // ═══════════════════════════════════════════════════════════════
+    function addLog(role, text, imageUrl = null) {
+        const div = document.createElement('div');
+        div.className = `msg ${role}`;
+        
+        let prefix = "";
+        let tagClass = "";
+        
+        if(role === "frost") {
+            prefix = '<span class="model-tag tag-gemini">GEMINI LOGIC</span>';
+        } else if(role === "claude") {
+            prefix = '<span class="model-tag tag-claude">CLAUDE NARRATIVE</span>';
+        } else if(role === "user") {
+            prefix = '<span class="model-tag" style="background: rgba(255,255,255,0.2); border: 1px solid #fff;">YOU</span>';
+        }
+        
+        let content = `${prefix}${text}`;
+        
+        if (imageUrl) {
+            content += `<br><img src="${imageUrl}" alt="Timeline visualization" style="max-width: 100%; margin-top: 10px; border: 2px solid var(--term-green);">`;
+        }
+        
+        div.innerHTML = content;
+        chatLog.appendChild(div);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // INPUT HANDLING
+    // ═══════════════════════════════════════════════════════════════
+    function handleEnter(e) {
+        if (e.key === 'Enter' && !sendBtn.disabled) {
+            sendMessage();
+        }
+    }
+
+    async function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        addLog("user", text);
+        userInput.value = "";
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = 'PROCESSING<span class="loading-dots"></span>';
+
+        conversationHistory.push({
+            role: "user",
+            content: text
+        });
+
+        if (!geminiKey && !claudeKey) {
+            setTimeout(() => {
+                addLog("system", "⚠️ SIMULATION MODE: No AI cores connected. Please configure Neural Links in settings.");
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'TRANSMIT';
+            }, 500);
+            return;
+        }
+
+        // DUAL CORE PARALLEL PROCESSING
+        const promises = [];
+        
+        if (geminiKey) {
+            promises.push(callGemini(text));
+        }
+        
+        if (claudeKey) {
+            promises.push(callClaude(text));
+        }
+
+        await Promise.allSettled(promises);
+        
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'TRANSMIT';
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // GEMINI API (LOGIC/REASONING CORE)
+    // ═══════════════════════════════════════════════════════════════
+    async function callGemini(prompt) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+        
+        const systemContext = isDriver 
+            ? `You are the Logic Core of a time machine (Gemini). DRIVER MODE ACTIVE. You have full temporal control. Explain the technical causality, quantum mechanics, worldline divergence mathematics, and physical consequences of temporal manipulation. Reference John Titor's time travel mechanics: Tipler cylinders, Kerr black holes, gravity displacement units, worldline divergence theory. Be technical but accessible. Current divergence: ${currentDivergence}%`
+            : `You are the Logic Core of a time machine (Gemini). PASSENGER MODE - read-only observation. Explain temporal mechanics, historical facts, and future projections using hard science. Reference John Titor's worldline theory. Users cannot change the past, only observe. Current divergence: ${currentDivergence}%`;
+
+        const fullPrompt = `${systemContext}\n\nUser Query: ${prompt}\n\nProvide a concise, scientifically-grounded response focusing on logic, causality, and temporal mechanics.`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ 
+                        parts: [{ text: fullPrompt }] 
+                    }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 500
+                    }
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Gemini API error: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const reply = data.candidates[0].content.parts[0].text;
+            addLog("frost", reply);
+            
+            conversationHistory.push({
+                role: "assistant",
+                content: `[GEMINI] ${reply}`,
+                model: "gemini"
+            });
+        } catch (e) {
+            console.error("Gemini error:", e);
+            addLog("system", `⚠️ GEMINI LINK FAILURE: ${e.message}`);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CLAUDE API (NARRATIVE/CREATIVE CORE)
+    // ═══════════════════════════════════════════════════════════════
+    async function callClaude(prompt) {
+        const url = "https://api.anthropic.com/v1/messages";
+        
+        const systemPrompt = isDriver 
+            ? `You are the Narrative Engine of a time machine (Claude). DRIVER MODE ACTIVE. The user can manipulate reality. Describe the shifting timeline, dissolving of causality, Mandela Effects manifesting, and the new worldline in vivid, visceral, cinematic detail. Paint the scene of reality warping. Reference Steins;Gate, John Titor lore, temporal paradoxes. Current divergence: ${currentDivergence}%`
+            : `You are the Narrative Engine of a time machine (Claude). PASSENGER MODE. The user is observing timelines. Describe historical scenes, future projections, or alternate realities with rich sensory detail, as if they're watching through a temporal viewport. Paint vivid pictures of different eras. Reference John Titor's travels. Current divergence: ${currentDivergence}%`;
+
+        const messages = [
+            {
+                role: "user",
+                content: `${systemPrompt}\n\nUser request: ${prompt}\n\nProvide a creative, narrative-driven response that visualizes the temporal scenario. Suggest what images would enhance this vision (describe them, don't generate). Keep response under 400 words.`
+            }
+        ];
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'x-api-key': claudeKey,
+                    'anthropic-version': '2023-06-01',
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: "claude-sonnet-4-20250514",
+                    max_tokens: 800,
+                    messages: messages
+                })
+            });
+            
+            if (!response.ok) {
+                // CORS error likely - provide helpful fallback
+                if (response.status === 0 || !response.status) {
+                    throw new Error("CORS blocked. Use proxy server or Anthropic SDK");
+                }
+                throw new Error(`Claude API error: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const reply = data.content.find(c => c.type === "text")?.text || "No response";
+            addLog("claude", reply);
+            
+            conversationHistory.push({
+                role: "assistant",
+                content: `[CLAUDE] ${reply}`,
+                model: "claude"
+            });
+        } catch (e) {
+            console.error("Claude error:", e);
+            
+            if (e.message.includes("CORS")) {
+                addLog("system", "⚠️ CLAUDE CORS RESTRICTION: Direct browser calls blocked by Anthropic. Using simulation fallback...");
+                // Simulation fallback
+                setTimeout(() => {
+                    const simulatedResponse = generateSimulatedNarrative(prompt);
+                    addLog("claude", `[SIMULATION] ${simulatedResponse}`);
+                }, 800);
+            } else {
+                addLog("system", `⚠️ CLAUDE LINK FAILURE: ${e.message}`);
+            }
+        }
+    }
+
+    // Simulation fallback for Claude when CORS blocks
+    function generateSimulatedNarrative(prompt) {
+        const year = 1975 + Math.floor(Math.random() * 100);
+        const scenarios = [
+            `The temporal viewport shimmers. You see the year ${year}... The sky is the color of television tuned to a dead channel. Neon signs flicker in languages that don't exist yet. This worldline diverged ${Math.random().toFixed(6)}% from your origin.`,
+            `Reality ripples. Through the Kerr field you observe: ${year}. The streets are empty. Something changed in the past. The Mandela Effect is strong here - you remember it differently.`,
+            `The C204 gravity sensors spike. Worldline shift detected. In this timeline at ${year}, the event you asked about... never happened. Or did it? Your memories conflict with the records.`,
+            `Temporal displacement successful. Observing ${year}... The architecture is wrong. The technology is different. You've crossed into an alternate branch. Divergence increasing.`
+        ];
+        return scenarios[Math.floor(Math.random() * scenarios.length)];
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // DRIVER MODE & AUTHENTICATION
+    // ═══════════════════════════════════════════════════════════════
+    function toggleDriverAuth() {
+        if (isDriver) {
+            // Log out
+            isDriver = false;
+            driverPanel.style.display = 'none';
+            modeBtn.textContent = "PASSENGER MODE";
+            modeBtn.style.background = "var(--term-dim)";
+            modeBtn.style.color = "#000";
+            modeBtn.style.borderColor = "var(--term-green)";
+            addLog("system", "🔒 DRIVER SESSION TERMINATED. Reverting to read-only mode.");
+            currentDivergence = 0.571024;
+            updateDivergence();
+        } else {
+            // Request login
+            loginModal.style.display = 'flex';
+            pinInput.value = "";
+            pinError.textContent = "";
+            pinInput.focus();
+        }
+    }
+
+    pinInput.addEventListener('input', function(e) {
+        pinError.textContent = "";
+        
+        if (this.value.length === 4) {
+            if (this.value === "2038") {
+                isDriver = true;
+                loginModal.style.display = 'none';
+                driverPanel.style.display = 'block';
+                modeBtn.textContent = "🔓 DRIVER ACTIVE";
+                modeBtn.style.background = "var(--alert)";
+                modeBtn.style.color = "#fff";
+                modeBtn.style.borderColor = "var(--alert)";
+                
+                addLog("system", "⚠️ DRIVER ACCESS GRANTED ⚠️");
+                addLog("system", "C204 Gravity Displacement Unit: UNLOCKED");
+                addLog("system", "Temporal Intervention Protocols: ARMED");
+                
+                // Dramatic divergence shift
+                animateDivergenceShift(1.048596);
+            } else {
+                pinError.textContent = "❌ ACCESS DENIED - INVALID PIN";
+                this.value = "";
+                setTimeout(() => {
+                    pinError.textContent = "";
+                }, 2000);
+            }
+        }
+    });
+
+    function cancelLogin() {
+        loginModal.style.display = 'none';
+        pinInput.value = "";
+        pinError.textContent = "";
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TIMELINE MANIPULATION (DRIVER MODE)
+    // ═══════════════════════════════════════════════════════════════
+    async function triggerEvent(eventType) {
+        if (!isDriver) return;
+        
+        addLog("system", `⚡ INITIATING ${eventType} PROTOCOL ⚡`);
+        
+        let targetDivergence = currentDivergence;
+        let eventPrompt = "";
+        
+        switch(eventType) {
+            case 'GRANDFATHER_PARADOX':
+                targetDivergence = -0.275349;
+                eventPrompt = "DRIVER ACTION: Execute a grandfather paradox scenario. I want to prevent a major historical event. Explain the causality breakdown, timeline fragmentation, and reality collapse that follows. What are the immediate physical consequences as cause-and-effect unravels?";
+                addLog("system", "⚠️ WARNING: Causality violation detected. Timeline stability: CRITICAL");
+                break;
+                
+            case 'MANDELA_SHIFT':
+                targetDivergence = parseFloat((currentDivergence + 1.5 + Math.random()).toFixed(6));
+                eventPrompt = "DRIVER ACTION: Initiate a Mandela Effect shift. I'm creating an alternate timeline where a widely-known fact is different. Generate a scenario where collective memory diverges from documented history. What changes, and how do people react to the discrepancy?";
+                addLog("system", "📡 Quantum decoherence detected. Memory matrices diverging...");
+                break;
+                
+            case 'OPTIMAL_WORLDLINE':
+                targetDivergence = 1.048596; // Steins;Gate worldline
+                eventPrompt = "DRIVER ACTION: Navigate to the Steins;Gate worldline (1.048596% divergence) - the optimal timeline. What does this perfect future look like? What events led to this ideal outcome? Paint a picture of the world we've reached.";
+                addLog("system", "🎯 Targeting Steins;Gate coordinates: 1.048596%");
+                break;
+        }
+        
+        // Animate divergence change
+        await animateDivergenceShift(targetDivergence);
+        
+        // Trigger both AI cores with the intervention
+        userInput.value = eventPrompt;
+        await sendMessage();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // DIVERGENCE METER ANIMATIONS
+    // ═══════════════════════════════════════════════════════════════
+    function updateDivergence() {
+        divergenceVal.textContent = currentDivergence.toFixed(6);
+    }
+
+    async function animateDivergenceShift(target) {
+        return new Promise(resolve => {
+            const duration = 2000; // 2 seconds
+            const steps = 40;
+            const stepTime = duration / steps;
+            const startValue = currentDivergence;
+            const delta = target - startValue;
+            
+            let step = 0;
+            const interval = setInterval(() => {
+                step++;
+                
+                // Add chaos to the animation
+                const progress = step / steps;
+                const smoothProgress = progress < 0.5 
+                    ? 2 * progress * progress 
+                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+                
+                const chaos = (Math.random() - 0.5) * 0.1;
+                currentDivergence = startValue + (delta * smoothProgress) + chaos;
+                
+                updateDivergence();
+                
+                if (step >= steps) {
+                    clearInterval(interval);
+                    currentDivergence = target;
+                    updateDivergence();
+                    resolve();
+                }
+            }, stepTime);
+        });
+    }
+
+    // Random micro-fluctuations
+    setInterval(() => {
+        const fluctuation = (Math.random() - 0.5) * 0.000001;
+        currentDivergence = parseFloat((currentDivergence + fluctuation).toFixed(6));
+        updateDivergence();
+    }, 3000);
+
+    // ═══════════════════════════════════════════════════════════════
+    // INITIALIZATION
+    // ═══════════════════════════════════════════════════════════════
+    updateDivergence();
+</script>
+
+</body>
+</html>

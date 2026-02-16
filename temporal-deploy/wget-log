@@ -1,0 +1,6 @@
+--2026-02-13 22:40:03--  https://storage.googleapis.com/replit-web-user-export/52051147/5570f2d5-9179-4ce0-a582-56fda0edd5f9/ReplitExport-voluntaryistj.tar.gz?GoogleAccessId=replit-web%40replit-web.iam.gserviceaccount.com&Expires=1771903294&Signature=AB%2FoPGM9lOq3uBvdVk3Uine8RfuA7Xk4VPTRHdlGmZErS6YyneA0jDTrDDINjwTxJo3Cz4lpwBNs5mYS6%2FiieFWon%2Bi2KkxFmkKywSUvmW9Kf6BU1a2d8cGVgjuqr9JpiB1PbQGtmCuvcPreecPhHgbd75Yh5tlUhFbaTC%2FrfyK0H7rmWKdYPuoFKyewqdRKZutvSvfW1zFSg76WG7hnQp7R4gm%2BrnvZils2yRZBbGCKqLFqhdkY7DPz3C7TSblCBjI7sQFScp0aKemzCTq0a8zWO4wrwSAcBnz1ewz%2Bx5BH9LECmR4ZDtVNOAdqcttIJbc%2BMc6nLM%2FwwxfpSTY3qA%3D%3D%0Awget%20-O%20temporal.tar.gz%20https://storage.googleapis.com/replit-web-user-export/52051147/5570f2d5-9179-4ce0-a582-56fda0edd5f9/ReplitExport-voluntaryistj.tar.gz?GoogleAccessId=replit-web%40replit-web.iam.gserviceaccount.com
+Resolving storage.googleapis.com (storage.googleapis.com)... 172.217.4.59, 142.250.189.155, 142.251.32.27, ...
+Connecting to storage.googleapis.com (storage.googleapis.com)|172.217.4.59|:443... connected.
+HTTP request sent, awaiting response... 400 Bad Request
+2026-02-13 22:40:03 ERROR 400: Bad Request.
+

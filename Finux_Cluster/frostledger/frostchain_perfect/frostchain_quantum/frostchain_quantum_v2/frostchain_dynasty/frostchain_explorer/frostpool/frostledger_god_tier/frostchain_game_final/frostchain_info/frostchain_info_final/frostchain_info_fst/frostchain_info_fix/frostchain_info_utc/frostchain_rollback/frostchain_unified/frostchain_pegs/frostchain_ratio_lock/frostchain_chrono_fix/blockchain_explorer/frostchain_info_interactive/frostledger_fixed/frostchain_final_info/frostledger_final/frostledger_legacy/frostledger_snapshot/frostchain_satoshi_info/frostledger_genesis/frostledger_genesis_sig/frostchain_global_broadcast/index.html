@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FROSTCHAIN // GLOBAL_GENESIS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --core: #00fbff; --gold: #ffd700; --quantum: #ff00ff; --bg: #010101; --panel: #0a0a0a; --border: #1a1a1a; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #eee; font-family: 'Share Tech Mono', monospace; font-size: 12px; }
+
+/* GENIUS BROADCAST HEADER */
+.broadcast-bar {
+  background: #000; border-bottom: 2px solid var(--gold); padding: 20px;
+  text-align: center; box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
+}
+.genius-msg { font-size: 1.2em; color: var(--gold); letter-spacing: 1px; font-weight: bold; margin-bottom: 5px; }
+.sub-sig { font-size: 10px; color: var(--quantum); opacity: 0.8; }
+
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+
+/* DATA TILES */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+.card { background: var(--panel); border: 1px solid var(--border); padding: 15px; border-top: 2px solid var(--core); }
+.val { font-size: 1.8em; font-weight: bold; color: #fff; margin: 5px 0; }
+.lbl { font-size: 9px; color: #555; text-transform: uppercase; }
+
+/* GLOBAL LEDGER */
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); }
+th { text-align: left; padding: 12px; background: #000; color: #555; font-size: 9px; }
+td { padding: 12px; border-bottom: 1px solid #111; font-family: monospace; font-size: 11px; }
+.hash { color: var(--gold); }
+
+@keyframes alert { 50% { border-color: var(--quantum); } }
+.quantum-card { border-color: var(--quantum); animation: alert 2s infinite; }
+</style>
+</head>
+<body onload="boot()">
+
+<div class="broadcast-bar">
+  <div class="genius-msg">"Sign the block. Alex what is the Genius Act? much Quantum Fungible wow!"</div>
+  <div class="sub-sig">BLOCK_SIGNATURE: 683050920 // SATOSHI_IDENTITY: VERIFIED</div>
+</div>
+
+<div class="container">
+  
+  <div>
+    <div class="stats">
+      <div class="card">
+        <div class="lbl">NETWORK HEIGHT</div>
+        <div class="val">683,050,920</div>
+      </div>
+      <div class="card quantum-card">
+        <div class="lbl">QUANTUM STATE</div>
+        <div class="val" style="color:var(--quantum)">FUNGIBLE</div>
+      </div>
+      <div class="card">
+        <div class="lbl">Satoshi Reserve</div>
+        <div class="val" style="color:var(--gold)">12,370,000</div>
+      </div>
+    </div>
+
+    <div style="color:var(--core); margin-bottom:10px;">>> GLOBAL LEDGER MONITOR (BROADCAST_SYNC)</div>
+    <table>
+      <thead><tr><th>HEIGHT</th><th>CHAIN</th><th>SIGNATURE</th><th>TIMESTAMP</th></tr></thead>
+      <tbody id="ledger"></tbody>
+    </table>
+  </div>
+
+  <div>
+    <div style="color:var(--gold); border-bottom:1px solid #222; padding:10px 0; font-size:14px; margin-bottom:15px;">EXCHANGE INTERCEPT</div>
+    <div class="card" style="margin-bottom:15px; border-top-color:var(--quantum)">
+      <div class="lbl">COINBASE BROADCAST STATUS</div>
+      <div class="val" style="font-size:1.2em">LISTENING...</div>
+      <div style="font-size:10px; color:#555; margin-top:5px;">TRAPPING_INCOMING_SIG_KEYS</div>
+    </div>
+    <div class="card">
+      <div class="lbl">BCH FORK RESERVE</div>
+      <div class="val" style="font-size:1.2em">21,000,000</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function boot() {
+  const tbody = document.getElementById('ledger');
+  // Locked to the Genius Act Height
+  const h = 683050920;
+  for(let i=0; i<15; i++) {
+    const time = new Date(Date.now() - (i * 300000)).toUTCString().split(' ')[4];
+    tbody.innerHTML += `
+      <tr>
+        <td style="color:#fff">${h}</td>
+        <td style="color:var(--core)">FROSTCHAIN</td>
+        <td class="hash">683050920</td>
+        <td>${time}</td>
+      </tr>
+    `;
+  }
+}
+</script>
+</body>
+</html>

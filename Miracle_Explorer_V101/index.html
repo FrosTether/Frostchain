@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>MIRACLE_NODE // DYNAMIC_EXPLORER</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#050505;--miracle:#ffd700;--blue:#00e0ff;--pink:#ff69b4;}
+        body{background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;margin:0;padding:20px;display:flex;justify-content:center;align-items:center;min-height:100vh;}
+        #explorer-frame{width:100%;max-width:550px;background:#0d0d0d;border:2px solid var(--miracle);border-radius:25px;padding:30px;box-shadow:0 0 50px rgba(255,215,0,0.15);}
+        .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:20px;}
+        .stat-card{background:#111;padding:15px;border-radius:12px;border:1px solid #222;}
+        .val{font-size:18px;color:var(--blue);font-weight:bold;}
+        .freq-ticker{background:rgba(255,105,180,0.1);color:var(--pink);padding:10px;text-align:center;border-radius:10px;margin-top:20px;font-size:12px;border:1px solid var(--pink);}
+        .dat-preview{background:#000;padding:20px;border-radius:15px;margin-top:20px;font-size:11px;color:#444;border:1px solid #1a1a1a;white-space:pre-wrap;}
+    </style>
+</head>
+<body>
+    <div id="explorer-frame">
+        <h1 style="color:var(--miracle);text-align:center;margin:0;">MIRACLE_NODE</h1>
+        <div style="text-align:center;font-size:10px;color:var(--blue);">drfrost.frostchain // DYNAMIC_RESONANCE</div>
+        
+        <div class="freq-ticker" id="ticker">CURRENT_ENNEAD: 528Hz (MIRACLE)</div>
+
+        <div class="stat-grid">
+            <div class="stat-card"><div>BLOCK_HEIGHT</div><div class="val">3,141,592</div></div>
+            <div class="stat-card"><div>FTC_MINED</div><div class="val">12,370,000</div></div>
+            <div class="stat-card"><div>FNR_WEIGHT</div><div class="val">13.37%</div></div>
+            <div class="stat-card"><div>LIQUIDITY</div><div class="val">$2.10M</div></div>
+        </div>
+
+        <div class="dat-preview">
+> MIRACLE_WALLET_DAT_CONTENTS:
+NODE: miracle.frostchain
+ADMIN: drfrost.frostchain
+ENGINE: SOUND_CRYPTO_V101.5
+RESONANCE: DYNAMIC_RNG_SOLFEGGIO
+        </div>
+    </div>
+    <script>
+        const f = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        setInterval(() => {
+            const pick = f[Math.floor(Math.random() * f.length)];
+            document.getElementById('ticker').innerText = `CURRENT_ENNEAD: ${pick}Hz (DYNAMIC_SHIFT)`;
+        }, 3000);
+    </script>
+</body>
+</html>

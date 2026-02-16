@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>FROST_MINER // QUANTUM_SOLFEGGIO</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#000;--blue:#00e0ff;--gold:#ffd700;--pink:#ff69b4;}
+        body, html{margin:0;padding:0;width:100%;height:100%;background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;overflow:hidden;}
+        #ui-layer{position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:30px;box-sizing:border-box;}
+        .glass-panel{background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);border:1px solid rgba(0,224,255,0.2);padding:20px;border-radius:20px;pointer-events:auto;}
+        canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
+        .toggle-switch{width:60px;height:30px;background:#333;border-radius:15px;position:relative;cursor:pointer;transition:0.3s;pointer-events:auto;}
+        .toggle-switch.active{background:var(--blue);box-shadow:0 0 20px var(--blue);}
+        .toggle-knob{width:26px;height:26px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:0.3s;}
+        .toggle-switch.active .toggle-knob{left:32px;}
+        h1{margin:0;font-size:18px;letter-spacing:5px;color:var(--blue);}
+        .stat-row{display:flex;justify-content:space-between;font-size:12px;margin:5px 0;}
+        .btn-full{background:none;border:1px solid #444;color:#666;padding:5px 10px;cursor:pointer;font-family:inherit;pointer-events:auto;}
+        .btn-full:hover{color:var(--gold);border-color:var(--gold);}
+    </style>
+</head>
+<body>
+    <canvas id="tangleCanvas"></canvas>
+    
+    <div id="ui-layer">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="glass-panel">
+                <h1>FROST_MINER // V95</h1>
+                <div class="stat-row"><span>ID:</span><span style="color:var(--gold)">drfrost.frostchain</span></div>
+                <div class="stat-row"><span>LIQUIDITY:</span><span style="color:var(--blue)">$2.10M</span></div>
+            </div>
+            <div class="glass-panel" style="text-align:right;">
+                <div style="font-size:10px;margin-bottom:5px;">SOUND_CRYPTO_ENGINE</div>
+                <div id="engineToggle" class="toggle-switch" onclick="toggleSound()">
+                    <div class="toggle-knob"></div>
+                </div>
+                <div id="freqLabel" style="font-size:9px;margin-top:5px;color:#555;">ENGINE_OFF</div>
+            </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+            <div class="glass-panel" style="width:250px;">
+                <div class="stat-row"><span>HASHRATE:</span><span id="hr">13.37 PH/s</span></div>
+                <div class="stat-row"><span>OWNERSHIP:</span><span>13.37%</span></div>
+                <div class="stat-row"><span>TANGLE_WEIGHT:</span><span style="color:var(--pink)">REZ_HD_ACTIVE</span></div>
+            </div>
+            <button class="btn-full" onclick="document.documentElement.requestFullscreen()">[ FULLSCREEN_MODE ]</button>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx, osc, gainNode, isRunning = false;
+        const canvas = document.getElementById('tangleCanvas');
+        const ctx = canvas.getContext('2d');
+        let nodes = [];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            for(let i=0; i<40; i++) nodes.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:Math.random()-0.5, vy:Math.random()-0.5});
+        }
+
+        function toggleSound() {
+            if(!isRunning) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                osc = audioCtx.createOscillator();
+                gainNode = audioCtx.createGain();
+                osc.frequency.setValueAtTime(528, audioCtx.currentTime); // Solfeggio 528Hz
+                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                osc.start();
+                isRunning = true;
+                document.getElementById('engineToggle').classList.add('active');
+                document.getElementById('freqLabel').innerText = "7.83Hz + 528Hz ACTIVE";
+                document.getElementById('freqLabel').style.color = "var(--blue)";
+            } else {
+                osc.stop();
+                isRunning = false;
+                document.getElementById('engineToggle').classList.remove('active');
+                document.getElementById('freqLabel').innerText = "ENGINE_OFF";
+                document.getElementById('freqLabel').style.color = "#555";
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            ctx.strokeStyle = isRunning ? "rgba(0, 224, 255, 0.2)" : "rgba(50, 50, 50, 0.2)";
+            ctx.lineWidth = 1;
+            
+            nodes.forEach((n, i) => {
+                n.x += n.vx * (isRunning ? 2 : 0.5);
+                n.y += n.vy * (isRunning ? 2 : 0.5);
+                if(n.x<0 || n.x>canvas.width) n.vx *= -1;
+                if(n.y<0 || n.y>canvas.height) n.vy *= -1;
+
+                nodes.forEach((n2, j) => {
+                    if(i === j) return;
+                    let dist = Math.hypot(n.x - n2.x, n.y - n2.y);
+                    if(dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(n.x, n.y);
+                        ctx.lineTo(n2.x, n2.y);
+                        ctx.stroke();
+                    }
+                });
+
+                ctx.fillStyle = isRunning ? "var(--blue)" : "#333";
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, 2, 0, Math.PI*2);
+                ctx.fill();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frost ICO | Premine Sale</title>
+    <style>
+        :root { --bg: #000; --term: #33ff00; --gold: #ffd700; --glass: rgba(51, 255, 0, 0.1); }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; }
+        #app { max-width: 500px; margin: 0 auto; padding: 25px; min-height: 100vh; display: flex; flex-direction: column; gap: 20px; }
+
+        .header { text-align: center; border-bottom: 2px solid var(--term); padding-bottom: 20px; }
+        .vault-tag { font-size: 0.6rem; color: #666; margin-top: 5px; letter-spacing: 2px; }
+
+        /* ICO CARD */
+        .ico-card { background: #080808; border: 1px solid #222; padding: 25px; border-radius: 15px; text-align: center; position: relative; overflow: hidden; }
+        .ico-card::after { content: "LIVE PREMINE"; position: absolute; top: 10px; right: -30px; background: var(--gold); color: #000; font-size: 0.6rem; padding: 5px 40px; transform: rotate(45deg); font-weight: bold; }
+        
+        .supply-lbl { font-size: 0.7rem; color: #888; text-transform: uppercase; }
+        .supply-val { font-size: 2.2rem; font-weight: bold; color: var(--term); margin: 10px 0; }
+        .price-box { background: #111; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #333; }
+        .price-val { font-size: 1.8rem; font-weight: bold; color: var(--gold); }
+
+        /* BUY ZONE */
+        .buy-zone { display: flex; flex-direction: column; gap: 10px; }
+        input { background: #000; border: 1px solid #444; color: #fff; width: 100%; padding: 18px; border-radius: 10px; font-family: inherit; font-size: 1.2rem; box-sizing: border-box; text-align: center; }
+        .btn-buy { background: var(--term); color: #000; border: none; width: 100%; padding: 20px; border-radius: 10px; font-weight: bold; text-transform: uppercase; cursor: pointer; letter-spacing: 1px; font-size: 1.1rem; }
+        .btn-buy:hover { background: #2bd600; box-shadow: 0 0 20px rgba(51, 255, 0, 0.2); }
+
+        .footer { font-size: 0.6rem; color: #444; text-align: center; margin-top: auto; padding-top: 20px; border-top: 1px solid #111; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div style="font-weight:bold; font-size:1.5rem; color:var(--term);">FRSTICO.SURGE.SH</div>
+            <div class="vault-tag">SOURCE: ICO.frostchain</div>
+        </div>
+
+        <div class="ico-card">
+            <div class="supply-lbl">Available Premine Supply</div>
+            <div class="supply-val" id="supply">1,000,000 FTC</div>
+            
+            <div class="price-box">
+                <div class="supply-lbl" style="color:var(--gold)">Fixed Fair Value Price</div>
+                <div class="price-val">$18.23</div>
+                <div style="font-size:0.6rem; color:#555; margin-top:5px;">BACKED BY KANEFROSTCHAIN LIQUIDITY</div>
+            </div>
+
+            <div class="buy-zone">
+                <input type="number" id="buy-amt" placeholder="Enter Amount of FTC">
+                <button class="btn-buy" onclick="buyFTC()">Buy FTC from Premine</button>
+            </div>
+        </div>
+
+        <div style="text-align:center;">
+            <a href="https://kanefrostchain.surge.sh" style="color:var(--gold); font-size:0.7rem; text-decoration:none;">← Back to Liquidity Exchange</a>
+        </div>
+
+        <div class="footer">
+            <div>FROST PROTOCOL ICO TERMINAL v1.0</div>
+            <div style="margin-top:5px;">AUTHORIZED BY: drfrost | FEB 12, 2026</div>
+        </div>
+    </div>
+
+    <script>
+        let currentSupply = 1000000;
+
+        function buyFTC() {
+            const amt = parseFloat(document.getElementById('buy-amt').value);
+            if(!amt || amt <= 0) return;
+            if(amt > currentSupply) { alert("Insufficient ICO Supply"); return; }
+
+            const cost = amt * 18.23;
+            if(confirm(`Confirm Purchase: ${amt} FTC for $${cost.toLocaleString()}?`)) {
+                currentSupply -= amt;
+                document.getElementById('supply').innerText = currentSupply.toLocaleString() + " FTC";
+                alert(`SUCCESS: ${amt} FTC added to your wallet. Liquidity re-routed to Satoshi.frostchain.`);
+            }
+        }
+    </script>
+</body>
+</html>

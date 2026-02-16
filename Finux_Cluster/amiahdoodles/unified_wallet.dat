@@ -1,0 +1,4 @@
+/* DRFROST_GOD_MODE_OVERRIDE */
+localStorage.removeItem('unified_wallet.dat');
+location.reload();
+console.log("%c [HARDWARE LOCK PURGED] ", "background: #ffd700; color: #000");

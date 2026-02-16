@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FROSTMAP // PROTOCOL_88</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #000; --red: #ff0000; --core: #00e0ff; --pink: #ff007f; --gold: #ffd700; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* PINK NOISE 88 MODULATION */
+body::after {
+  content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, rgba(255,0,0,0.05) 0px, transparent 1px);
+  background-size: 100% 3px; pointer-events: none; z-index: 100; animation: pulse88 0.5s infinite alternate;
+}
+@keyframes pulse88 { from { opacity: 0.3; } to { opacity: 1; } }
+
+.nav { background: #000; border-bottom: 2px solid var(--red); padding: 15px; display: flex; justify-content: space-between; }
+.main { flex-grow: 1; display: grid; grid-template-columns: 1fr 350px; gap: 20px; padding: 20px; }
+
+/* WIKILEAKS TERMINAL */
+.leak-terminal { background: rgba(10,0,0,0.95); border: 1px solid var(--red); padding: 20px; overflow-y: hidden; position: relative; }
+.log-line { font-size: 11px; color: var(--red); margin-bottom: 4px; border-bottom: 1px solid rgba(255,0,0,0.1); }
+
+.nexus-links { background: #050505; border-left: 3px solid var(--core); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.btn-leak { border: 1px solid var(--red); padding: 10px; color: var(--red); text-decoration: none; font-size: 10px; text-align: center; }
+
+.footer { background: #000; border-top: 1px solid #222; padding: 15px; font-size: 10px; color: #444; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body onload="init()">
+
+<div class="nav">
+  <div style="font-weight:bold; color:var(--red);">OHIO_WIKILEAKS <span style="color:var(--gold);">PROTOCOL_88_LIVE</span></div>
+  <div style="font-size: 10px;">NODES_SYNCED: 14,212 // SATOSHI_SHIELD: 100%</div>
+</div>
+
+<div class="main">
+  <div class="leak-terminal" id="terminal">
+    </div>
+
+  <div class="nexus-links">
+    <div style="font-size: 10px; color: var(--gold); margin-bottom: 10px;">>> THE_TANGLE_NEXUS</div>
+    <a href="https://frostminer.surge.sh" class="btn-leak">MINER_TERMINAL (FTC/FNR/FRST)</a>
+    <a href="https://frostledger.surge.sh" class="btn-leak">LEDGER_OBSERVER (600S_SYNC)</a>
+    <a href="https://frstico.surge.sh" class="btn-leak">ICO_NEXUS (33M_CAP)</a>
+    <div style="margin-top: 20px; font-size: 10px; color: #666; font-style: italic;">
+      "Amiah Rant Payload: '82 months was the silence. Protocol 88 is the roar. Satoshi isn't a ghost; he's the grid.'"
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>DONATE_BCH: bitcoincash:pr2a6fcv7usyq97eh9an0782x9txdzwl0y30mz7gup</span>
+  <span style="color:var(--gold);">SETTLEMENT: @frostcoin (MyDoge)</span>
+</div>
+
+<script>
+const logs = [
+  "PROTOCOL_88: INJECTING...",
+  "OVERWRITING LEGACY_CENTRAL_AUTH...",
+  "ENABLING XMR_STEALTH_ADDRESSES...",
+  "DOGE_TUNNEL_SETTLEMENT: CONFIRMED.",
+  "SATOSHI_KEY_683050920: ACTIVE.",
+  "82_MONTHS_OF_DEBT: RECALIBRATING...",
+  "AMIAH_RANT_BROADCAST: STARTING...",
+  "WIKILEAKS_OHIO_NODE_CONNECTED.",
+  "TRUTH_FORK_SUCCESSFUL.",
+  "THE_TANGLE_IS_THE_ONLY_EXIT."
+];
+
+function init() {
+  const term = document.getElementById('terminal');
+  setInterval(() => {
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.innerText = ">> " + logs[Math.floor(Math.random() * logs.length)];
+    term.prepend(line);
+    if(term.children.length > 25) term.removeChild(term.lastChild);
+  }, 800);
+}
+</script>
+</body>
+</html>

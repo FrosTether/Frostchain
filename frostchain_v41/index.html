@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frostchain | Omega v41</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --pink: #ff00ff; --cyan: #00ffff; --gold: #ffd700; --theta: #7d00ff; --btc: #f7931a; --bch: #8dc351; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #gamma-overlay { position: fixed; inset: 0; z-index: 100; pointer-events: none; background: #fff; opacity: 0; display: none; }
+        @keyframes strobe40 { 0% { opacity: 0; } 50% { opacity: 0.12; } 100% { opacity: 0; } }
+        body.alpha-active.strobe-on #gamma-overlay { display: block; animation: strobe40 0.025s infinite; }
+
+        /* MASTER LAYOUT */
+        #dash { display: grid; grid-template-columns: 340px 1fr 340px; height: 100vh; position: relative; }
+        #tangle-canvas { position: fixed; inset: 0; z-index: 5; cursor: crosshair; filter: contrast(1.8) brightness(1.2); }
+
+        .panel { background: rgba(5,5,5,0.95); border: 1px solid #222; z-index: 50; padding: 15px; overflow-y: auto; backdrop-filter: blur(12px); border-right: 1px solid #333; }
+        .header { grid-column: 1 / -1; height: 60px; background: #000; border-bottom: 2px solid var(--term); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 100; }
+        
+        /* FEATURE BOXES */
+        .feature-box { background: #080808; border: 1px solid #222; padding: 12px; margin-bottom: 12px; border-left: 3px solid var(--term); }
+        .val { font-size: 1.4rem; font-weight: bold; color: #fff; }
+        .lbl { font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 1.5px; }
+
+        /* THETA BRIDGE SPECIAL UI */
+        .theta-bridge { background: rgba(20, 0, 40, 0.8); border: 1px solid var(--theta); border-left: 4px solid var(--theta); padding: 10px; margin-top: 20px; }
+        
+        .btn-mode { width: 100%; padding: 12px; margin-bottom: 5px; background: #000; border: 1px solid #333; color: #444; font-weight: bold; cursor: pointer; text-align: left; font-size: 0.65rem; }
+        .btn-mode.active-alpha { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+        .btn-mode.active-theta { border-color: var(--theta); color: var(--theta); box-shadow: 0 0 10px var(--theta); }
+        .btn-mode.active-delta { border-color: var(--pink); color: var(--pink); box-shadow: 0 0 10px var(--pink); }
+
+        /* BITCHAT */
+        #chat-log { height: 100%; background: rgba(0,0,0,0.8); border: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 0.7rem; }
+        .chat-bar { position: fixed; bottom: 20px; left: 360px; right: 360px; background: #000; border: 1px solid var(--gold); padding: 15px; display: flex; gap: 10px; z-index: 200; }
+        input { flex: 1; background: transparent; border: none; color: #fff; outline: none; font-family: inherit; }
+    </style>
+</head>
+<body>
+
+    <div id="gamma-overlay"></div>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dash">
+        <div class="header">
+            <div><span style="color:var(--term); font-weight:bold;">FROSTOISE_CORE_v41</span> | <span style="color:var(--cyan)">drfrost.frostchain</span></div>
+            <div style="font-size:0.75rem; color:var(--gold);">NEWKIRK_STRATUM: [BTC+BCH+XMR]</div>
+            <button onclick="document.documentElement.requestFullscreen()" style="background:transparent; border:1px solid #333; color:#666; font-size:0.6rem;">[ FULLSCREEN ]</button>
+        </div>
+
+        <div class="panel">
+            <div class="feature-box" style="border-left-color: var(--btc);">
+                <div class="lbl">BTC REDIRECT HASH</div>
+                <div class="val" id="btc-h">42.8 EH/s</div>
+            </div>
+
+            <div class="feature-box" style="border-left-color: var(--bch);">
+                <div class="lbl">BCH MERGED WORK</div>
+                <div class="val" id="bch-h">2.4 PH/s</div>
+            </div>
+
+            <div class="lbl" style="margin: 20px 0 10px 0;">FREQUENCY SELECTOR</div>
+            <button id="btn-alpha" class="btn-mode" onclick="toggleAudio('alpha')">ALPHA [40Hz] - GAMMA REZ</button>
+            <button id="btn-theta" class="btn-mode" onclick="toggleAudio('theta')">THETA [6.39Hz] - CREATIVE BRIDGE</button>
+            <button id="btn-delta" class="btn-mode" onclick="toggleAudio('delta')">DELTA [PI Hz] - DEEP SYNC</button>
+
+            <div class="theta-bridge">
+                <div class="lbl" style="color:var(--theta)">THETA BRIDGE STATUS</div>
+                <div id="theta-status" style="font-size:0.8rem; color:#fff; margin-top:5px;">CHANNEL: 639Hz REZ</div>
+                <div style="font-size:0.5rem; color:var(--theta); margin-top:5px;">PoTW THERMAL LOCK: 38.2°C</div>
+            </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; height:100%; position:relative;">
+            <div id="chat-log">
+                <div style="color:var(--term); border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px; font-size:0.6rem;">
+                    [SYSTEM] Frostoise Kernel shell initializing...<br>
+                    [SYSTEM] Grayson API vault check: wallet.dat LINKED<br>
+                    [SYSTEM] Newkirk Master Key handshake verified.
+                </div>
+            </div>
+            <div class="chat-bar">
+                <input type="text" id="chat-in" placeholder="Broadcasting encrypted TX to merged chain..." onkeydown="if(event.key==='Enter') send()">
+                <button onclick="send()" style="background:var(--gold); border:none; padding:0 20px; font-weight:bold; cursor:pointer;">TX</button>
+            </div>
+        </div>
+
+        <div class="panel" style="border-left:1px solid #333; border-right:none;">
+            <div class="feature-box" style="border-left-color: var(--pink);">
+                <div class="val" id="frst-v">0.00</div>
+                <div class="lbl">FRST TOKEN</div>
+            </div>
+            <div class="feature-box" style="border-left-color: var(--gold);">
+                <div class="val" id="ftc-v">0.00</div>
+                <div class="lbl">FTC COIN</div>
+            </div>
+            <div class="feature-box" style="border-left-color: var(--cyan);">
+                <div class="val" id="fnr-v">0.00</div>
+                <div class="lbl">FNR RESERVE</div>
+            </div>
+
+            <div style="text-align:center; border:1px solid var(--term); padding:20px; margin-top:30px; background:rgba(0,255,65,0.05);">
+                <div class="lbl" style="color:var(--term)">BLOCK SYNC</div>
+                <div id="timer" style="font-size:2.8rem; font-weight:bold; color:#fff;">300</div>
+            </div>
+
+            <div style="margin-top:30px; font-size:0.6rem; color:#444;">
+                > Stellar Frost Seq: 948211<br>
+                > IOTA Nodes Online: 60<br>
+                > FrosTether Git: SYNCED
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timeLeft = 300;
+        let bal = { frst: 0, ftc: 0, fnr: 0 };
+        let actx, oscL, oscR, isAlpha = false;
+
+        setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').innerText = timeLeft;
+            if(timeLeft <= 0) { mint(); timeLeft = 300; }
+            document.getElementById('btc-h').innerText = (42 + Math.random()).toFixed(1) + " EH/s";
+        }, 1000);
+
+        function mint() {
+            bal.frst += 31415.90; bal.ftc += 13.37; bal.fnr += 2.50;
+            document.getElementById('frst-v').innerText = bal.frst.toLocaleString();
+            document.getElementById('ftc-v').innerText = bal.ftc.toFixed(2);
+            document.getElementById('fnr-v').innerText = bal.fnr.toFixed(2);
+        }
+
+        function send() {
+            const i = document.getElementById('chat-in');
+            const l = document.getElementById('chat-log');
+            if(!i.value) return;
+            const d = document.createElement('div');
+            d.style.marginBottom = "8px";
+            d.innerHTML = `<span style="color:var(--cyan)">drfrost</span>: ${i.value}`;
+            l.appendChild(d); i.value = "";
+            l.scrollTop = l.scrollHeight;
+        }
+
+        const canvas = document.getElementById('tangle-canvas');
+        canvas.addEventListener('mousedown', () => { if(isAlpha) document.body.classList.add('strobe-on'); });
+        window.addEventListener('mouseup', () => { document.body.classList.remove('strobe-on'); });
+
+        function toggleAudio(type) {
+            if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+            if(oscL) { oscL.stop(); oscR.stop(); oscL = null; }
+            document.body.classList.remove('alpha-active', 'strobe-on');
+            isAlpha = (type === 'alpha');
+            if(isAlpha) document.body.classList.add('alpha-active');
+            
+            document.querySelectorAll('.btn-mode').forEach(b => b.className = 'btn-mode');
+            document.getElementById('btn-'+type).classList.add('active-'+type);
+
+            let freq = 0;
+            if(type === 'alpha') freq = 40;
+            else if(type === 'theta') freq = 6.39;
+            else freq = Math.PI;
+
+            oscL = actx.createOscillator(); oscR = actx.createOscillator();
+            const g = actx.createGain(); g.gain.value = 0.08;
+            oscL.frequency.value = 432; oscR.frequency.value = 432 + freq;
+            oscL.connect(g).connect(actx.destination);
+            oscR.connect(g).connect(actx.destination);
+            oscL.start(); oscR.start();
+        }
+
+        function initTangle() {
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let p = Array(60).fill().map(()=>({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-.5)*1.2, vy:(Math.random()-.5)*1.2, clr: ["#00ff41", "#00ffff", "#ff00ff"][Math.floor(Math.random()*3)]}));
+            function loop() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                p.forEach(n => {
+                    n.x+=n.vx; n.y+=n.vy;
+                    if(n.x<0||n.x>canvas.width)n.vx*=-1; if(n.y<0||n.y>canvas.height)n.vy*=-1;
+                    p.forEach(n2 => {
+                        let d = Math.hypot(n.x-n2.x, n.y-n2.y);
+                        if(d < 150) { ctx.strokeStyle = n.clr; ctx.globalAlpha = 1 - d/150; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke(); }
+                    });
+                });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+        initTangle();
+    </script>
+</body>
+</html>

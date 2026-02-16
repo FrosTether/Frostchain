@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FrostTime Machine | voluntaryistj</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: radial-gradient(ellipse at center, #001a33 0%, #000 100%);
+            color: #0ff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        .flux-capacitor {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .flux-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid #0ff;
+            animation: fluxPulse 2s infinite;
+        }
+        
+        @keyframes fluxPulse {
+            0%, 100% { box-shadow: 0 0 30px #0ff, inset 0 0 30px #0ff; }
+            50% { box-shadow: 0 0 80px #0ff, inset 0 0 80px #0ff; }
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            border: 3px solid #0ff;
+            background: rgba(0, 255, 255, 0.05);
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.4);
+            margin-bottom: 30px;
+            border-radius: 15px;
+        }
+        
+        .logo {
+            font-size: 56px;
+            font-weight: bold;
+            text-shadow: 0 0 40px #0ff, 0 0 80px #0ff;
+            animation: logoFlux 3s ease-in-out infinite;
+            color: #0ff;
+            margin-bottom: 10px;
+        }
+        
+        @keyframes logoFlux {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.08); }
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #0aa;
+            margin-top: 15px;
+            letter-spacing: 3px;
+        }
+        
+        .owner-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #f0f, #f0a);
+            color: #fff;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 15px;
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .panel {
+            background: rgba(0, 40, 60, 0.9);
+            border: 3px solid #0ff;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            transition: all 0.4s;
+        }
+        
+        .panel:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 10px 50px rgba(0, 255, 255, 0.6);
+        }
+        
+        .panel-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #0ff;
+            text-shadow: 0 0 20px #0ff;
+            border-bottom: 2px solid rgba(0, 255, 255, 0.4);
+            padding-bottom: 12px;
+        }
+        
+        .time-display {
+            font-size: 56px;
+            text-align: center;
+            margin: 25px 0;
+            color: #ff0;
+            text-shadow: 0 0 30px #ff0, 0 0 60px #ff0;
+            font-weight: bold;
+            font-family: 'Digital', monospace;
+            animation: timeGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes timeGlow {
+            0%, 100% { text-shadow: 0 0 30px #ff0, 0 0 60px #ff0; }
+            50% { text-shadow: 0 0 50px #ff0, 0 0 100px #ff0, 0 0 150px #ff0; }
+        }
+        
+        .destination-display {
+            background: rgba(0, 0, 0, 0.8);
+            border: 3px solid #ff0;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.3);
+        }
+        
+        .destination-time {
+            font-size: 32px;
+            color: #ff0;
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .time-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 3px solid #0ff;
+            color: #0ff;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            border-radius: 8px;
+            margin: 15px 0;
+            transition: all 0.3s;
+        }
+        
+        .time-input:focus {
+            outline: none;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+            border-color: #0ff;
+        }
+        
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            font-size: 15px;
+        }
+        
+        .stat-label { color: #0aa; }
+        .stat-value { color: #0ff; font-weight: bold; }
+        
+        .btn {
+            background: linear-gradient(135deg, #0ff, #0aa);
+            border: none;
+            color: #000;
+            padding: 18px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.4s;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.8);
+        }
+        
+        .btn-time {
+            background: linear-gradient(135deg, #ff0, #f90);
+            font-size: 18px;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #f00, #a00);
+            color: #fff;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(0, 60, 80, 0.6);
+            border: 3px solid #0ff;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0ff, #0aa, #0ff);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+            transition: width 0.5s;
+            box-shadow: 0 0 20px #0ff;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #0f0;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+            margin-right: 8px;
+            box-shadow: 0 0 15px #0f0;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        #travelLog {
+            max-height: 250px;
+            overflow-y: auto;
+            font-size: 13px;
+            color: #0aa;
+        }
+        
+        .log-entry {
+            padding: 8px;
+            border-bottom: 1px solid rgba(0,255,255,0.1);
+            transition: background 0.3s;
+        }
+        
+        .log-entry:hover {
+            background: rgba(0, 255, 255, 0.1);
+        }
+        
+        .speed-display {
+            font-size: 72px;
+            text-align: center;
+            margin: 20px 0;
+            color: #f0f;
+            text-shadow: 0 0 30px #f0f, 0 0 60px #f0f;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="flux-capacitor">
+        <div class="flux-glow"></div>
+        <div class="flux-glow" style="animation-delay: 0.5s; width: 85%; height: 85%;"></div>
+        <div class="flux-glow" style="animation-delay: 1s; width: 70%; height: 70%;"></div>
+        <div class="flux-glow" style="animation-delay: 1.5s; width: 55%; height: 55%;"></div>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="logo">⚡ FROSTTIME MACHINE ⚡</div>
+            <div class="subtitle">INFINITE USE • ZERO FEES • FROST SUB ZERO PROTOCOL</div>
+            <div class="owner-badge">♾️ OWNER: VOLUNTARYISTJ • UNLIMITED ACCESS</div>
+        </div>
+        
+        <div class="grid">
+            <div class="panel">
+                <div class="panel-title">🕐 TIME MACHINE CONTROL</div>
+                <div class="time-display" id="currentTime">PRESENT TIME</div>
+                <div class="destination-display">
+                    <div style="color: #0aa; font-size: 14px; text-align: center; margin-bottom: 10px;">DESTINATION TIME</div>
+                    <div class="destination-time" id="destinationTime">-- -- ----</div>
+                </div>
+                <input type="text" class="time-input" id="timeInput" placeholder="YYYY-MM-DD HH:MM (e.g., 1985-10-26 01:20)">
+                <div class="stat">
+                    <span class="stat-label">Time Travels Made:</span>
+                    <span class="stat-value" id="travelCount">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Paradoxes Avoided:</span>
+                    <span class="stat-value" id="paradoxCount">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Access Level:</span>
+                    <span class="stat-value">♾️ INFINITE</span>
+                </div>
+                <button class="btn btn-time" onclick="timeTravel()">🚀 TIME TRAVEL (FREE)</button>
+                <button class="btn" onclick="setPassenger()">👤 ADD PASSENGER (FREE)</button>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">⚡ Flux Capacitor</div>
+                <div class="speed-display" id="currentSpeed">0 MPH</div>
+                <div class="stat">
+                    <span class="stat-label"><span class="status-indicator"></span>Status:</span>
+                    <span class="stat-value">1.21 GIGAWATTS</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Speed Required:</span>
+                    <span class="stat-value">88 MPH</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Time Circuits:</span>
+                    <span class="stat-value"><span class="status-indicator"></span>ON</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Passengers:</span>
+                    <span class="stat-value" id="passengers">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Fuel:</span>
+                    <span class="stat-value">♾️ UNLIMITED</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="fluxProgress" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">🌌 Timeline Status</div>
+                <div class="stat">
+                    <span class="stat-label">Temporal Stability:</span>
+                    <span class="stat-value" id="stability">100%</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Paradox Risk:</span>
+                    <span class="stat-value" id="paradoxRisk">LOW</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Timeline Integrity:</span>
+                    <span class="stat-value" id="integrity">STABLE</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Current Era:</span>
+                    <span class="stat-value" id="currentEra">2026</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Dimensional Phase:</span>
+                    <span class="stat-value">PRIME</span>
+                </div>
+                <button class="btn" onclick="returnToPresent()">🏠 RETURN TO PRESENT</button>
+                <button class="btn btn-danger" onclick="emergencyAbort()">🚨 EMERGENCY ABORT</button>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">📜 Time Travel Log</div>
+                <div id="travelLog">
+                    <div class="log-entry">
+                        🕐 <span id="logTime"></span> - System initialized - Temporal circuits online
+                    </div>
+                    <div class="log-entry">
+                        ♾️ <span id="logTime2"></span> - Infinite use mode: ACTIVE for voluntaryistj
+                    </div>
+                    <div class="log-entry">
+                        ⚡ <span id="logTime3"></span> - Flux Capacitor: 1.21 GW confirmed
+                    </div>
+                </div>
+                <button class="btn" onclick="clearLog()">🗑️ CLEAR LOG</button>
+                <button class="btn" onclick="exportTimeData()">💾 EXPORT DATA</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let state = {
+            travelCount: 0,
+            paradoxCount: 0,
+            passengers: 0,
+            currentSpeed: 0,
+            stability: 100,
+            destinationTime: null
+        };
+        
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = 
+                now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+            
+            const times = document.querySelectorAll('[id^="logTime"]');
+            times.forEach(el => {
+                if (!el.textContent) {
+                    el.textContent = now.toLocaleTimeString();
+                }
+            });
+        }
+        
+        function updateDisplay() {
+            document.getElementById('travelCount').textContent = state.travelCount;
+            document.getElementById('paradoxCount').textContent = state.paradoxCount;
+            document.getElementById('passengers').textContent = state.passengers;
+            document.getElementById('currentSpeed').textContent = state.currentSpeed + ' MPH';
+            document.getElementById('stability').textContent = state.stability + '%';
+            
+            const risk = state.travelCount > 10 ? 'HIGH' : state.travelCount > 5 ? 'MEDIUM' : 'LOW';
+            document.getElementById('paradoxRisk').textContent = risk;
+            
+            const integrity = state.paradoxCount > 5 ? 'UNSTABLE' : state.paradoxCount > 2 ? 'FLUCTUATING' : 'STABLE';
+            document.getElementById('integrity').textContent = integrity;
+        }
+        
+        function addToLog(message) {
+            const log = document.getElementById('travelLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = '🕐 ' + new Date().toLocaleTimeString() + ' - ' + message;
+            log.insertBefore(entry, log.firstChild);
+        }
+        
+        function timeTravel() {
+            const input = document.getElementById('timeInput').value;
+            
+            if (!input) {
+                alert('⚠️ Please enter a destination time!\n\nFormat: YYYY-MM-DD HH:MM\nExample: 1985-10-26 01:20');
+                return;
+            }
+            
+            state.travelCount++;
+            
+            // Flux capacitor animation
+            let speed = 0;
+            const speedInterval = setInterval(() => {
+                speed += 8;
+                state.currentSpeed = speed;
+                updateDisplay();
+                
+                if (speed >= 88) {
+                    clearInterval(speedInterval);
+                    
+                    // Time travel effect
+                    setTimeout(() => {
+                        state.destinationTime = new Date(input);
+                        document.getElementById('destinationTime').textContent = 
+                            state.destinationTime.toLocaleDateString() + ' ' + 
+                            state.destinationTime.toLocaleTimeString();
+                        
+                        document.getElementById('currentEra').textContent = 
+                            state.destinationTime.getFullYear();
+                        
+                        addToLog('⚡ TIME JUMP SUCCESSFUL! Destination: ' + input);
+                        addToLog('💰 Cost: FREE (Infinite Use - voluntaryistj)');
+                        
+                        alert('⚡ TIME TRAVEL SUCCESSFUL!\n\n' +
+                              '🕐 Destination: ' + input + '\n' +
+                              '💰 Cost: FREE (Infinite Use)\n' +
+                              '✅ Flux Capacitor: 1.21 GW\n' +
+                              '✅ Speed: 88 MPH achieved\n' +
+                              '♾️ Infinite travels remaining\n\n' +
+                              'Welcome to ' + state.destinationTime.toLocaleDateString() + '!');
+                        
+                        state.currentSpeed = 0;
+                        if (Math.random() < 0.2) {
+                            state.paradoxCount++;
+                            addToLog('⚠️ Paradox detected but avoided!');
+                        }
+                        updateDisplay();
+                    }, 1500);
+                }
+            }, 80);
+        }
+        
+        function setPassenger() {
+            state.passengers++;
+            addToLog('👤 Passenger added - Cost: FREE (Infinite Use)');
+            alert('✅ PASSENGER ADDED!\n\n' +
+                  '💰 Cost: FREE\n' +
+                  '👥 Total passengers: ' + state.passengers + '\n' +
+                  '♾️ Unlimited passenger capacity!');
+            updateDisplay();
+        }
+        
+        function returnToPresent() {
+            state.destinationTime = null;
+            state.currentSpeed = 0;
+            document.getElementById('destinationTime').textContent = '-- -- ----';
+            document.getElementById('timeInput').value = '';
+            document.getElementById('currentEra').textContent = new Date().getFullYear();
+            
+            addToLog('🏠 Returned to present timeline');
+            alert('🏠 RETURNED TO PRESENT!\n\n' +
+                  '✅ Timeline restored\n' +
+                  '✅ No paradoxes detected\n' +
+                  '✅ Temporal stability maintained\n' +
+                  '♾️ Ready for next jump!');
+            updateDisplay();
+        }
+        
+        function emergencyAbort() {
+            state.currentSpeed = 0;
+            state.destinationTime = null;
+            document.getElementById('destinationTime').textContent = '-- -- ----';
+            document.getElementById('timeInput').value = '';
+            
+            addToLog('🚨 EMERGENCY ABORT INITIATED!');
+            alert('🚨 EMERGENCY ABORT!\n\n' +
+                  '⚠️ All time travel operations halted\n' +
+                  '✅ Returned to present\n' +
+                  '✅ Temporal circuits safe\n' +
+                  '♾️ System ready - You can resume anytime!');
+            updateDisplay();
+        }
+        
+        function clearLog() {
+            document.getElementById('travelLog').innerHTML = 
+                '<div class="log-entry">🕐 ' + new Date().toLocaleTimeString() + ' - Log cleared</div>';
+        }
+        
+        function exportTimeData() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                owner: 'voluntaryistj',
+                machine: 'FrostTime Machine',
+                accessLevel: 'INFINITE',
+                domain: 'frosttime.surge.sh',
+                stats: state,
+                message: 'Deployed and ready for time travel!'
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'frosttime_data_' + Date.now() + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // Auto-update time display
+        setInterval(updateTime, 1000);
+        updateTime();
+        updateDisplay();
+        
+        // Welcome message
+        setTimeout(() => {
+            console.log('%c⚡ FROSTTIME MACHINE ⚡', 'color: #0ff; font-size: 24px; font-weight: bold;');
+            console.log('%c♾️ INFINITE USE • VOLUNTARYISTJ • frosttime.surge.sh', 'color: #0aa; font-size: 14px;');
+            console.log('%cReady for time travel!', 'color: #0f0; font-size: 14px;');
+        }, 500);
+    </script>
+</body>
+</html>

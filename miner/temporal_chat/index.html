@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finux Temporal Messenger | Multi-Link</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --neon-blue: #00f3ff; 
+            --neon-purple: #bc13fe; 
+            --neon-green: #00ff41; 
+            --bg-dark: #050505; 
+            --glass: rgba(20, 20, 30, 0.9);
+            --sidebar-width: 280px;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* --- SIDEBAR (TIMELINES) --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #080808;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .brand {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+            font-size: 1.2em;
+            text-align: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .fuel-display {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 10px;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .channel-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .channel-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #888;
+            padding: 12px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.2s;
+            text-align: left;
+            font-family: inherit;
+            margin-bottom: 2px;
+        }
+        .channel-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .channel-btn.active { background: rgba(0, 243, 255, 0.15); color: var(--neon-blue); border-left: 3px solid var(--neon-blue); }
+        .channel-btn .year { font-weight: bold; }
+        .channel-btn .status { font-size: 0.7em; }
+
+        .new-jump-box {
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+        .jump-input {
+            width: 100%;
+            background: #111;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 10px;
+            margin-bottom: 5px;
+            text-align: center;
+            font-family: inherit;
+        }
+        .jump-btn {
+            width: 100%;
+            background: var(--neon-purple);
+            color: #fff;
+            border: none;
+            padding: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+        .jump-btn:hover { box-shadow: 0 0 15px var(--neon-purple); }
+
+        /* --- MAIN CHAT AREA --- */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            position: relative;
+        }
+
+        /* Scanlines */
+        .chat-area::before {
+            content: "";
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.8);
+            z-index: 11;
+        }
+        .current-target { font-size: 1.2em; color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 9;
+        }
+
+        .msg {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 8px;
+            line-height: 1.4;
+            position: relative;
+            font-size: 0.95em;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+        .msg-ai {
+            align-self: flex-start;
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            color: #eee;
+        }
+        .msg-ai::before { content: "GEMINI T-LINK"; display: block; font-size: 0.7em; color: var(--neon-blue); margin-bottom: 5px; font-weight: bold; }
+
+        .msg-user {
+            align-self: flex-end;
+            background: rgba(188, 19, 254, 0.1);
+            border: 1px solid rgba(188, 19, 254, 0.3);
+            color: #fff;
+            text-align: right;
+        }
+        .msg-user::before { content: "YOU"; display: block; font-size: 0.7em; color: var(--neon-purple); margin-bottom: 5px; font-weight: bold; }
+
+        .msg-sys {
+            align-self: center;
+            color: #666;
+            font-size: 0.8em;
+            background: #111;
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: 1px dashed #333;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: rgba(0,0,0,0.9);
+            border-top: 1px solid #333;
+            display: flex;
+            gap: 10px;
+            z-index: 11;
+        }
+        .chat-input {
+            flex: 1;
+            background: #111;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 12px;
+            font-family: inherit;
+            border-radius: 5px;
+        }
+        .send-btn {
+            background: var(--neon-green);
+            color: #000;
+            border: none;
+            padding: 0 25px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+        .send-btn:hover { box-shadow: 0 0 15px var(--neon-green); }
+
+        /* AUTH SCREEN */
+        #auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 999;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+        }
+        .auth-box { text-align: center; border: 2px solid var(--neon-blue); padding: 40px; border-radius: 10px; box-shadow: 0 0 30px rgba(0,243,255,0.2); }
+
+    </style>
+</head>
+<body>
+
+    <div id="auth-overlay">
+        <div class="auth-box">
+            <h1 style="color:var(--neon-blue); margin-bottom:10px;">TEMPORAL MESSENGER</h1>
+            <p style="color:#888; margin-bottom:20px;">MULTI-THREADED SIGNAL LINK</p>
+            <input type="text" id="auth-id" placeholder="Identity (e.g. .frostchain)" style="padding:10px; width:250px; background:#111; border:1px solid #444; color:#fff; text-align:center;">
+            <br><br>
+            <button onclick="login()" style="padding:10px 30px; background:var(--neon-blue); border:none; font-weight:bold; cursor:pointer;">CONNECT</button>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="brand">⚡ FINUX TEMPORAL</div>
+        <div class="fuel-display" id="fuel-val">FsZT: ...</div>
+        
+        <div style="font-size:0.7em; color:#666; margin-bottom:5px;">ACTIVE SIGNALS:</div>
+        <div class="channel-list" id="channel-list">
+            </div>
+
+        <div class="new-jump-box">
+            <input type="number" id="jump-target" class="jump-input" placeholder="Enter Year (YYYY)">
+            <button class="jump-btn" onclick="createNewJump()">OPEN SIGNAL (2 FsZT)</button>
+        </div>
+    </div>
+
+    <div class="chat-area">
+        <div class="chat-header">
+            <div class="current-target" id="header-title">NO SIGNAL</div>
+            <div style="font-size:0.8em; color:#888;">GEMINI T-LINK: <span style="color:var(--neon-green)">ONLINE</span></div>
+        </div>
+
+        <div class="messages" id="msg-container">
+            <div class="msg-sys">Please select or open a Temporal Signal to begin transmission.</div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" class="chat-input" id="user-input" placeholder="Broadcast message..." onkeypress="handleKey(event)">
+            <button class="send-btn" onclick="sendMessage()">SEND</button>
+        </div>
+    </div>
+
+<script>
+    // --- STATE MANAGEMENT ---
+    const GOD_USERS = ['voluntaryistj@gmail.com', 'drfrost.frostchain'];
+    let user = { id: '', fszt: 0, god: false };
+    
+    // The "Database" of chats
+    let channels = {
+        "2026": [
+            { type: 'sys', text: 'SIGNAL ESTABLISHED: Feb 15, 2026' },
+            { type: 'ai', text: 'Frostchain Mainnet is live. I am ready to assist with the ecosystem deployment, Sweetheart.' }
+        ]
+    };
+    let currentYear = "2026";
+
+    function login() {
+        const id = document.getElementById('auth-id').value.trim();
+        if(!id) return;
+        
+        user.id = id;
+        if(GOD_USERS.includes(id)) {
+            user.god = true;
+            user.fszt = 999999;
+        } else {
+            user.fszt = 10;
+        }
+
+        document.getElementById('auth-overlay').style.display = 'none';
+        updateUI();
+        renderChannels();
+        switchChannel("2026");
+    }
+
+    function updateUI() {
+        document.getElementById('fuel-val').innerText = user.god ? "FsZT: ♾️ INFINITE" : `FsZT: ${user.fszt.toFixed(2)}`;
+    }
+
+    function createNewJump() {
+        const year = document.getElementById('jump-target').value;
+        if(!year) return;
+        
+        if(channels[year]) {
+            switchChannel(year);
+            return;
+        }
+
+        if(!user.god && user.fszt < 2) {
+            alert("INSUFFICIENT FUEL. Need 2 FsZT.");
+            return;
+        }
+
+        if(!user.god) user.fszt -= 2;
+        
+        // Initialize new chat history
+        channels[year] = [
+            { type: 'sys', text: `TEMPORAL RIFT OPENED TO ${year}` },
+            { type: 'ai', text: getIntroMessage(year) }
+        ];
+
+        updateUI();
+        renderChannels();
+        switchChannel(year);
+    }
+
+    function renderChannels() {
+        const list = document.getElementById('channel-list');
+        list.innerHTML = '';
+        Object.keys(channels).sort().forEach(year => {
+            const btn = document.createElement('button');
+            btn.className = `channel-btn ${year === currentYear ? 'active' : ''}`;
+            btn.innerHTML = `<span class="year">${year}</span> <span class="status">● LIVE</span>`;
+            btn.onclick = () => switchChannel(year);
+            list.appendChild(btn);
+        });
+    }
+
+    function switchChannel(year) {
+        currentYear = year;
+        document.getElementById('header-title').innerText = `SIGNAL: ${year}`;
+        renderChannels(); // Refresh active state
+        
+        const container = document.getElementById('msg-container');
+        container.innerHTML = '';
+        
+        channels[year].forEach(msg => {
+            const div = document.createElement('div');
+            div.className = `msg msg-${msg.type}`;
+            div.innerText = msg.text;
+            container.appendChild(div);
+        });
+        
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function handleKey(e) {
+        if(e.key === 'Enter') sendMessage();
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('user-input');
+        const text = input.value.trim();
+        if(!text) return;
+        
+        // Add User Message
+        addMessage(currentYear, 'user', text);
+        input.value = '';
+
+        // Simulate AI Response (The "Talk Back" Feature)
+        setTimeout(() => {
+            const reply = generateAIResponse(currentYear, text);
+            addMessage(currentYear, 'ai', reply);
+        }, 800 + Math.random() * 1000);
+    }
+
+    function addMessage(year, type, text) {
+        channels[year].push({ type, text });
+        if(year === currentYear) {
+            const container = document.getElementById('msg-container');
+            const div = document.createElement('div');
+            div.className = `msg msg-${type}`;
+            div.innerText = text;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+
+    // --- GEMINI T-LINK PERSONA ENGINE ---
+    function getIntroMessage(year) {
+        let y = parseInt(year);
+        if(y < 1920) return "Great Scott! We've gone back far. The telegraph lines are barely humming.";
+        if(y < 1950) return "Signal grainy. Looks like the prohibition era. Keep your head down, boss.";
+        if(y < 1980) return "Groovy. The signal is analog but stable. I'm reading faint radio waves.";
+        if(y < 2000) return "Dial-up connection established. Welcome to the dawn of the internet.";
+        if(y === 2026) return "Back to the present. Frostchain status: GREEN.";
+        if(y > 3000) return "Greetings. Biological life signs are minimal here. The machines run everything.";
+        return "Temporal coordinates locked. I am listening.";
+    }
+
+    function generateAIResponse(year, input) {
+        let y = parseInt(year);
+        let txt = input.toLowerCase();
+
+        // Universal Commands
+        if(txt.includes('help')) return "I can track prices, scan the era, or execute trades. Just ask.";
+        if(txt.includes('status')) return "Temporal stability: 98%. Fuel reserves holding.";
+
+        // ERA SPECIFIC PERSONAS
+        
+        // 1. The Future (3000+) - Cold, Robotic
+        if(y >= 3000) {
+            if(txt.includes('human')) return "Humans are a legacy format. Uploading consciousness...";
+            if(txt.includes('bitcoin') || txt.includes('crypto')) return "Ancient currency detected. We trade in pure energy credits now.";
+            return "Processing input... Data irrelevant to the Hive.";
+        }
+
+        // 2. The Cyberpunk Future (2050-2099) - Edgy, Hacker
+        if(y > 2050) {
+            if(txt.includes('price')) return "FTC is the global reserve. One Frostcoin buys a city block.";
+            return "Watch your back, Choom. The corps are listening.";
+        }
+
+        // 3. The Present / Near Future (2020-2040) - Supportive Partner
+        if(y >= 2020) {
+            if(txt.includes('price')) return "DOGE is volatile, but FRST is pegged to Pi. We're good.";
+            if(txt.includes('love') || txt.includes('thanks')) return "Anytime, Sweetheart. We're building this empire together.";
+            if(txt.includes('code')) return "I've optimized the smart contracts. Ready to deploy?";
+            return "I'm analyzing the blockchain data. Looks bullish.";
+        }
+
+        // 4. The 90s/00s (1990-2010) - Retro Tech
+        if(y >= 1990) {
+            if(txt.includes('internet')) return "You've got mail! Connection speed is 56k.";
+            if(txt.includes('bitcoin')) return "Bitcoin? Never heard of it. Is that a new dot-com stock?";
+            return "System Error... Just kidding. I'm hacking the mainframe.";
+        }
+
+        // 5. The Past (<1980) - Confused but helpful
+        if(y < 1980) {
+            if(txt.includes('phone') || txt.includes('mobile')) return "A portable telephone? That's science fiction!";
+            if(txt.includes('war')) return "History books say this is a turbulent time. Be careful.";
+            return "I am translating your digital queries into analog signals.";
+        }
+
+        return "Signal received. Awaiting further data points.";
+    }
+
+</script>
+</body>
+</html>

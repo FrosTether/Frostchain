@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kane Frostchain | Grayson Enclave</title>
+    <style>
+        :root { --ice: #a5f2f3; --bg: #000; --term: #00ff41; }
+        body { background: var(--bg); color: var(--ice); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
+        
+        #gate { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; }
+        .loading-spinner { border: 4px solid rgba(165, 242, 243, 0.1); border-left-color: var(--ice); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        #content { display: none; padding: 20px; opacity: 0; transition: opacity 1s; }
+        .status { font-size: 0.8rem; margin-top: 20px; color: #444; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+    <div id="gate">
+        <div style="font-size: 1.5rem; letter-spacing: 8px; margin-bottom: 30px;">AUTH_PENDING</div>
+        <div class="loading-spinner"></div>
+        <div class="status" id="status">Pinging Grayson API for drfrost.frostchain...</div>
+    </div>
+
+    <div id="content">
+        <div style="border-bottom: 2px solid var(--ice); padding: 20px; display: flex; justify-content: space-between;">
+            <div style="font-size: 1.5rem; font-weight: bold;">KANE<span style="color:var(--term)">FROSTCHAIN</span></div>
+            <div id="identity-tag" style="color:var(--term); border:1px solid var(--term); padding: 5px 10px; font-size: 0.7rem;">ID: VERIFIED</div>
+        </div>
+        <div style="padding: 40px; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 10px;">$102,450,200</div>
+            <div style="color:#666; letter-spacing: 2px;">TOTAL NEWKIRK ETF AUM</div>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('load', async () => {
+            const status = document.getElementById('status');
+            
+            // 1. Check for Grayson Provider
+            if (typeof window.grayson === 'undefined') {
+                status.innerText = "ERROR: GRAYSON API NOT DETECTED";
+                status.style.color = "#ff3333";
+                return;
+            }
+
+            try {
+                // 2. Request Identity Handshake (No manual file pick)
+                const identity = await window.grayson.getIdentity();
+                
+                if (identity === 'drfrost.frostchain') {
+                    status.innerText = "IDENTITY CONFIRMED. DECRYPTING ENCLAVE...";
+                    unlock();
+                } else {
+                    status.innerText = "ACCESS DENIED: IDENTITY MISMATCH (" + identity + ")";
+                    status.style.color = "#ff3333";
+                }
+            } catch (e) {
+                status.innerText = "ERROR: USER REJECTED HANDSHAKE";
+            }
+        });
+
+        function unlock() {
+            const gate = document.getElementById('gate');
+            const content = document.getElementById('content');
+            
+            setTimeout(() => {
+                gate.style.display = 'none';
+                content.style.display = 'block';
+                setTimeout(() => content.style.opacity = '1', 10);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

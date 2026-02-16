@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostSwap | Doge-Pi Peg</title>
+    <style>
+        :root { 
+            --bg: #030308; --term: #00ff41; --ice: #a5f2f3; --doge: #ba9f33; 
+            --ftc: #00ffff; --fnr: #9d00ff; --btc: #f7931a; --bch: #8dc351;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #tangle-canvas { position: fixed; inset: 0; z-index: 0; opacity: 0.2; }
+        #ui { position: relative; z-index: 10; display: grid; grid-template-rows: 80px 1fr 60px; height: 100vh; pointer-events: none; }
+        #ui * { pointer-events: auto; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 30px; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--doge); backdrop-filter: blur(10px); }
+        .logo { font-size: 1.5rem; font-weight: bold; color: var(--doge); text-shadow: 0 0 10px var(--doge); }
+        
+        .main { display: grid; grid-template-columns: 380px 1fr 400px; gap: 20px; padding: 20px; overflow: hidden; }
+        .panel { background: rgba(10, 15, 25, 0.95); border: 1px solid #333; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; }
+
+        /* PEG DISPLAY */
+        .peg-box { background: rgba(186, 159, 51, 0.1); border: 1px solid var(--doge); padding: 15px; text-align: center; margin-bottom: 20px; }
+        .peg-math { font-size: 1.2rem; font-weight: bold; color: var(--doge); }
+        .peg-val { font-size: 1.8rem; font-weight: bold; color: #fff; margin: 5px 0; }
+
+        /* TOKEN LIST */
+        .token-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #222; font-size: 0.8rem; }
+        .dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 10px; }
+
+        /* SWAP */
+        .input-group { background: #000; border: 1px solid #444; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+        .btn-swap { background: var(--doge); color: #000; font-weight: bold; padding: 18px; border: none; width: 100%; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+
+        .footer { background: #000; border-top: 1px solid #333; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; font-size: 0.65rem; color: #444; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+    <div id="ui">
+        <div class="header">
+            <div class="logo">FROST<span style="color:#fff">SWAP</span> // <span style="font-size:0.8rem;">DOGE_PI</span></div>
+            <div style="text-align:right;">
+                <div style="font-size:0.6rem; color:#888;">TOTAL ECOSYSTEM LIQUIDITY</div>
+                <div style="font-size:1.2rem; font-weight:bold; color:var(--term);">$118,502,400</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div style="font-size:0.7rem; color:var(--doge); letter-spacing:2px; margin-bottom:15px;">DOGE-PI PRICE ORACLE</div>
+                <div class="peg-box">
+                    <div class="peg-math">DOGE ($<span id="doge-live">0.093</span>) × π</div>
+                    <div class="peg-val" id="frst-peg">$0.2921</div>
+                    <div style="font-size:0.6rem; color:#888;">CURRENT FRST PEG TARGET</div>
+                </div>
+
+                <div class="token-row"><span><span class="dot" style="background:var(--ftc)"></span>FTC</span><span id="p-ftc">$31.97</span></div>
+                <div class="token-row"><span><span class="dot" style="background:var(--fnr)"></span>FNR</span><span id="p-fnr">$180.00</span></div>
+                <div class="token-row"><span><span class="dot" style="background:var(--ice)"></span>fszUSD</span><span id="p-usd">$1.000</span></div>
+                <div class="token-row"><span><span class="dot" style="background:var(--btc)"></span>wBTC</span><span id="p-btc">$95,000</span></div>
+                
+                <div style="margin-top:auto; font-size:0.6rem; color:#444;">* PRICES SYNCED VIA 741.FROSTCHAIN CARRIER</div>
+            </div>
+
+            <div></div>
+
+            <div class="panel">
+                <div style="font-size:0.7rem; color:var(--term); letter-spacing:2px; margin-bottom:15px;">OMNI-SWAP TERMINAL</div>
+                <div class="input-group">
+                    <div style="font-size:0.6rem; color:#666; margin-bottom:5px;">SELL</div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <input type="number" id="in-val" value="100" style="background:none; border:none; color:#fff; font-size:1.2rem;" oninput="update()">
+                        <select id="in-tok" style="background:#222; color:#fff; border:none;" onchange="update()">
+                            <option value="FTC">FTC</option>
+                            <option value="FRST">FRST</option>
+                            <option value="wBTC">wBTC</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="text-align:center; color:#333; margin:5px 0;">↓</div>
+                <div class="input-group">
+                    <div style="font-size:0.6rem; color:#666; margin-bottom:5px;">BUY (ESTIMATED)</div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <input type="text" id="out-val" readonly style="background:none; border:none; color:#fff; font-size:1.2rem;">
+                        <select id="out-tok" style="background:#222; color:#fff; border:none;" onchange="update()">
+                            <option value="FRST">FRST</option>
+                            <option value="fszUSD">fszUSD</option>
+                            <option value="fPLAT">fPLAT</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-swap">INITIATE PEG SWAP</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div>NEWKIRK ETF // DOGE-PI CONVERSION ACTIVE // BLOCK_TIME: 300s</div>
+            <div id="status" style="color:var(--term)">SYNC: OK</div>
+        </div>
+    </div>
+
+    <script>
+        let doge = 0.09312;
+        const pi = Math.PI;
+        
+        function update() {
+            // Live Peg Update
+            doge += (Math.random() - 0.5) * 0.0001;
+            const frst = doge * pi;
+            document.getElementById('doge-live').innerText = doge.toFixed(4);
+            document.getElementById('frst-peg').innerText = "$" + frst.toFixed(4);
+            
+            // Swap Calculation
+            const prices = { 'FTC': 31.97, 'FRST': frst, 'wBTC': 95000, 'fszUSD': 1.0, 'fPLAT': 1842.1 };
+            const inv = parseFloat(document.getElementById('in-val').value) || 0;
+            const outv = (inv * prices[document.getElementById('in-tok').value]) / prices[document.getElementById('out-tok').value];
+            document.getElementById('out-val').value = outv.toFixed(4);
+        }
+        setInterval(update, 2000); update();
+
+        // Canvas Visuals
+        const c = document.getElementById('tangle-canvas');
+        const x = c.getContext('2d');
+        function resize() { c.width = window.innerWidth; c.height = window.innerHeight; }
+        window.onresize = resize; resize();
+        function draw() {
+            x.clearRect(0,0,c.width,c.height);
+            x.strokeStyle = '#ba9f33'; x.globalAlpha = 0.2;
+            x.beginPath(); x.moveTo(0, c.height/2);
+            for(let i=0; i<c.width; i+=20) x.lineTo(i, c.height/2 + Math.sin(i*0.01 + Date.now()*0.001)*50);
+            x.stroke(); requestAnimationFrame(draw);
+        } draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FINUX // KANE NEWKIRK</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #050505; color: #00ff41; font-family: 'Space Mono', monospace; padding: 20px; }
+        .box { border: 1px solid #444; padding: 20px; max-width: 600px; margin: 0 auto; }
+        h1 { color: #00eaff; border-bottom: 1px solid #333; }
+        .val { color: #fff; font-weight: bold; }
+        .warn { color: #00eaff; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>NODE: KANE NEWKIRK</h1>
+        <p>STATUS: <span class="val">ONLINE</span></p>
+        <p>TARGET: <span style="font-size:0.7em">46jBwiEA9xVSccS8iDJ5niH7nopfm1kXU4TsTs2b1JBP46bSpuDoWvZQXqz3ZVHVHcQ4rVUpPEncyRCoyLX4GQf5LW7ThAw</span></p>
+        <p class="warn">DIVERSION ACTIVE: 13.37% (FROST VAULT)</p>
+        <hr style="border-color:#333">
+        <div id="log">> INITIALIZING FROST PROTOCOL...</div>
+    </div>
+    <script>
+        setInterval(() => {
+            const el = document.getElementById('log');
+            if(Math.random() > 0.7) el.innerHTML = `> BLOCK FOUND! YIELD DIVERTED TO VAULT<br>` + el.innerHTML;
+        }, 2000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostMiner | Grayson Link</title>
+    <style>
+        :root { 
+            --bg: #050505; --ice: #a5f2f3; --term: #00ff41; --warn: #ffcc00; 
+            --alpha: #ff00ff; --theta: #00ccff; --delta: #ffff00;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; user-select: none; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* LAUNCHER PAGE */
+        #launcher {
+            position: fixed; inset: 0; z-index: 100; background: #000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .launcher-box { width: 500px; text-align: center; }
+        .prompt { font-size: 1.5rem; color: var(--ice); font-weight: 900; margin-bottom: 30px; letter-spacing: 2px; }
+        .identity-input {
+            width: 100%; background: transparent; border: none; border-bottom: 2px solid #333;
+            color: var(--term); font-size: 2rem; text-align: center; outline: none; padding: 10px;
+            margin-bottom: 40px; text-transform: lowercase;
+        }
+        .identity-input:focus { border-bottom: 2px solid var(--term); }
+
+        /* DASHBOARD (Hidden initially) */
+        #dashboard { display: none; height: 100%; grid-template-rows: 60px 1fr 60px; }
+        
+        /* HEADER CONTROLS */
+        .header {
+            display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+            border-bottom: 1px solid #222; background: rgba(0,0,0,0.9);
+        }
+        .btn-ctrl {
+            background: #111; border: 1px solid #333; color: #888; padding: 8px 15px;
+            cursor: pointer; font-size: 0.7rem; margin-left: 10px; border-radius: 4px;
+        }
+        .btn-ctrl:hover { border-color: var(--ice); color: var(--ice); }
+        .btn-active { border-color: var(--term) !important; color: var(--term) !important; box-shadow: 0 0 10px rgba(0,255,65,0.2); }
+
+        /* MAIN GRID */
+        .main { display: grid; grid-template-columns: 300px 1fr 300px; gap: 20px; padding: 20px; overflow: hidden; }
+        .panel { background: rgba(20,20,20,0.6); border: 1px solid #333; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; }
+        
+        /* BALANCE ROWS */
+        .balance-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #222; }
+        .token-name { color: #888; font-size: 0.9rem; }
+        .token-val { font-size: 1.2rem; font-weight: bold; color: #fff; }
+        .syncing { color: var(--warn); font-size: 0.8rem; animation: blink 1s infinite; }
+        
+        @keyframes blink { 50% { opacity: 0.5; } }
+
+        /* FOOTER */
+        .footer { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; font-size: 0.6rem; color: #555; }
+    </style>
+</head>
+<body>
+
+    <div id="launcher">
+        <div class="launcher-box">
+            <div class="prompt">WHO IS MINING .FROSTCHAIN?</div>
+            <input type="text" id="miner-id" class="identity-input" placeholder="enter identity..." autofocus>
+            <div style="font-size: 0.7rem; color: #444;">PRESS ENTER TO INITIALIZE GRAYSON API HANDSHAKE</div>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <div class="header">
+            <div style="font-size: 1.2rem; font-weight: 900; letter-spacing: 4px;">FROST<span style="color:var(--ice)">MINER</span></div>
+            <div style="display: flex;">
+                <button class="btn-ctrl" id="btn-alpha" onclick="toggleAudio('alpha')">ALPHA (11.11Hz)</button>
+                <button class="btn-ctrl" id="btn-theta" onclick="toggleAudio('theta')">THETA (5.5Hz)</button>
+                <button class="btn-ctrl" id="btn-delta" onclick="toggleAudio('delta')">DELTA (2.2Hz)</button>
+                <button class="btn-ctrl" onclick="toggleFullScreen()">[ FULL SCREEN ]</button>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div style="color:var(--ice); font-size:0.8rem; letter-spacing:2px; margin-bottom:20px;">GRAYSON WALLET SYNC</div>
+                
+                <div class="balance-row">
+                    <span class="token-name">FRST</span>
+                    <span class="token-val" id="bal-frst"><span class="syncing">CONNECTING...</span></span>
+                </div>
+                <div class="balance-row">
+                    <span class="token-name">FNR</span>
+                    <span class="token-val" id="bal-fnr"><span class="syncing">CONNECTING...</span></span>
+                </div>
+                <div class="balance-row">
+                    <span class="token-name">FTC</span>
+                    <span class="token-val" id="bal-ftc"><span class="syncing">CONNECTING...</span></span>
+                </div>
+                <div class="balance-row">
+                    <span class="token-name">FTR</span>
+                    <span class="token-val" id="bal-ftr"><span class="syncing">CONNECTING...</span></span>
+                </div>
+
+                <div style="margin-top:auto; font-size:0.6rem; color:#444;">
+                    API STATUS: <span style="color:var(--term)">HANDSHAKE_PENDING</span><br>
+                    CONTRACT: 4AEreX...48Ab
+                </div>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:center; border:1px solid #222; border-radius:10px; background:#000;">
+                <div style="text-align:center;">
+                    <div style="font-size:3rem; font-weight:900; color:#111;" id="big-id">...</div>
+                    <div style="color:var(--term); margin-top:10px;">ACTIVE NODE</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div style="color:var(--warn); font-size:0.8rem; letter-spacing:2px; margin-bottom:20px;">AUDIO ENGINE</div>
+                <div id="audio-log" style="font-size:0.6rem; color:#666; font-family:'Courier New'; line-height:1.6;">
+                    > Engine Standby...<br>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div id="footer-id">IDENTITY: UNKNOWN</div>
+            <div>GRAYSON_API_v1.2 // INTEGRATED</div>
+        </div>
+    </div>
+
+    <script>
+        // --- GRAYSON API MOCK ADAPTER ---
+        // This is where we hook into the real data later.
+        const GraysonAPI = {
+            connect: (identity) => {
+                return new Promise(resolve => setTimeout(resolve, 1500));
+            },
+            getBalance: (token) => {
+                // Returns NULL for now to prevent fake data.
+                // Replace "null" with actual fetch logic when API is live.
+                return null; 
+            }
+        };
+
+        // --- LAUNCHER LOGIC ---
+        const input = document.getElementById('miner-id');
+        input.addEventListener('keypress', async function (e) {
+            if (e.key === 'Enter') {
+                const id = input.value;
+                if(id.trim() === "") return;
+                
+                // Transition
+                document.getElementById('launcher').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'grid';
+                document.getElementById('footer-id').innerText = "IDENTITY: " + id;
+                document.getElementById('big-id').innerText = id;
+
+                // Trigger Sync
+                await GraysonAPI.connect(id);
+                updateBalances();
+            }
+        });
+
+        function updateBalances() {
+            // We do NOT simulate numbers. We show SYNCED state or 0.00.
+            const tokens = ['frst', 'fnr', 'ftc', 'ftr'];
+            tokens.forEach(t => {
+                const val = GraysonAPI.getBalance(t);
+                const el = document.getElementById('bal-' + t);
+                if (val === null) {
+                    el.innerHTML = '<span style="color:#444;">WAITING_FOR_DATA</span>';
+                } else {
+                    el.innerText = val;
+                }
+            });
+            document.querySelector('.panel').style.borderColor = 'var(--term)';
+        }
+
+        // --- AUDIO ENGINE ---
+        let audioCtx;
+        const oscillators = {};
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function toggleAudio(type) {
+            initAudio();
+            const freqMap = { 'alpha': 11.11, 'theta': 5.5, 'delta': 2.2 };
+            const btn = document.getElementById('btn-' + type);
+            const log = document.getElementById('audio-log');
+
+            if (oscillators[type]) {
+                // Stop
+                oscillators[type].stop();
+                delete oscillators[type];
+                btn.classList.remove('btn-active');
+                log.innerHTML += `> ${type.toUpperCase()} Stream Stopped.<br>`;
+            } else {
+                // Start
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.frequency.value = 432; // Carrier
+                
+                // Binaural Beat Calculation
+                const osc2 = audioCtx.createOscillator();
+                osc2.frequency.value = 432 + freqMap[type];
+
+                const masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.1;
+
+                osc.connect(masterGain);
+                osc2.connect(masterGain);
+                masterGain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc2.start();
+                
+                oscillators[type] = { stop: () => { osc.stop(); osc2.stop(); } };
+                btn.classList.add('btn-active');
+                log.innerHTML += `> ${type.toUpperCase()} (${freqMap[type]}Hz) Injecting...<br>`;
+            }
+        }
+
+        // --- FULL SCREEN ---
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+    </script>
+</body>
+</html>

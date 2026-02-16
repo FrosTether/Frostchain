@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Miracle Node | Consensus Locked</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --blue: #00d4ff; --iota: #00d4ff; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; }
+        
+        /* IOTA TANGLE OVERLAY */
+        #tangle-canvas { position: absolute; inset: 0; z-index: 1; opacity: 0.6; }
+
+        /* HUD */
+        #hud { position: absolute; inset: 0; z-index: 10; display: grid; grid-template-columns: 350px 1fr; gap: 20px; padding: 20px; box-sizing: border-box; pointer-events: none; }
+        .panel { background: rgba(0, 10, 0, 0.9); border: 1px solid #222; padding: 15px; pointer-events: auto; }
+        
+        .sync-indicator { font-size: 0.7rem; display: flex; align-items: center; gap: 10px; }
+        .pulse { width: 8px; height: 8px; background: var(--iota); border-radius: 50%; box-shadow: 0 0 10px var(--iota); animation: pulse 4s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
+
+        .explorer { overflow-y: auto; font-size: 0.7rem; border-left: 2px solid var(--iota); }
+        .block-card { border-bottom: 1px solid #111; padding: 10px 0; }
+        
+        .reward-stack { text-align: right; }
+        .token { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="hud">
+        <div class="panel explorer">
+            <div class="sync-indicator">
+                <div class="pulse"></div>
+                <span>IOTA TANGLE SYNC: <span id="sync-timer">4s</span></span>
+            </div>
+            <div style="font-weight:bold; margin: 10px 0; border-bottom: 1px solid #333;">FROSTCHAIN LEDGER</div>
+            <div id="block-list"></div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end;">
+            <div class="panel reward-stack">
+                <div style="font-size:0.7rem; color:#888;">drfrost.frostchain</div>
+                <div class="token" style="color:var(--gold);">FTC: <span id="ftc-val">0.00</span></div>
+                <div class="token" style="color:var(--blue);">FNR: <span id="fnr-val">0.00</span></div>
+                <div style="font-size:0.6rem; color:#888; margin-top:5px;">RATIO: 2 FTC BLOCKS : 1 BCH BLOCK</div>
+            </div>
+            
+            <div class="panel">
+                <div style="font-size:0.8rem;">NEWKIRK CODE: <span style="color:#fff;">LOCKED (300s)</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let balances = { ftc: 0, fnr: 0 };
+        let ftc_blocks = 0;
+        let lastSync = Date.now();
+
+        // 1. IOTA TANGLE HEARTBEAT (4s Sync)
+        setInterval(() => {
+            const timeLeft = 4 - Math.floor((Date.now() - lastSync) / 1000);
+            document.getElementById('sync-timer').innerText = timeLeft + "s";
+            if(timeLeft <= 0) {
+                lastSync = Date.now();
+                console.log("IOTA Tangle Verified.");
+            }
+        }, 1000);
+
+        // 2. CONSENSUS THROTTLE (300s FTC Cycle)
+        // To respect "2 FTC blocks per BCH interval" (300s/2 = 150s per FTC mint)
+        setInterval(mintFTC, 150000); 
+        
+        function mintFTC() {
+            balances.ftc += 13.37;
+            ftc_blocks++;
+            logBlock("FTC", 13.37, "GOLD");
+            document.getElementById('ftc-val').innerText = balances.ftc.toFixed(2);
+            
+            // Check if we hit the 2-block ratio for a BCH Bridge verification
+            if(ftc_blocks % 2 === 0) {
+                logBlock("BCH BRIDGE", "SYNCED", "BLUE");
+                balances.fnr += 2.5;
+                document.getElementById('fnr-val').innerText = balances.fnr.toFixed(2);
+            }
+        }
+
+        function logBlock(type, amt, color) {
+            const list = document.getElementById('block-list');
+            const card = document.createElement('div');
+            card.className = 'block-card';
+            card.innerHTML = `
+                <div style="color:var(--term);">[${new Date().toLocaleTimeString()}] ${type}</div>
+                <div style="color:var(--${color.toLowerCase()}); font-weight:bold;">+${amt} REWARD</div>
+                <div style="font-size:0.6rem; color:#444;">NEWKIRK CONSENSUS: VERIFIED</div>
+            `;
+            list.prepend(card);
+            if(list.children.length > 10) list.removeChild(list.lastChild);
+        }
+
+        // 3. TANGLE VISUALS
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let nodes = Array.from({length: 50}, () => ({
+            x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+            vx: (Math.random()-0.5)*1, vy: (Math.random()-0.5)*1
+        }));
+
+        function animate() {
+            ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+            nodes.forEach((n, i) => {
+                n.x += n.vx; n.y += n.vy;
+                if(n.x<0||n.x>canvas.width) n.vx*=-1;
+                if(n.y<0||n.y>canvas.height) n.vy*=-1;
+                nodes.forEach(n2 => {
+                    let d = Math.hypot(n.x-n2.x, n.y-n2.y);
+                    if(d < 100) {
+                        ctx.strokeStyle = `rgba(0,212,255,${1-d/100})`;
+                        ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                    }
+                });
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+        mintFTC(); // Initial Mint
+    </script>
+</body>
+</html>

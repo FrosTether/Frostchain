@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FROST EXPLORER | COMMAND CENTER</title>
+<style>
+  :root { --bg: #050505; --cyan: #00ffff; --iota: #00ff41; --panel: #0a0a0a; --border: #222; }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; margin: 0; padding: 0; overflow: hidden; }
+  
+  /* INTERACTIVE HUB OVERLAY */
+  #hub-nav {
+    position: absolute; top: 20px; left: 20px; z-index: 100;
+    background: rgba(0,0,0,0.85); padding: 20px; border: 1px solid var(--border); border-radius: 12px;
+  }
+  .brand { color: var(--cyan); font-size: 1.5em; font-weight: 900; text-shadow: 0 0 10px var(--cyan); margin-bottom: 15px; }
+  .nav-link { display: block; padding: 10px; color: #888; text-decoration: none; font-size: 0.8em; border-bottom: 1px solid #1a1a1a; transition: 0.3s; }
+  .nav-link:hover { color: var(--iota); border-bottom-color: var(--iota); }
+  
+  /* CLICKABLE MAP */
+  #map-container { width: 100vw; height: 100vh; background: #000; position: relative; }
+  canvas#world-map { width: 100%; height: 100%; cursor: pointer; }
+  
+  #tooltip {
+    position: absolute; display: none; padding: 8px; background: var(--iota); color: #000;
+    font-weight: bold; font-size: 0.7em; pointer-events: none; border-radius: 4px; z-index: 200;
+  }
+</style>
+</head>
+<body>
+
+<div id="tooltip">CLICK TO DEPLOY</div>
+
+<div id="hub-nav">
+  <div class="brand">FROSTCHAIN</div>
+  <a href="http://frostisfinux.surge.sh" class="nav-link">> OS HOMEPAGE</a>
+  <a href="http://frostcrush.surge.sh" class="nav-link">> FROSTCRUSH SAGA</a>
+  <a href="http://cryptodoku.surge.sh" class="nav-link">> CRYPTODOKU VALIDATOR</a>
+  <div style="font-size:0.5em; color:#444; margin-top:20px;">AUTHORITY: drfrost.frostchain</div>
+</div>
+
+<div id="map-container">
+  <canvas id="world-map"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('world-map');
+const ctx = canvas.getContext('2d');
+const tt = document.getElementById('tooltip');
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.onresize = resize; resize();
+
+// DEFINE CLICKABLE ZONES (x, y fractions, radius, link)
+const nodes = [
+  { n: "AUTHORITY NODE (OHIO)", x: 0.25, y: 0.35, r: 25, url: "http://frostisfinux.surge.sh" },
+  { n: "EUROPE VALIDATOR", x: 0.48, y: 0.32, r: 15, url: "http://cryptodoku.surge.sh" },
+  { n: "ASIA MINING POOL", x: 0.75, y: 0.42, r: 15, url: "http://frostcrush.surge.sh" }
+];
+
+function loop() {
+  ctx.fillStyle = 'rgba(5,5,5,0.2)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  
+  nodes.forEach(node => {
+    const px = node.x * canvas.width; const py = node.y * canvas.height;
+    
+    // Draw Pulse
+    const pulse = (Math.sin(Date.now()/500) + 1) * 10;
+    ctx.strokeStyle = node.url.includes('finux') ? '#ffd700' : '#00ffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(px, py, node.r + pulse, 0, Math.PI*2); ctx.stroke();
+    
+    // Draw Center
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI*2); ctx.fill();
+    
+    // Tangle lines back to Ohio
+    if(node.x !== 0.25) {
+      ctx.strokeStyle = 'rgba(0,255,65,0.1)';
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(0.25*canvas.width, 0.35*canvas.height); ctx.stroke();
+    }
+  });
+  requestAnimationFrame(loop);
+}
+loop();
+
+canvas.onmousemove = (e) => {
+  let found = false;
+  nodes.forEach(node => {
+    const d = Math.hypot(e.clientX - node.x*canvas.width, e.clientY - node.y*canvas.height);
+    if(d < node.r + 20) {
+      tt.style.display = 'block'; tt.style.left = e.clientX + 10 + 'px'; tt.style.top = e.clientY + 10 + 'px';
+      tt.innerText = node.n; found = true;
+    }
+  });
+  if(!found) tt.style.display = 'none';
+};
+
+canvas.onclick = (e) => {
+  nodes.forEach(node => {
+    const d = Math.hypot(e.clientX - node.x*canvas.width, e.clientY - node.y*canvas.height);
+    if(d < node.r + 20) window.location.href = node.url;
+  });
+};
+</script>
+</body>
+</html>

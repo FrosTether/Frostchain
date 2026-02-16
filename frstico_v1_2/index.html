@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frost ICO | Tri-Asset Gateway</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --frst: #d400ff; --fnr: #00d2ff; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; overflow-x: hidden; }
+        
+        #app { max-width: 500px; margin: 0 auto; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; gap: 15px; }
+        .header { text-align: center; border-bottom: 2px solid var(--term); padding-bottom: 15px; }
+
+        /* ASSET SELECTION */
+        .asset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .asset-btn { background: #111; border: 1px solid #333; color: #666; padding: 10px 5px; cursor: pointer; border-radius: 6px; font-size: 0.65rem; font-weight: bold; }
+        .asset-btn.active { border-color: #fff; color: #fff; background: #1a1a1a; }
+        .asset-btn.active.ftc { border-color: var(--term); color: var(--term); }
+        .asset-btn.active.fnr { border-color: var(--fnr); color: var(--fnr); }
+        .asset-btn.active.frst { border-color: var(--frst); color: var(--frst); }
+
+        /* ICO CARD */
+        .ico-card { background: #080808; border: 1px solid #222; padding: 20px; border-radius: 12px; text-align: center; }
+        .price-val { font-size: 2rem; font-weight: bold; color: var(--gold); margin: 10px 0; }
+        .label { font-size: 0.6rem; color: #444; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* BRIDGE SECTION */
+        .bridge-box { background: #000; border: 1px dashed #444; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 0.65rem; word-break: break-all; color: #888; cursor: pointer; }
+        
+        input { background: #000; border: 1px solid #333; color: #fff; width: 100%; padding: 15px; margin-top: 15px; border-radius: 8px; font-family: inherit; font-size: 1rem; text-align: center; }
+        .btn-mint { background: var(--term); color: #000; border: none; width: 100%; padding: 18px; border-radius: 8px; font-weight: bold; text-transform: uppercase; cursor: pointer; margin-top: 15px; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div style="font-weight:bold; font-size:1.3rem; color:var(--term);">FRSTICO GATEWAY</div>
+            <div style="font-size:0.55rem; color:#444; margin-top:5px;">OFFICIAL TRI-ASSET DISTRIBUTION</div>
+        </div>
+
+        <div class="asset-grid">
+            <button id="ftc-tab" class="asset-btn active ftc" onclick="setAsset('ftc')">FTC (1M)</button>
+            <button id="fnr-tab" class="asset-btn" onclick="setAsset('fnr')">FNR (400k)</button>
+            <button id="frst-tab" class="asset-btn" onclick="setAsset('frst')">FRST (3.14M)</button>
+        </div>
+
+        <div class="ico-card">
+            <div class="label" id="asset-label">FTC UNIT PRICE</div>
+            <div class="price-val" id="price-display">$18.23</div>
+            
+            <div style="display:flex; justify-content:space-between; margin: 10px 0;">
+                <button id="d-btn" style="width:48%; background:#111; border:1px solid #fff; color:#fff; padding:8px; border-radius:4px; font-size:0.6rem;" onclick="setBridge('doge')">DOGE BRIDGE</button>
+                <button id="x-btn" style="width:48%; background:#111; border:1px solid #333; color:#555; padding:8px; border-radius:4px; font-size:0.6rem;" onclick="setBridge('xmr')">XMR BRIDGE</button>
+            </div>
+
+            <div class="bridge-box" id="addr" onclick="copyAddr()">DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s</div>
+            
+            <input type="number" id="buy-amt" placeholder="Amount to Purchase">
+            
+            <button class="btn-mint" onclick="initiateSwap()">Initiate Atomic Swap</button>
+        </div>
+
+        <div style="font-size:0.55rem; color:#333; text-align:center;">
+            All proceeds re-routed to Satoshi.frostchain Liquidity Hub.
+        </div>
+    </div>
+
+    <script>
+        const DATA = {
+            ftc: { price: "$18.23", label: "FTC UNIT PRICE (Fair Value)" },
+            fnr: { price: "$103.12", label: "FNR UNIT PRICE (31.337% XMR)" },
+            frst: { price: "$0.31459", label: "FRST UNIT PRICE (Pi-Peg)" }
+        };
+        const ADDRS = {
+            doge: "DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s",
+            xmr: "4AEreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab"
+        };
+        
+        let activeAsset = 'ftc';
+        let activeBridge = 'doge';
+
+        function setAsset(asset) {
+            activeAsset = asset;
+            document.querySelectorAll('.asset-btn').forEach(b => b.classList.remove('active', 'ftc', 'fnr', 'frst'));
+            document.getElementById(asset + '-tab').classList.add('active', asset);
+            document.getElementById('price-display').innerText = DATA[asset].price;
+            document.getElementById('asset-label').innerText = DATA[asset].label;
+        }
+
+        function setBridge(b) {
+            activeBridge = b;
+            document.getElementById('d-btn').style.borderColor = b === 'doge' ? '#fff' : '#333';
+            document.getElementById('d-btn').style.color = b === 'doge' ? '#fff' : '#555';
+            document.getElementById('x-btn').style.borderColor = b === 'xmr' ? '#fff' : '#333';
+            document.getElementById('x-btn').style.color = b === 'xmr' ? '#fff' : '#555';
+            document.getElementById('addr').innerText = ADDRS[b];
+        }
+
+        function copyAddr() {
+            navigator.clipboard.writeText(document.getElementById('addr').innerText);
+            alert("Bridge Address Copied.");
+        }
+
+        function initiateSwap() {
+            const amt = document.getElementById('buy-amt').value;
+            if(!amt) return;
+            alert(`Atomic Swap Locked: Requesting ${amt} ${activeAsset.toUpperCase()} via ${activeBridge.toUpperCase()} Bridge.`);
+        }
+    </script>
+</body>
+</html>

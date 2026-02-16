@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frostscan | v1.6 Stealth</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --fnr: #00d2ff; --btc: #f7931a; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #dash { display: grid; grid-template-rows: 60px 100px 1fr; height: 100vh; padding: 0 20px; position: relative; z-index: 10; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
+        
+        /* SEARCH & STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 15px 0; }
+        .stat-card { background: rgba(10,10,10,0.9); border: 1px solid #222; padding: 10px; border-left: 3px solid var(--term); }
+        .stat-val { font-size: 1.2rem; font-weight: bold; color: #fff; }
+        .stat-lbl { font-size: 0.6rem; color: #666; text-transform: uppercase; }
+
+        /* LEDGER TABLE */
+        .ledger-container { background: rgba(5,5,5,0.95); border: 1px solid #222; overflow-y: auto; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        th { text-align: left; padding: 12px; background: #111; color: var(--cyan); position: sticky; top: 0; }
+        td { padding: 12px; border-bottom: 1px solid #111; color: #ccc; }
+        .hidden-miner { color: #444; font-style: italic; letter-spacing: 1px; }
+        .asset-tag { padding: 2px 5px; border-radius: 3px; font-size: 0.6rem; font-weight: bold; color: #000; margin-right: 3px; }
+    </style>
+</head>
+<body>
+
+    <div id="dash">
+        <div class="header">
+            <div style="font-weight:bold; font-size:1.2rem;">FROSTSCAN <span style="color:var(--fnr)">v1.6 STEALTH</span></div>
+            <div style="font-size:0.7rem; color:#444;">LEDGER_SYNC: <span style="color:var(--term)">LATTICE_OK</span></div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card" style="border-left-color: var(--btc);">
+                <div class="stat-lbl">Merged Hashrate</div>
+                <div class="stat-val" id="hash-val">42.6 EH/s</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--gold);">
+                <div class="stat-lbl">FTC Supply</div>
+                <div class="stat-val">1,241,337</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--fnr);">
+                <div class="stat-lbl">FNR Total Rewards</div>
+                <div class="stat-val" id="fnr-total">842.50</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--term);">
+                <div class="stat-lbl">Block Height</div>
+                <div class="stat-val" id="h-val">948221</div>
+            </div>
+        </div>
+
+        <div class="ledger-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Height</th>
+                        <th>Hash / TXID</th>
+                        <th>Type</th>
+                        <th>Assets</th>
+                        <th>Miner ID</th>
+                    </tr>
+                </thead>
+                <tbody id="ledger-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let height = 948221;
+        let fnrRewards = 842.50;
+
+        function addBlock() {
+            const body = document.getElementById('ledger-body');
+            const row = document.createElement('tr');
+            const txid = "0x" + Math.random().toString(16).substr(2, 12).toUpperCase();
+            
+            // Randomly toggle between MERGED and FNR blocks
+            const isFNR = Math.random() > 0.7;
+            const typeText = isFNR ? "FNR_RESERVE" : "MERGED_SHA256";
+            const typeColor = isFNR ? "var(--fnr)" : "var(--btc)";
+            
+            // Hide miner name if FNR
+            const minerText = isFNR ? 
+                '<span class="hidden-miner">[HIDDEN_IDENTITY]</span>' : 
+                '<span style="color:var(--cyan)">drfrost.frostchain</span>';
+
+            row.innerHTML = `
+                <td>${height--}</td>
+                <td><span style="color:#555">${txid}...</span></td>
+                <td><span style="color:${typeColor}">${typeText}</span></td>
+                <td>
+                    <span class="asset-tag" style="background:var(--pink)">FRST</span>
+                    <span class="asset-tag" style="background:var(--gold)">FTC</span>
+                    ${isFNR ? '<span class="asset-tag" style="background:var(--fnr)">FNR</span>' : ''}
+                </td>
+                <td>${minerText}</td>
+            `;
+            
+            body.prepend(row);
+            if(body.children.length > 15) body.removeChild(body.lastChild);
+            
+            // Update Stats
+            if(isFNR) {
+                fnrRewards += 2.50;
+                document.getElementById('fnr-total').innerText = fnrRewards.toFixed(2);
+            }
+            document.getElementById('h-val').innerText = height + 1;
+            document.getElementById('hash-val').innerText = (42 + Math.random()).toFixed(1) + " EH/s";
+        }
+
+        setInterval(addBlock, 3000);
+        for(let i=0; i<12; i++) addBlock();
+    </script>
+</body>
+</html>

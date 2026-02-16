@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FSP GOD-TIER V82 // LEDGER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #000; --text: #e0e0e0; --orange: #ff6600; --iota: #00e0ff; --burgundy: #800020; }
+body { background: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; margin:0; overflow:hidden; display:flex; flex-direction:column; height:100vh; }
+
+.header { background: #111; border-bottom: 2px solid var(--orange); padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+.grid-area { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #111 0%, #000 70%); }
+.grid { display: grid; grid-template-columns: repeat(9, 40px); grid-template-rows: repeat(9, 40px); gap: 2px; border: 4px solid #222; padding: 5px; }
+.cell { width: 40px; height: 40px; background: #0a0a0a; border: 1px solid #1a1a1a; display:flex; align-items:center; justify-content:center; }
+.cell.obj-iota::after { content: "•"; color: var(--iota); font-size: 30px; text-shadow: 0 0 10px var(--iota); }
+.cell.h-burgundy { background: var(--burgundy); }
+
+.status-bar { background: #111; border-top: 2px solid var(--orange); padding: 15px; display: flex; justify-content: space-between; }
+.val { color: var(--orange); font-weight: bold; }
+
+@keyframes blink { 50% { opacity: 0; } }
+.sync-tag { color: var(--iota); font-size: 10px; }
+</style>
+</head>
+<body onload="init()">
+
+<div class="header">
+  <div>FSP GOD-TIER <span style="color:var(--orange)">V82</span></div>
+  <div class="sync-tag" id="utc-clock">UTC...</div>
+</div>
+
+<div class="grid-area">
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="status-bar">
+  <div>HEIGHT: <span class="val" id="h-val">1,675,500</span></div>
+  <div>CYCLE: <span class="val" id="cycle">WRITE</span></div>
+  <div>WALLET: <span class="val" style="color:var(--iota)">30.8071 Mi</span></div>
+</div>
+
+<script>
+const BLOCK_MS = 300000;
+function init() {
+  const g = document.getElementById('grid');
+  for(let i=0; i<81; i++) {
+    const c = document.createElement('div');
+    c.className = 'cell';
+    if(i===40) c.classList.add('obj-iota');
+    if(i===10 || i===70) c.classList.add('h-burgundy');
+    g.appendChild(c);
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+function tick() {
+  const now = new Date();
+  document.getElementById('utc-clock').innerText = now.toUTCString();
+  const slot = Math.floor(now.getTime() / BLOCK_MS);
+  document.getElementById('h-val').innerText = (1675500 + (slot - 5692135)).toLocaleString();
+  
+  // V82 Cycle Logic
+  const subSec = Math.floor((now.getTime() % BLOCK_MS) / 1000);
+  if(subSec < 145) document.getElementById('cycle').innerText = (145-subSec) + "s WRITE";
+  else if(subSec < 301) document.getElementById('cycle').innerText = (301-subSec) + "s SOLVE";
+}
+</script>
+</body>
+</html>

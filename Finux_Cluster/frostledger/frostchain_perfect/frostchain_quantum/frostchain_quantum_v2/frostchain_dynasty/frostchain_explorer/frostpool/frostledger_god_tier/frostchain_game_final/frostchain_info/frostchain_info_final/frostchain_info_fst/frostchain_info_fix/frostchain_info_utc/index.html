@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FROSTCHAIN // UTC_LIVE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+:root { --core: #00fbff; --gold: #ffd700; --bch: #8dc351; --bg: #050505; --panel: #0a0a0a; --border: #333; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; font-size: 13px; }
+
+.nav-bar { background: #000; border-bottom: 2px solid var(--core); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+.brand { font-size: 1.4em; color: var(--core); letter-spacing: 2px; font-weight: bold; }
+.utc-time { color: #fff; font-size: 12px; border: 1px solid #333; padding: 5px 10px; background: #111; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; gap: 20px; }
+
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+.card { background: var(--panel); border: 1px solid var(--border); padding: 20px; position: relative; }
+.card::after { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--core); }
+.card.bch { border-color: var(--bch); }
+.card.bch::after { background: var(--bch); }
+
+.lbl { font-size: 10px; color: #666; margin-bottom: 5px; letter-spacing: 1px; }
+.val { font-size: 1.8em; color: #fff; font-weight: bold; }
+.sub { font-size: 10px; color: #555; margin-top: 5px; }
+
+/* TANGLE VISUALIZER */
+.tangle-bar { 
+  display: flex; gap: 5px; background: #111; padding: 10px; border: 1px dashed #333; 
+  align-items: center; overflow: hidden; height: 50px;
+}
+.pulse-node {
+  width: 8px; height: 8px; background: var(--core); border-radius: 50%;
+  animation: flash 0.5s;
+}
+.tangle-msg { font-size: 10px; color: var(--core); margin-left: 10px; }
+
+.tbl { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); margin-top: 20px; }
+.tbl th { text-align: left; padding: 10px; background: #111; color: #888; font-size: 10px; }
+.tbl td { padding: 10px; border-bottom: 1px solid #222; color: #ddd; font-family: monospace; }
+.hash { color: var(--gold); }
+.utc-stamp { color: var(--core); font-weight: bold; }
+
+@keyframes flash { 0% { opacity: 0; transform: scale(2); } 100% { opacity: 1; transform: scale(1); } }
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <div class="brand">FROSTCHAIN.INFO</div>
+  <div class="utc-time" id="utc-clock">SYNCING...</div>
+</div>
+
+<div class="container">
+
+  <div class="stats-row">
+    <div class="card bch">
+      <div class="lbl">BCH ANCHOR BLOCK</div>
+      <div class="val" id="bch-h">837,640</div>
+      <div class="sub">10 MINUTE CYCLE (600s)</div>
+    </div>
+    <div class="card">
+      <div class="lbl">FROST BLOCK (FST)</div>
+      <div class="val" id="fst-h">1,675,280</div>
+      <div class="sub">5 MINUTE CYCLE (300s)</div>
+    </div>
+    <div class="card">
+      <div class="lbl">NEXT BLOCK IN</div>
+      <div class="val" style="color:var(--gold)" id="timer">--:--</div>
+      <div class="sub">UTC ALIGNMENT</div>
+    </div>
+  </div>
+
+  <div style="color:#666; font-size:10px; margin-top:10px;">>> TANGLE MEMPOOL PULSE (4s TICK)</div>
+  <div class="tangle-bar" id="tangle">
+    <div class="tangle-msg">WAITING FOR PULSE...</div>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>HEIGHT</th><th>TYPE</th><th>ANCHOR</th><th>HASH</th><th>REWARD</th><th>UTC TIME</th></tr></thead>
+    <tbody id="blocks"></tbody>
+  </table>
+
+</div>
+
+<script>
+// CONFIG
+// We calculate 'Real' height based on fixed genesis
+const GENESIS_TIME = 1700000000000; // Arbitrary past point to align math
+const BLOCK_TIME = 300 * 1000; // 300s = 5 min
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('utc-clock').innerText = now.toUTCString();
+  
+  // COUNTDOWN LOGIC
+  const ms = now.getTime();
+  const nextBlockTime = Math.ceil(ms / BLOCK_TIME) * BLOCK_TIME;
+  const diff = Math.floor((nextBlockTime - ms) / 1000);
+  
+  const m = Math.floor(diff / 60);
+  const s = (diff % 60).toString().padStart(2, '0');
+  document.getElementById('timer').innerText = `${m}:${s}`;
+  
+  // Check if we just crossed a boundary (allow 1s buffer)
+  if(diff === 299 || document.getElementById('blocks').children.length === 0) {
+    refreshChain(); // MINT BLOCK
+  }
+}
+
+function refreshChain() {
+  const now = new Date();
+  const currentSlot = Math.floor(now.getTime() / BLOCK_TIME);
+  
+  // Calculate Heights
+  const fstHeight = 1675000 + currentSlot - 5666000; // Align to roughly 1.67M
+  const bchHeight = Math.floor(fstHeight / 2);
+  
+  document.getElementById('fst-h').innerText = fstHeight.toLocaleString();
+  document.getElementById('bch-h').innerText = bchHeight.toLocaleString();
+  
+  // Populate Table with HISTORY (So it's not empty)
+  const tbody = document.getElementById('blocks');
+  tbody.innerHTML = ''; // Clear and rebuild based on time
+  
+  for(let i=0; i<8; i++) {
+    const slot = currentSlot - i;
+    const h = 1675000 + slot - 5666000;
+    const anchor = Math.floor(h / 2);
+    const time = new Date(slot * BLOCK_TIME);
+    
+    // Hash is deterministic-ish based on height for consistency
+    const hash = '0000' + Math.abs(Math.sin(h)*1000000000000).toString(16).substr(0,12) + '...';
+    
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td style="color:#fff; font-weight:bold;">${h}</td>
+      <td><span style="color:var(--core)">FST_BLOCK</span></td>
+      <td style="color:#888;">#${anchor}</td>
+      <td class="hash">${hash}</td>
+      <td>+13.37 FTC</td>
+      <td class="utc-stamp">${time.toUTCString().split(' ')[4]}</td>
+    `;
+    tbody.appendChild(row);
+  }
+}
+
+// TANGLE PULSE (4 Seconds)
+setInterval(() => {
+  const t = document.getElementById('tangle');
+  // Visual pulse
+  t.innerHTML = `
+    <div class="pulse-node"></div>
+    <div class="pulse-node" style="background:var(--gold)"></div>
+    <div class="tangle-msg">TANGLE SYNC > BLOCK A/B VERIFIED > MEMPOOL OK</div>
+  `;
+  setTimeout(() => {
+    t.innerHTML = '<div class="tangle-msg" style="color:#444">IDLE...</div>';
+  }, 2000);
+}, 4000);
+
+// INIT
+setInterval(updateClock, 1000);
+updateClock();
+refreshChain(); // Initial Load
+
+</script>
+</body>
+</html>

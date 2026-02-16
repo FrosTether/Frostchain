@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kane | Governance Injection</title>
+    <style>
+        :root { --bg: #000; --frst: #d400ff; --fnr: #00d2ff; --term: #33ff00; --gold: #ffd700; --doge: #ba9f33; --xmr: #ff6600; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; }
+        #app { max-width: 500px; margin: 0 auto; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; gap: 15px; }
+
+        .header { text-align: center; border-bottom: 2px solid var(--frst); padding-bottom: 15px; }
+        .satoshi-tag { font-size: 0.6rem; color: #444; letter-spacing: 2px; text-transform: uppercase; }
+
+        /* LIQUIDITY CARDS */
+        .card { background: #080808; border: 1px solid #222; padding: 15px; border-radius: 12px; position: relative; overflow: hidden; }
+        .card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+        .c-frst::before { background: var(--frst); }
+        .c-fnr::before { background: var(--fnr); }
+        
+        .lbl { font-size: 0.7rem; color: #888; text-transform: uppercase; }
+        .val { font-size: 1.8rem; font-weight: bold; }
+        .price { color: var(--gold); font-weight: bold; font-size: 1.1rem; }
+        .inventory { font-size: 0.6rem; color: #555; margin-top: 5px; }
+
+        /* ATOMIC EXCHANGE */
+        .exchange-box { background: #0a0a0a; border: 1px dashed #333; padding: 20px; border-radius: 15px; }
+        .bridge-btn { background: #111; border: 1px solid #333; color: #888; padding: 10px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; width: 48%; }
+        .bridge-btn.active { border-color: #fff; color: #fff; background: #1a1a1a; }
+        
+        .addr-display { background: #000; border: 1px solid #222; padding: 12px; margin-top: 15px; font-size: 0.6rem; word-break: break-all; color: var(--term); border-radius: 5px; cursor: pointer; }
+        input { background: #000; border: 1px solid #333; color: #fff; width: 100%; padding: 15px; border-radius: 8px; font-family: inherit; box-sizing: border-box; margin-top: 15px; }
+        .btn-action { background: var(--frst); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 8px; font-weight: bold; text-transform: uppercase; margin-top: 15px; cursor: pointer; }
+
+        .log { font-size: 0.6rem; color: #444; height: 60px; overflow-y: auto; margin-top: 10px; border-top: 1px solid #111; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div style="font-weight:bold; font-size:1.3rem;">KANEFROSTCHAIN</div>
+            <div class="satoshi-tag">Liquidity Node: Satoshi.frostchain</div>
+        </div>
+
+        <div class="card c-fnr">
+            <div class="lbl">Reserve (FNR)</div>
+            <div class="val">$103.12</div>
+            <div class="price">31.337% XMR PRICE</div>
+            <div class="inventory" id="fnr-inv">Available: 400,000 FNR</div>
+        </div>
+
+        <div class="card c-frst">
+            <div class="lbl">Governance (FRST)</div>
+            <div class="val">$0.31459</div>
+            <div class="price">FIXED π-PEG</div>
+            <div class="inventory" id="frst-inv">Available: 3,145,900 FRST</div>
+        </div>
+
+        <div class="exchange-box">
+            <div class="lbl" style="margin-bottom:10px;">DEX Atomic Gateway</div>
+            <div style="display:flex; justify-content:space-between;">
+                <button id="d-btn" class="bridge-btn active" onclick="setBridge('doge')">DOGE BRIDGE</button>
+                <button id="x-btn" class="bridge-btn" onclick="setBridge('xmr')">XMR BRIDGE</button>
+            </div>
+            
+            <div class="addr-display" id="addr" onclick="copyAddr()">DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s</div>
+            
+            <input type="number" id="amt" placeholder="Amount to Purchase">
+            
+            <button class="btn-action" onclick="executeSwap()">Execute Atomic Swap</button>
+        </div>
+
+        <div class="log" id="log">
+            <div>> Kanefrostchain v5.0 Hub Online.</div>
+            <div>> Governance supply unlocked for liquidation.</div>
+        </div>
+    </div>
+
+    <script>
+        const ADDRS = {
+            doge: "DJTDVRxJGtcuSsxwT7GHbkdCabqaTa1C7s",
+            xmr: "4AEreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab"
+        };
+        let activeBridge = 'doge';
+
+        function setBridge(b) {
+            activeBridge = b;
+            document.querySelectorAll('.bridge-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(b[0] + '-btn').classList.add('active');
+            document.getElementById('addr').innerText = ADDRS[b];
+        }
+
+        function copyAddr() {
+            navigator.clipboard.writeText(document.getElementById('addr').innerText);
+            alert("Bridge Address Copied.");
+        }
+
+        function executeSwap() {
+            const amt = document.getElementById('amt').value;
+            if(!amt) return;
+            const log = document.getElementById('log');
+            log.innerHTML += `<div style="color:var(--term)">> Atomic Swap Locked. Awaiting ${activeBridge.toUpperCase()} entropy...</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Live Market Jitter
+        setInterval(() => {
+            const jitter = 103.12 + (Math.random() - 0.5) * 0.2;
+            document.getElementById('fnr-price').innerText = "$" + jitter.toFixed(2);
+        }, 4000);
+    </script>
+</body>
+</html>

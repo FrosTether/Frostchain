@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FROSTCHAIN: TANGLE MINER v1.0</title>
+    <style>
+        :root { --neon-blue: #00f3ff; --neon-pink: #ff00ff; --neon-green: #00ff41; --bg-dark: #050505; }
+        body { margin: 0; background: var(--bg-dark); color: #fff; font-family: 'Courier New', monospace; overflow: hidden; }
+        #tangle-canvas { position: absolute; top: 0; left: 0; z-index: 1; filter: blur(1px) contrast(1.2); }
+        .ui-layer { position: relative; z-index: 10; display: grid; grid-template-columns: 1fr 1fr 1fr; height: 100vh; padding: 20px; pointer-events: none; }
+        .panel { background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); margin: 10px; padding: 20px; border-radius: 15px; box-shadow: 0 0 20px rgba(0, 243, 255, 0.1); transition: all 0.3s ease; pointer-events: auto; }
+        .panel:hover { transform: scale(1.02); box-shadow: 0 0 40px rgba(255, 0, 255, 0.3); border-color: var(--neon-pink); }
+        h1 { text-shadow: 0 0 10px var(--neon-blue); margin-top: 0; }
+        h2 { color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); }
+        .stat-value { font-size: 2em; font-weight: bold; animation: breathe 3s infinite ease-in-out; }
+        .token-row { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding: 10px 0; }
+        .solfeggio { color: #ffd700; }
+        .miner-bar-container { width: 100%; height: 30px; background: #222; border-radius: 15px; margin-top: 20px; overflow: hidden; box-shadow: inset 0 0 10px #000; }
+        .miner-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink), var(--neon-green)); background-size: 200% 200%; animation: shimmer 2s linear infinite, fillup 10s infinite linear; }
+        @keyframes breathe { 0%, 100% { opacity: 0.8; text-shadow: 0 0 10px currentColor; } 50% { opacity: 1; text-shadow: 0 0 25px currentColor; } }
+        @keyframes shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+        @keyframes fillup { 0% { width: 0%; } 100% { width: 100%; } }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+    <div class="ui-layer">
+        <div class="panel">
+            <h1>❄️ FROSTCHAIN</h1>
+            <div class="token-row"><span>FTC (Frostcoin)</span><span class="stat-value" style="color:var(--neon-blue)">11.87M</span></div>
+            <div class="token-row"><span>FNR (Reserve)</span><span class="stat-value" style="color:var(--neon-green)">4.41M</span></div>
+            <div class="token-row"><span>AMD (Amiah)</span><span class="stat-value" style="color:var(--neon-pink)">404.4M</span></div>
+            <div class="token-row"><span>FRST (Gov)</span><span class="stat-value" style="color:#ffd700">3.14M</span></div>
+        </div>
+        <div class="panel" style="text-align: center;">
+            <h2>⛏️ TANGLE MINER ACTIVE</h2>
+            <div style="margin: 30px 0;"><span style="font-size: 4em;" class="stat-value" id="hashrate">0.00</span><div>KH/s (Solfeggio Tuned)</div></div>
+            <div class="miner-bar-container"><div class="miner-bar"></div></div>
+            <p>SYNC: <span style="color:var(--neon-pink)">4.00s Overlap</span></p>
+            <p>DAG NODES: <span id="node-count">100</span></p>
+        </div>
+        <div class="panel">
+            <h2>🔊 FREQUENCY MINT</h2>
+            <div class="token-row"><span class="solfeggio">396 Hz</span><span>UTXO: Validated</span></div>
+            <div class="token-row"><span class="solfeggio">528 Hz</span><span>DNA Repair: Active</span></div>
+            <div class="token-row"><span class="solfeggio">852 Hz</span><span>Spirit: Aligned</span></div>
+            <div style="margin-top:20px; font-size: 0.8em; color: #888;">> Connecting to .frostchain...<br>> BCH Block Header Found...<br>> Re-syncing Tangle Nodes...<br>> Frostcoin Block #1138 Mined!</div>
+        </div>
+    </div>
+<script>
+    const canvas = document.getElementById('tangle-canvas'); const ctx = canvas.getContext('2d'); let width, height; let nodes = [];
+    function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; } window.addEventListener('resize', resize); resize();
+    class Node { constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.vx = (Math.random() - 0.5) * 1.5; this.vy = (Math.random() - 0.5) * 1.5; this.size = Math.random() * 3 + 1; this.color = Math.random() > 0.5 ? '#00f3ff' : '#ff00ff'; } update() { this.x += this.vx; this.y += this.vy; if (this.x < 0 || this.x > width) this.vx *= -1; if (this.y < 0 || this.y > height) this.vy *= -1; } draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fillStyle = this.color; ctx.shadowBlur = 15; ctx.shadowColor = this.color; ctx.fill(); } }
+    for(let i=0; i<100; i++) nodes.push(new Node());
+    function animate() { ctx.clearRect(0, 0, width, height); for(let i=0; i<nodes.length; i++) { nodes[i].update(); nodes[i].draw(); for(let j=i+1; j<nodes.length; j++) { let dx = nodes[i].x - nodes[j].x; let dy = nodes[i].y - nodes[j].y; let dist = Math.sqrt(dx*dx + dy*dy); if(dist < 150) { ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.strokeStyle = `rgba(255, 255, 255, ${1 - dist/150})`; ctx.lineWidth = 0.5; ctx.stroke(); } } } if(Math.random() > 0.9) { document.getElementById('hashrate').innerText = (Math.random() * 100 + 300).toFixed(2); } requestAnimationFrame(animate); } animate();
+</script>
+</body>
+</html>

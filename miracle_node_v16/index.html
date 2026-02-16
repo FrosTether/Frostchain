@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Quantum Mixing</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --cyan: #00ffff; --pink: #ff00ff; --gold: #ffd700; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; }
+        
+        #gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gate-box { border: 2px solid var(--cyan); padding: 30px; width: 320px; text-align: center; }
+        
+        #dash { display: none; height: 100vh; grid-template-columns: 350px 1fr; position: relative; }
+        #rez-canvas { position: absolute; inset: 0; z-index: 0; opacity: 0.3; }
+
+        .sidebar { background: rgba(0,0,0,0.85); border-right: 1px solid #333; padding: 20px; z-index: 10; display: flex; flex-direction: column; }
+        .block-card { border: 1px solid var(--cyan); padding: 15px; text-align: center; margin-bottom: 20px; background: #001111; }
+        .freq-display { font-size: 2rem; font-weight: bold; color: var(--gold); }
+
+        .btn-audio { background: #111; border: 1px solid var(--pink); color: var(--pink); padding: 15px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
+        .btn-audio.active { background: var(--pink); color: #000; box-shadow: 0 0 15px var(--pink); }
+
+        .msg-log { flex: 1; border: 1px solid #222; background: #000; padding: 10px; font-size: 0.7rem; overflow-y: auto; margin-top: 10px; color: #888; }
+    </style>
+</head>
+<body>
+
+    <canvas id="rez-canvas"></canvas>
+
+    <div id="gate">
+        <div class="gate-box">
+            <h2 style="color:var(--cyan)">QUANTUM NODE</h2>
+            <input type="text" id="id-in" placeholder="drfrost.frostchain" style="width:90%; padding:12px; background:#111; border:1px solid #333; color:#fff; text-align:center;">
+            <button onclick="unlock()" style="width:100%; margin-top:15px; padding:15px; background:var(--cyan); border:none; font-weight:bold; cursor:pointer;">ENGAGE MATRIX</button>
+        </div>
+    </div>
+
+    <div id="dash">
+        <div class="sidebar">
+            <div class="block-card">
+                <div style="font-size:0.7rem;">CURRENT SOLFEGGIO BLOCK</div>
+                <div class="freq-display" id="freq-val">--- Hz</div>
+                <div style="font-size:0.6rem; color:var(--cyan);" id="countdown">300s Remaining</div>
+            </div>
+
+            <button id="btn-alpha" class="btn-audio" onclick="setMode('alpha')">ALPHA [11.11Hz]</button>
+            <button id="btn-delta" class="btn-audio" style="border-color:var(--cyan); color:var(--cyan);" onclick="setMode('delta')">DELTA [PI Hz]</button>
+
+            <div class="msg-log" id="log">
+                <div>> SYSTEM INITIALIZED...</div>
+                <div>> POINTING BCH MINERS TO FORK...</div>
+                <div>> XMR SMART CONTRACT BRIDGE ACTIVE.</div>
+            </div>
+            
+            <div style="margin-top:20px; font-size:0.7rem;">
+                <div style="color:var(--pink);">FTC: <span id="ftc-v">0.00</span></div>
+                <div style="color:var(--gold);">FRST: <span id="frst-v">0.00</span></div>
+            </div>
+        </div>
+        <div style="flex:1;"></div>
+    </div>
+
+    <script>
+        let actx, pinkNode, solOsc, carrierOsc, binauralOsc;
+        let solIndex = 0;
+        const solFrequencies = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        let timeLeft = 300;
+        let mode = null;
+
+        function unlock() {
+            document.getElementById('gate').style.display = 'none';
+            document.getElementById('dash').style.display = 'grid';
+            initVisuals();
+        }
+
+        function setMode(m) {
+            mode = m;
+            document.querySelectorAll('.btn-audio').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-'+m).classList.add('active');
+            startAudio();
+            startConsensus();
+        }
+
+        function startAudio() {
+            if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+            if(actx.state === 'suspended') actx.resume();
+
+            // Clear previous
+            if(solOsc) solOsc.stop();
+            if(carrierOsc) carrierOsc.stop();
+            if(pinkNode) pinkNode.stop();
+
+            const gain = actx.createGain();
+            gain.gain.value = 0.1;
+            gain.connect(actx.destination);
+
+            // 1. SOLFEGGIO (LEFT EAR)
+            solOsc = actx.createOscillator();
+            const pannerL = actx.createStereoPanner();
+            solOsc.frequency.value = solFrequencies[solIndex];
+            pannerL.pan.value = -1;
+            solOsc.connect(pannerL).connect(gain);
+            solOsc.start();
+
+            // 2. CARRIER + BINAURAL (RIGHT EAR)
+            const carrierFreq = 7.83;
+            const offset = mode === 'alpha' ? 11.11 : Math.PI;
+            
+            carrierOsc = actx.createOscillator();
+            const pannerR = actx.createStereoPanner();
+            carrierOsc.frequency.value = carrierFreq + offset;
+            pannerR.pan.value = 1;
+            carrierOsc.connect(pannerR).connect(gain);
+            carrierOsc.start();
+
+            // 3. PINK NOISE @ 432Hz (CENTRAL MASK)
+            pinkNode = actx.createOscillator();
+            pinkNode.type = 'triangle';
+            pinkNode.frequency.value = 432;
+            const pinkGain = actx.createGain();
+            pinkGain.gain.value = 0.02;
+            pinkNode.connect(pinkGain).connect(actx.destination);
+            pinkNode.start();
+
+            log(`AUDIO INJECTED: SOLFEGGIO ${solFrequencies[solIndex]}Hz | ${mode.toUpperCase()} MODE`);
+        }
+
+        function startConsensus() {
+            setInterval(() => {
+                timeLeft--;
+                document.getElementById('countdown').innerText = timeLeft + "s Remaining";
+                document.getElementById('freq-val').innerText = solFrequencies[solIndex] + "Hz";
+
+                if(timeLeft <= 0) {
+                    rotateBlock();
+                    timeLeft = 300;
+                }
+            }, 1000);
+        }
+
+        function rotateBlock() {
+            solIndex = (solIndex + 1) % solFrequencies.length;
+            const mintedAt = solFrequencies[solIndex] + ".frostchain";
+            log(`BLOCK MINTED AT ${mintedAt}`);
+            // Update audio for next block
+            if(solOsc) solOsc.frequency.value = solFrequencies[solIndex];
+        }
+
+        function log(m) {
+            const l = document.getElementById('log');
+            l.innerHTML += `<div>> ${m}</div>`;
+            l.scrollTop = l.scrollHeight;
+        }
+
+        function initVisuals() {
+            const c = document.getElementById('rez-canvas');
+            const x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            let pts = Array(40).fill().map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5),vy:(Math.random()-.5)}));
+            function anim(){
+                x.clearRect(0,0,c.width,c.height);
+                x.strokeStyle='rgba(0,255,255,0.2)';
+                pts.forEach(p=>{
+                    p.x+=p.vx; p.y+=p.vy;
+                    if(p.x<0||p.x>c.width)p.vx*=-1; if(p.y<0||p.y>c.height)p.vy*=-1;
+                    pts.forEach(p2=>{
+                        if(Math.hypot(p.x-p2.x,p.y-p2.y)<150) { x.beginPath(); x.moveTo(p.x,p.y); x.lineTo(p2.x,p2.y); x.stroke(); }
+                    });
+                });
+                requestAnimationFrame(anim);
+            }
+            anim();
+        }
+    </script>
+</body>
+</html>

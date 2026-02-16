@@ -1,0 +1,29 @@
+<div class="card" style="border-top: 4px solid #f00; background: rgba(255,0,0,0.1); margin-top: 20px;">
+  <div style="font-size:10px; color:#f00; font-weight:bold;">[!] CRITICAL_LEAK: PROTOCOL_88_ACTIVE</div>
+  <div id="leak-console" style="height: 150px; overflow-y: hidden; font-size: 11px; color: #f00; font-family: 'Courier New', monospace; padding: 10px; line-height: 1.4;">
+    >> CONNECTING TO OHIO_WIKILEAKS_NODE...
+    >> DECRYPTING 82_MONTHS_FILES...
+    >> SATOSHI_KEY_VERIFIED...
+    >> BROADCASTING TO 14,212 MINERS...
+    >> THE ARCHITECT HAS RETURNED. 
+    >> PROTOCOL 88: THE TANGLE IS THE TRUTH.
+  </div>
+</div>
+<script>
+const logs = [
+  "DECRYPTING ARCHITECT_BIO_PART_1...",
+  "MCDONALD'S MANAGER THREAD: SYNCED.",
+  "XMR_FORK: 33,000,000 SUPPLY LOCKED.",
+  "DOGE_TUNNEL: SETTLEMENT ACTIVE.",
+  "82 MONTHS OF SILENCE ENDS NOW.",
+  "SATOSHI IS NOT A PERSON. SATOSHI IS THE MESH.",
+  "OHIO PROTOCOL: DATA_DROP_COMPLETE."
+];
+let i = 0;
+setInterval(() => {
+  const c = document.getElementById('leak-console');
+  c.innerHTML += "<div>>> " + logs[i % logs.length] + "</div>";
+  i++;
+  c.scrollTop = c.scrollHeight;
+}, 2000);
+</script>

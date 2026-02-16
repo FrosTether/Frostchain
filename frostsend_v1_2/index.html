@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FrostSend | v1.2 Private</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --priv: #7d00ff; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        #app { max-width: 400px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
+        
+        .header { border-bottom: 2px solid var(--term); padding-bottom: 10px; margin-bottom: 15px; font-weight: bold; display: flex; justify-content: space-between; }
+        
+        /* ASSET TABS */
+        .asset-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab { flex: 1; padding: 10px; border: 1px solid #222; text-align: center; cursor: pointer; font-size: 0.7rem; color: #444; transition: 0.3s; }
+        .tab.active { border-color: var(--cyan); color: var(--cyan); background: rgba(0, 255, 255, 0.05); }
+        .tab.fnr-active { border-color: var(--gold); color: var(--gold); }
+
+        /* PRIVACY TOGGLE */
+        .priv-toggle { background: #080808; border: 1px solid #333; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .priv-btn { width: 40px; height: 20px; background: #222; border-radius: 10px; position: relative; cursor: pointer; }
+        .priv-btn.on { background: var(--priv); }
+        .knob { width: 16px; height: 16px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: 0.2s; }
+        .on .knob { left: 22px; }
+
+        input { width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 12px; margin-bottom: 10px; box-sizing: border-box; font-family: inherit; }
+        input:focus { border-color: var(--gold); outline: none; }
+
+        #pin-screen { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        .dot-container { display: flex; gap: 10px; margin-bottom: 20px; }
+        .pin-dot { height: 12px; width: 12px; border: 1px solid var(--gold); border-radius: 50%; }
+        .pin-dot.filled { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+        
+        .keypad { display: grid; grid-template-columns: repeat(3, 85px); gap: 15px; }
+        .key { height: 75px; border: 1px solid #222; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+        .btn-send { width: 100%; padding: 20px; background: var(--term); color: #000; font-weight: bold; border: none; cursor: pointer; margin-top: auto; }
+    </style>
+</head>
+<body>
+
+    <div id="pin-screen">
+        <div id="pin-msg" style="color:var(--gold); margin-bottom:10px; font-size:0.7rem;">ENTER 4-6 DIGIT PIN</div>
+        <div class="dot-container">
+            <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+        </div>
+        <div class="keypad" id="pad"></div>
+    </div>
+
+    <div id="app">
+        <div class="header">
+            <span>FROSTSEND v1.2</span>
+            <span id="vault-id" style="color:var(--cyan); font-size:0.6rem;">drfrost.frostchain</span>
+        </div>
+
+        <div class="asset-tabs">
+            <div class="tab active" onclick="switchAsset('FTC', this)">FTC</div>
+            <div class="tab" onclick="switchAsset('FRST', this)">FRST</div>
+            <div class="tab" onclick="switchAsset('FNR', this)">FNR</div>
+        </div>
+
+        <div style="background:#0a0a0a; border:1px solid #222; padding:20px; text-align:center; margin-bottom:15px;">
+            <div id="asset-name" style="font-size:0.6rem; color:#666;">FTC BALANCE</div>
+            <div id="bal" style="font-size:1.8rem; font-weight:bold; color:#fff;">11,870,000.00</div>
+        </div>
+
+        <div class="priv-toggle" id="priv-ui">
+            <div style="font-size:0.7rem;">
+                <div id="priv-label">PRIVATE SEND (DASH MIX)</div>
+                <div style="font-size:0.5rem; color:#555;" id="priv-desc">Decentralized mixing enabled</div>
+            </div>
+            <div class="priv-btn" id="p-toggle" onclick="this.classList.toggle('on')"><div class="knob"></div></div>
+        </div>
+
+        <input type="text" id="to" placeholder="Recipient: user.frostchain">
+        <input type="number" id="val" placeholder="Amount: 0.00">
+
+        <button class="btn-send" onclick="openPin()">TRANSMIT ASSET</button>
+    </div>
+
+    <script>
+        let current = 'FTC';
+        let pin = "";
+        const data = { 'FTC': '11,870,000.00', 'FRST': '3,141,592.00', 'FNR': '4,412,100.00' };
+
+        function switchAsset(a, el) {
+            current = a;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active', 'fnr-active'));
+            el.classList.add(a === 'FNR' ? 'fnr-active' : 'active');
+            document.getElementById('asset-name').innerText = a + " BALANCE";
+            document.getElementById('bal').innerText = data[a];
+            
+            // Privacy Label Update
+            const pLabel = document.getElementById('priv-label');
+            const pDesc = document.getElementById('priv-desc');
+            if(a === 'FNR') {
+                pLabel.innerText = "XMR STEALTH MODE";
+                pDesc.innerText = "Forced Ring Signature Tunneling";
+                document.getElementById('p-toggle').classList.add('on'); // FNR requires stealth
+            } else {
+                pLabel.innerText = "PRIVATE SEND (DASH MIX)";
+                pDesc.innerText = "Decentralized mixing enabled";
+            }
+        }
+
+        function openPin() {
+            if(!document.getElementById('to').value || !document.getElementById('val').value) return;
+            document.getElementById('pin-screen').style.display = 'flex';
+        }
+
+        const pad = document.getElementById('pad');
+        [1,2,3,4,5,6,7,8,9,'C',0,'OK'].forEach(v => {
+            const k = document.createElement('div');
+            k.className = 'key'; k.innerText = v;
+            k.onclick = () => {
+                if(v === 'C') pin = "";
+                else if(v === 'OK') submit();
+                else if(pin.length < 6) pin += v;
+                const dots = document.querySelectorAll('.pin-dot');
+                dots.forEach((d, i) => d.className = i < pin.length ? 'pin-dot filled' : 'pin-dot');
+            };
+            pad.appendChild(k);
+        });
+
+        function submit() {
+            if(pin.length >= 4 && pin.length <= 6) {
+                const mode = document.getElementById('p-toggle').classList.contains('on') ? "PRIVATE" : "TRANSPARENT";
+                alert(`TX INITIATED [${mode}]\nAsset: ${current}\nDest: ${document.getElementById('to').value}\nAuth: ${pin.length}-Digit PIN Verified`);
+                location.reload();
+            } else {
+                alert("PIN must be 4 to 6 digits.");
+                pin = "";
+                document.querySelectorAll('.pin-dot').forEach(d => d.className = 'pin-dot');
+            }
+        }
+    </script>
+</body>
+</html>

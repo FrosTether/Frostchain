@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FROSTNERJO | ENGINE GRADE</title>
+<style>
+  :root { --bg: #050505; --cyan: #00ffff; --pink: #ff00ff; --heat: #00ffff; --glow: 15px; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; text-align: center; margin: 0; overflow: hidden; touch-action: none; user-select: none; }
+
+  /* HUD */
+  #hud { display: flex; justify-content: space-between; padding: 10px; background: #000; border-bottom: 2px solid var(--heat); height: 75px; align-items: center; }
+  .hud-item { display: flex; flex-direction: column; width: 30%; }
+  .label { font-size: 0.55em; color: #666; font-weight: bold; }
+  .val { font-size: 1.1em; font-weight: 900; }
+  .dynamic-val { color: var(--heat); text-shadow: 0 0 var(--glow) var(--heat); transition: color 0.2s; }
+  
+  #fs-toggle { 
+    width: 32px; height: 32px; border: 1px solid var(--heat); color: var(--heat); 
+    display: flex; align-items: center; justify-content: center; font-size: 0.65em; 
+    cursor: pointer; background: transparent; font-weight: bold; border-radius: 4px;
+  }
+
+  /* STAGE */
+  #stage { width: 100vw; height: calc(100vh - 280px); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+  
+  /* BLOCK REWARD MANIFEST (POPUP) */
+  #manifest {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 80%; background: rgba(0,0,0,0.95); border: 2px solid var(--heat);
+    padding: 20px; z-index: 200; display: none; box-shadow: 0 0 50px var(--heat);
+    text-align: left;
+  }
+  #manifest h2 { margin: 0 0 10px 0; color: var(--heat); font-size: 1.2em; border-bottom: 1px solid #333; padding-bottom: 5px; }
+  .reward-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9em; }
+  .r-ftc { color: #00ffff; } .r-ama { color: #0088ff; } .r-fnr { color: #ff00ff; }
+
+  /* GRID */
+  #grid-container { 
+    position: relative; background: #000; border: 2px solid #333; 
+    display: grid; grid-template-columns: repeat(9, 1fr); width: 90vw; max-width: 360px;
+    transition: all 0.2s;
+  }
+  #grid-container.linked { border-color: var(--heat); box-shadow: 0 0 40px var(--heat); }
+
+  .cell { border: 1px solid #111; display: flex; align-items: center; justify-content: center; font-size: 1.5em; position: relative; aspect-ratio: 1 / 1; }
+  .cell:nth-child(3n) { border-right: 2px solid #333; }
+  .cell:nth-child(n+19):nth-child(-n+27), .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #333; }
+  
+  .filled { background: var(--heat); box-shadow: inset 0 0 5px #fff, 0 0 var(--glow) var(--heat); border: 1px solid #fff; z-index: 10; display: flex; align-items: center; justify-content: center; }
+  .asset { z-index: 15; text-shadow: 0 0 15px currentColor; font-size: 0.8em; pointer-events: none; }
+
+  /* SHADOWS */
+  .cell.shadow { background: rgba(255, 255, 255, 0.2); }
+  .cell.shadow-invalid { background: rgba(255, 0, 0, 0.2); }
+
+  /* DOCK */
+  #dock { width: 100%; height: 90px; display: flex; justify-content: space-around; align-items: center; padding: 5px; }
+  .shape { display: grid; gap: 2px; cursor: pointer; transition: opacity 0.2s; }
+  .s-block { width: 18px; height: 18px; background: var(--heat); border: 1px solid #fff; aspect-ratio: 1/1; }
+
+  /* TERMINAL */
+  #terminal { width: 96%; height: 110px; background: #000; margin: 5px auto; border: 1px solid #222; padding: 6px; font-size: 0.6em; color: var(--heat); text-align: left; overflow-y: hidden; }
+  .log-line { margin-bottom: 2px; border-left: 2px solid var(--heat); padding-left: 6px; }
+
+  /* CONTROLS */
+  #controls { position: fixed; bottom: 0; width: 100%; height: 80px; display: flex; background: #000; border-top: 1px solid #333; }
+  .btn { flex: 1; border: none; font-weight: 800; font-size: 0.7em; color: #fff; background: #080808; cursor: pointer; }
+  .btn.active { color: #00ff41; border-top: 3px solid var(--heat); }
+  
+  .dragging { position: fixed; z-index: 1000; pointer-events: none; transform: scale(1.1); filter: drop-shadow(0 0 15px var(--heat)); opacity: 0.9; }
+</style>
+</head>
+<body onclick="startEngine()">
+
+<div id="hud">
+  <div class="hud-item"><div class="label">QUANTUM HASH</div><div class="val dynamic-val" id="hr">0.0 H/s</div></div>
+  <div class="hud-item"><div class="val" id="timer">5:00</div><div class="label" id="status">MINING</div></div>
+  <div class="hud-item" style="align-items: flex-end;">
+    <button id="fs-toggle" onclick="toggleFS()">FS</button>
+    <div class="label" style="margin-top:5px;">FTC YIELD</div>
+    <div class="val dynamic-val" id="yield">0.0000</div>
+  </div>
+</div>
+
+<div id="stage">
+  <div id="manifest">
+    <h2>BLOCK REWARD MANIFEST</h2>
+    <div class="reward-row"><span class="r-ftc">FROSTCOIN (FTC)</span><span>PENDING...</span></div>
+    <div class="reward-row"><span class="r-ama">AMATERASU (AMA)</span><span>DETECTED</span></div>
+    <div class="reward-row"><span class="r-fnr">FROSTNERJO (FNR)</span><span>MINING</span></div>
+    <div style="margin-top:15px; font-size:0.7em; color:#666;">>> AUTOMATIC MINER ACTIVE</div>
+  </div>
+
+  <div id="grid-container"></div>
+  <div id="dock"></div>
+</div>
+
+<div id="terminal">
+  <div class="log-line">> SYSTEM: ENGINE-GRADE V235</div>
+  <div class="log-line">> AUDIO: TAP TO ENGAGE</div>
+</div>
+
+<div id="controls">
+  <button class="btn active">FNR AUTOMATIC</button>
+  <button class="btn" id="fai-btn" onclick="toggleFAI()">FAI GHOST</button>
+  <button class="btn" onclick="burn()">BURN</button>
+</div>
+
+<script>
+let grid = Array(81).fill(0), assets = Array(81).fill(null), ftc = 0.0, faiActive = false, engineStarted = false;
+let currentHash = 350.0;
+const ITEMS = [{i:'❄️',c:'#0ff'},{i:'💎',c:'#08f'},{i:'⚡',c:'#ff0'}];
+const SHAPES = [
+  {m:[[1,1],[1,1]],w:2}, {m:[[1,1,1,1]],w:4}, {m:[[1,1,1],[0,1,0]],w:3}, 
+  {m:[[1]],w:1}, {m:[[1,1,1],[1,0,0],[1,0,0]],w:3}, {m:[[1,1,0],[0,1,1]],w:3}
+];
+const SOLFEGGIO = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+
+// --- AUDIO STACK (AUTO-START) ---
+let audioCtx, oscL, oscR, pinkNode, masterGain;
+
+function startEngine() {
+  if (engineStarted) return;
+  engineStarted = true;
+  
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.02; // Subliminal
+  masterGain.connect(audioCtx.destination);
+
+  // PINK NOISE
+  const bs = 4096;
+  pinkNode = audioCtx.createScriptProcessor(bs, 1, 1);
+  pinkNode.onaudioprocess = function(e) {
+    const o = e.outputBuffer.getChannelData(0);
+    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+    for (let i=0; i<bs; i++) {
+      const w = Math.random()*2-1;
+      b0 = 0.99886*b0 + w*0.0555179; b1 = 0.99332*b1 + w*0.0750759; b2 = 0.96900*b2 + w*0.1538520;
+      b3 = 0.86650*b3 + w*0.3104856; b4 = 0.55000*b4 + w*0.5329522; b5 = -0.7616*b5 - w*0.0168980;
+      o[i] = (b0+b1+b2+b3+b4+b5+b6+w*0.5362) * 0.11; b6 = w*0.115926;
+    }
+  };
+  pinkNode.connect(masterGain);
+
+  // BINAURAL
+  oscL=audioCtx.createOscillator(); oscL.type='sine';
+  oscR=audioCtx.createOscillator(); oscR.frequency.value=11.11;
+  let pL=audioCtx.createStereoPanner(); pL.pan.value=-1;
+  let pR=audioCtx.createStereoPanner(); pR.pan.value=1;
+  oscL.connect(pL).connect(masterGain); oscR.connect(pR).connect(masterGain);
+  
+  updateSolfeggio();
+  oscL.start(); oscR.start();
+  
+  term("FNR MINER: AUTOMATIC AUDIO ENGAGED", "var(--green)");
+}
+
+function updateSolfeggio() {
+  if(!oscL) return;
+  const freq = SOLFEGGIO[Math.floor(Math.random()*SOLFEGGIO.length)];
+  oscL.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.1);
+  term(`ENTROPY: ${freq}Hz`, "var(--green)");
+}
+
+function playTone(f, t='sine') {
+  if(!audioCtx) return;
+  const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
+  o.type=t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
+  g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.3);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime+0.3);
+}
+
+// --- CORE GAME ---
+window.onload = () => {
+  const g = document.getElementById('grid-container');
+  for(let i=0; i<81; i++) { let c = document.createElement('div'); c.className = 'cell'; c.id = 'c-'+i; g.appendChild(c); }
+  seed(); spawn(); requestAnimationFrame(loop);
+};
+
+function seed() {
+  grid.fill(0); assets.fill(null);
+  document.querySelectorAll('.cell').forEach(c => { c.innerHTML=''; c.classList.remove('filled'); c.classList.remove('shadow'); });
+  let count = 4 + Math.floor(Math.random()*4);
+  for(let n=0; n<count; n++) {
+    let i = Math.floor(Math.random()*81);
+    if(grid[i] === 0) {
+        let a = ITEMS[Math.floor(Math.random()*3)]; assets[i]=a; grid[i]=1; 
+        let c = document.getElementById('c-'+i); c.classList.add('filled'); 
+        c.innerHTML=`<span class='asset' style='color:${a.c}'>${a.i}</span>`;
+    }
+  }
+}
+
+function loop() {
+  const elapsed = Math.floor(Date.now()/1000) % 300;
+  const rem = 300 - elapsed;
+  document.getElementById('timer').innerText = `${Math.floor(rem/60)}:${(rem%60).toString().padStart(2,'0')}`;
+  
+  let target = (faiActive ? 750 : 350) + Math.random() * 200; 
+  currentHash = currentHash * 0.95 + target * 0.05;
+  document.getElementById('hr').innerText = currentHash.toFixed(1) + " H/s";
+
+  const root = document.documentElement;
+  if (currentHash < 500) { root.style.setProperty('--heat', '#00ffff'); root.style.setProperty('--glow', '10px'); }
+  else if (currentHash < 800) { root.style.setProperty('--heat', '#ff00ff'); root.style.setProperty('--glow', '20px'); }
+  else { root.style.setProperty('--heat', '#ffaa00'); root.style.setProperty('--glow', '35px'); }
+
+  // REWARD MANIFEST LOGIC
+  const m = document.getElementById('manifest');
+  if (elapsed < 5) { // Show for first 5 seconds
+    m.style.display = 'block';
+  } else {
+    m.style.display = 'none';
+  }
+
+  if (elapsed === 256) { document.getElementById('grid-container').classList.add('linked'); term("256-LINK SEALING BLOCK", "var(--heat)"); }
+  if (elapsed === 0 && document.getElementById('grid-container').classList.contains('linked')) {
+    document.getElementById('grid-container').classList.remove('linked');
+    updateSolfeggio(); playTone(864, 'triangle'); // Reward Chime
+    ftc += 6.685; document.getElementById('yield').innerText = ftc.toFixed(4);
+    term("FRACTURE EVENT: REWARD DISBURSED", "#fff"); seed();
+  }
+  requestAnimationFrame(loop);
+}
+
+function term(m, c) {
+  const t = document.getElementById('terminal'); const l = document.createElement('div');
+  l.className = 'log-line'; if(c) l.style.color = c; l.innerText = `> ${m}`;
+  t.insertBefore(l, t.firstChild); if(t.children.length > 5) t.removeChild(t.lastChild);
+}
+
+// --- COLLISION & PLACEMENT ---
+function canPlace(r, c, m, w) {
+  for(let y=0; y<m.length; y++) {
+    for(let x=0; x<w; x++) {
+      if(m[y][x]) {
+        let gr = r + y;
+        let gc = c + x;
+        // BOUNDARY CHECK + STRICT COLLISION CHECK (grid[idx] === 1)
+        if(gr > 8 || gc > 8 || grid[gr*9 + gc] === 1) return false;
+      }
+    }
+  }
+  return true;
+}
+
+function place(r, c, m, w) {
+  for(let y=0; y<m.length; y++) {
+    for(let x=0; x<w; x++) {
+      if(m[y][x]) {
+        let i = (r + y) * 9 + (c + x);
+        grid[i] = 1;
+        document.getElementById('c-'+i).classList.add('filled');
+      }
+    }
+  }
+  checkConsensus();
+}
+
+function checkConsensus() {
+  let cl = new Set();
+  // Rows & Cols
+  for(let i=0; i<9; i++) { 
+    let r=[], c=[]; 
+    for(let j=0;j<9;j++){ if(grid[i*9+j])r.push(i*9+j); if(grid[j*9+i])c.push(j*9+i); } 
+    if(r.length==9)r.forEach(x=>cl.add(x)); 
+    if(c.length==9)c.forEach(x=>cl.add(x)); 
+  }
+  // 3x3 Squares
+  for(let r=0; r<9; r+=3) for(let c=0; c<9; c+=3) { 
+    let sq=[]; 
+    for(let i=0;i<3;i++)for(let j=0;j<3;j++){ let idx=(r+i)*9+(c+j); if(grid[idx])sq.push(idx); } 
+    if(sq.length==9)sq.forEach(x=>cl.add(x)); 
+  }
+
+  if(cl.size > 0) {
+    playTone(432, 'sine');
+    if(navigator.vibrate) navigator.vibrate([30, 50]);
+    let b=0;
+    cl.forEach(i=>{ 
+      grid[i]=0; 
+      let c=document.getElementById('c-'+i); 
+      c.classList.remove('filled'); 
+      c.innerHTML=''; 
+      if(assets[i]) { b+=0.25; term(`MINED ${assets[i].i}`, "#fff"); assets[i]=null; } 
+    });
+    ftc += ((cl.size * 0.01) + b) * (faiActive ? 0.55 : 1);
+    document.getElementById('yield').innerText = ftc.toFixed(4);
+    currentHash += 250;
+  } else {
+    playTone(216, 'sawtooth'); // Placement sound
+    if(navigator.vibrate) navigator.vibrate(20);
+  }
+}
+
+// --- INTERACTION ---
+let dragEl, dragSrc, currentMap, currentW, off={x:0,y:0};
+function spawn(){ const d=document.getElementById('dock'); d.innerHTML=''; for(let i=0;i<3;i++){ let sD=SHAPES[Math.floor(Math.random()*SHAPES.length)]; let s=document.createElement('div'); s.className='shape'; s.style.gridTemplateColumns=`repeat(${sD.w},18px)`; s.dataset.map=JSON.stringify(sD.m); s.dataset.w=sD.w; sD.m.flat().forEach(b=>{ if(b){let v=document.createElement('div');v.className='s-block';s.appendChild(v);}else{s.appendChild(document.createElement('div'));} }); s.onmousedown=s.ontouchstart=startDrag; d.appendChild(s); } }
+
+function startDrag(e){ 
+  startEngine(); // Ensure audio starts on first interaction
+  if(faiActive) return; e.preventDefault(); const t=e.currentTarget; if(t.style.opacity==='0') return; 
+  const r=t.getBoundingClientRect(); const tx=e.touches?e.touches[0]:e; 
+  dragEl=t.cloneNode(true); dragEl.className='shape dragging'; dragEl.style.width=r.width+'px'; 
+  document.body.appendChild(dragEl); dragSrc=t; 
+  currentMap=JSON.parse(t.dataset.map); currentW=parseInt(t.dataset.w); 
+  off.x=tx.clientX-r.left; off.y=tx.clientY-r.top; 
+  moveDrag(e); 
+  document.addEventListener('mousemove',moveDrag); document.addEventListener('touchmove',moveDrag,{passive:false}); 
+  document.addEventListener('mouseup',endDrag); document.addEventListener('touchend',endDrag); 
+  t.style.opacity='0'; 
+}
+
+function moveDrag(e){ 
+  if(!dragEl)return; e.preventDefault(); const tx=e.touches?e.touches[0]:e; 
+  dragEl.style.left=(tx.clientX-off.x)+'px'; dragEl.style.top=(tx.clientY-off.y-60)+'px'; 
+  
+  document.querySelectorAll('.cell').forEach(c=>c.classList.remove('shadow', 'shadow-invalid'));
+  const g=document.getElementById('grid-container').getBoundingClientRect(); const cs=g.width/9;
+  
+  if(tx.clientX>g.left && tx.clientX<g.right && (tx.clientY-60)>g.top && (tx.clientY-60)<g.bottom){
+    const col = Math.floor((tx.clientX-g.left)/cs); const row = Math.floor(((tx.clientY-60)-g.top)/cs);
+    const valid = canPlace(row, col, currentMap, currentW);
+    
+    for(let y=0; y<currentMap.length; y++) for(let x=0; x<currentW; x++) {
+      if(currentMap[y][x]) {
+        let r=row+y, c=col+x;
+        if(r<9 && c<9) document.getElementById('c-'+(r*9+c)).classList.add(valid ? 'shadow' : 'shadow-invalid');
+      }
+    }
+  }
+}
+
+function endDrag(e){ 
+  document.removeEventListener('mousemove',moveDrag); document.removeEventListener('touchmove',moveDrag); 
+  document.querySelectorAll('.cell').forEach(c=>c.classList.remove('shadow', 'shadow-invalid'));
+  
+  const tx=e.changedTouches?e.changedTouches[0]:e; const g=document.getElementById('grid-container').getBoundingClientRect(); const cs=g.width/9; 
+  if(tx.clientX>g.left && tx.clientX<g.right && (tx.clientY-60)>g.top && (tx.clientY-60)<g.bottom){ 
+    const c=Math.floor((tx.clientX-g.left)/cs); const r=Math.floor(((tx.clientY-60)-g.top)/cs); 
+    if(canPlace(r,c,currentMap,currentW)){ 
+      place(r,c,currentMap,currentW); 
+      dragSrc.style.visibility='hidden'; 
+      if(Array.from(document.getElementById('dock').children).every(x=>x.style.visibility==='hidden')) spawn(); 
+    } else dragSrc.style.opacity='1'; 
+  } else dragSrc.style.opacity='1'; 
+  dragEl.remove(); dragEl=null; 
+}
+
+function runFAI() {
+  if(!faiActive) return; const s = Array.from(document.getElementById('dock').children).filter(s => s.style.visibility !== 'hidden')[0];
+  if(!s) return; const m = JSON.parse(s.dataset.map), w = parseInt(s.dataset.w);
+  let best = null, maxe = -1;
+  for(let r=0; r<9; r++) for(let c=0; c<9; c++) if(canPlace(r, c, m, w)) { let sc=0; if(sc>maxe){maxe=sc; best={r,c};} }
+  if(best) { place(best.r, best.c, m, w); s.style.visibility='hidden'; if(Array.from(document.getElementById('dock').children).every(x=>x.style.visibility==='hidden')) spawn(); }
+}
+function toggleFAI() { faiActive = !faiActive; document.getElementById('fai-btn').classList.toggle('active'); if(faiActive) window.faiInt = setInterval(runFAI, 1500); else clearInterval(window.faiInt); }
+function toggleFS() { if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+function burn() { seed(); term("GRID RE-SYCED", "red"); }
+</script>
+</body>
+</html>

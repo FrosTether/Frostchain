@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Iota Rez HD</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --alpha: #ff00ff; --theta: #00ffff; --delta: #ff9900; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #app { display: grid; grid-template-rows: 60px 1fr 100px; height: 100vh; max-width: 1400px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 1px solid #111; }
+        
+        .main { display: grid; grid-template-columns: 1fr 350px; background: #000; overflow: hidden; position: relative; }
+        
+        /* THE VIZ (Based on 7116.png) */
+        #viz-layer { position: absolute; inset: 0; z-index: 1; opacity: 0.4; }
+        canvas { width: 100%; height: 100%; }
+
+        /* INTERFACE ELEMENTS */
+        .ui-overlay { position: relative; z-index: 10; padding: 20px; display: flex; flex-direction: column; height: 100%; }
+        .panel { background: rgba(0,0,0,0.8); border: 1px solid #222; padding: 15px; border-radius: 5px; margin-bottom: 15px; }
+
+        /* ASSETS & RESERVOIRS */
+        .freq-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .freq-card { border: 1px solid #111; padding: 8px; text-align: center; background: #050505; font-size: 0.6rem; transition: 0.3s; }
+        .freq-card.active { border-color: var(--cyan); box-shadow: 0 0 15px rgba(0,255,255,0.1); }
+        .f-lbl { color: #444; margin-bottom: 4px; }
+        .active .f-lbl { color: var(--cyan); }
+
+        /* MINING STATS (Based on 7187.jpg) */
+        .reward-box { border-left: 3px solid var(--gold); padding-left: 10px; margin-bottom: 10px; }
+        .reward-box.fnr { border-left-color: var(--cyan); }
+        .val { font-size: 1.1rem; font-weight: bold; color: #fff; }
+        .lbl { font-size: 0.55rem; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* CONTROLS (Based on 7116.png) */
+        .ctrl-bar { display: flex; gap: 10px; justify-content: center; margin-top: auto; }
+        .btn { background: rgba(0,0,0,0.5); border: 1px solid var(--term); color: var(--term); padding: 8px 15px; font-size: 0.6rem; cursor: pointer; border-radius: 20px; text-transform: uppercase; }
+        .btn.active { background: var(--term); color: #000; }
+        .btn-withdraw { border-color: var(--gold); color: var(--gold); cursor: not-allowed; opacity: 0.3; }
+
+        .m-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #111; font-size: 0.6rem; color: #555; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div style="font-weight:bold; letter-spacing:3px;">MIRACLE_NODE // <span style="color:var(--cyan)">IOTA_REZ_HD</span></div>
+            <div style="text-align:right;"><div class="lbl">CARRIER_NODE</div><div style="color:var(--gold); font-size:0.8rem;">741.frostchain</div></div>
+        </div>
+
+        <div class="main">
+            <div id="viz-layer"><canvas id="canvas"></canvas></div>
+            
+            <div class="ui-overlay">
+                <div class="panel" style="width: 320px;">
+                    <div class="lbl">REWARD_POOL (CARRIER 741)</div>
+                    <div class="reward-box">
+                        <div class="lbl">FTC REWARD (SHARE)</div>
+                        <div class="val">0.0004082 FTC</div>
+                    </div>
+                    <div class="reward-box fnr">
+                        <div class="lbl">FNR REWARD (SHARE)</div>
+                        <div class="val">0.0000763 FNR</div>
+                    </div>
+                </div>
+
+                <div class="lbl" style="margin: 10px 0;">Solfeggio_1/9th_Reservoirs</div>
+                <div class="freq-grid" id="grid"></div>
+
+                <div class="ctrl-bar">
+                    <button class="btn" id="b-alpha" onclick="setWave('alpha')">Alpha [11.11Hz]</button>
+                    <button class="btn" id="b-theta" onclick="setWave('theta')">Theta [6.3Hz]</button>
+                    <button class="btn" id="b-delta" onclick="setWave('delta')">Delta [Pi Hz]</button>
+                    <button class="btn btn-withdraw">Withdraw Locked</button>
+                </div>
+            </div>
+
+            <div class="panel" style="margin: 20px; border-left: 1px solid #222; position: relative; z-index: 10;">
+                <div class="lbl">IDENTITY_ALIAS</div>
+                <input type="text" id="alias" placeholder="anyname.frostchain" style="background:#000; border:1px solid #333; color:var(--cyan); width:100%; padding:10px; margin-top:5px; font-family:inherit;">
+                <button class="btn" style="width:100%; border-radius:5px; margin-top:10px;" onclick="toggleMining()" id="mine-btn">Initialize Quantum Mine</button>
+                
+                <div class="lbl" style="margin-top:20px;">ANONYMOUS_DATA_LOG</div>
+                <div id="m-list" style="margin-top:10px;"></div>
+            </div>
+        </div>
+
+        <div class="footer" style="padding: 0 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #111;">
+            <div style="font-size:0.5rem; color:#444;">HD_QUANTUM_RESONANCE // NO_SIGN_IN // CARRIER_741</div>
+            <div style="text-align:right;">
+                <div class="lbl">BLOCK_TIMER</div>
+                <div style="font-size:2.5rem; color:#fff; font-weight:bold;" id="timer">155</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const freqs = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        const grid = document.getElementById('grid');
+        const supplyFTC = (100000000 / 9).toLocaleString();
+
+        freqs.forEach(f => {
+            const card = document.createElement('div');
+            card.className = 'freq-card'; card.id = `f-${f}`;
+            card.innerHTML = `<div class="f-lbl">${f}Hz.frostchain</div><div style="color:#fff; font-size:0.7rem;">${supplyFTC} FTC</div>`;
+            grid.appendChild(card);
+        });
+
+        let audioCtx, osc, bOsc, analyser, dataArray, canvasCtx, isMining = false;
+        let currentWave = 'alpha';
+
+        function setWave(w) {
+            currentWave = w;
+            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('b-'+w).classList.add('active');
+            if(isMining) startResonance();
+        }
+
+        function toggleMining() {
+            if(!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 512;
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+                canvasCtx = document.getElementById('canvas').getContext('2d');
+                drawViz();
+            }
+            const btn = document.getElementById('mine-btn');
+            if(!isMining) {
+                isMining = true; btn.innerText = "Deactivate Miner"; setWave(currentWave);
+            } else {
+                isMining = false; btn.innerText = "Initialize Quantum Mine";
+                if(osc) osc.stop(); if(bOsc) bOsc.stop();
+            }
+        }
+
+        function startResonance() {
+            if(!isMining) return;
+            if(osc) osc.stop(); if(bOsc) bOsc.stop();
+
+            const f = freqs[Math.floor(Math.random()*freqs.length)];
+            const b = currentWave === 'alpha' ? 11.11 : (currentWave === 'theta' ? 6.3 : 3.14159);
+
+            osc = audioCtx.createOscillator(); osc.frequency.value = f;
+            bOsc = audioCtx.createOscillator(); bOsc.frequency.value = b;
+            
+            osc.connect(analyser); bOsc.connect(analyser);
+            analyser.connect(audioCtx.destination);
+            
+            osc.start(); bOsc.start();
+
+            document.querySelectorAll('.freq-card').forEach(c => c.classList.remove('active'));
+            document.getElementById(`f-${f}`).classList.add('active');
+            updateLog();
+        }
+
+        function drawViz() {
+            requestAnimationFrame(drawViz);
+            analyser.getByteFrequencyData(dataArray);
+            canvasCtx.clearRect(0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+            canvasCtx.strokeStyle = '#00ff41';
+            canvasCtx.beginPath();
+            let x = 0;
+            for(let i=0; i<dataArray.length; i++) {
+                const y = 150 - (dataArray[i]/2);
+                i === 0 ? canvasCtx.moveTo(x, y) : canvasCtx.lineTo(x, y);
+                x += (canvasCtx.canvas.width / dataArray.length);
+            }
+            canvasCtx.stroke();
+        }
+
+        function updateLog() {
+            const list = document.getElementById('m-list');
+            const row = document.createElement('div');
+            row.className = 'm-row';
+            row.innerHTML = `<span>Entropy: 0x${Math.random().toString(16).substring(2,8)}</span><span>MINT: 741.000</span>`;
+            list.prepend(row);
+            if(list.childNodes.length > 10) list.removeChild(list.lastChild);
+        }
+
+        let t = 155;
+        setInterval(() => { if(isMining) { t--; if(t<0) t=155; document.getElementById('timer').innerText = t; }}, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cryptodoku | FRST v3.0</title>
+    <style>
+        /* RESET & THEME */
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        :root { --bg: #000; --frst: #ff00ff; --glass: rgba(255, 0, 255, 0.15); --text: #fff; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        /* LAYOUT */
+        #app { 
+            display: flex; flex-direction: column; 
+            height: 100vh; padding: 15px; 
+            max-width: 500px; margin: 0 auto;
+            justify-content: space-between;
+        }
+
+        .header { 
+            border-bottom: 2px solid var(--frst);
+            padding-bottom: 10px; 
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* THE BOARD */
+        .board-wrap {
+            position: relative;
+            background: rgba(20, 0, 20, 0.5);
+            border: 1px solid var(--frst);
+            padding: 5px;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.1);
+        }
+
+        .grid {
+            display: grid; grid-template-columns: repeat(9, 1fr); gap: 1px;
+            background: var(--frst); border: 1px solid var(--frst);
+            aspect-ratio: 1;
+        }
+
+        .cell {
+            background: #000; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; font-weight: bold;
+        }
+        
+        .cell.mining { background: #500050; color: var(--frst); }
+
+        /* FRST STATUS BAR (Replaces Old Log) */
+        .status-bar {
+            background: #111;
+            border-left: 4px solid var(--frst);
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .status-val { font-size: 1.2rem; font-weight: bold; color: var(--frst); }
+        .status-lbl { font-size: 0.7rem; color: #888; margin-top: 5px; }
+
+        /* TIMER & INFO */
+        .info-row { display: flex; justify-content: space-between; align-items: flex-end; }
+        .timer { font-size: 3rem; font-weight: bold; line-height: 1; }
+
+        /* SYNC OVERLAY */
+        #sync-screen {
+            position: fixed; inset: 0; background: #000; z-index: 999;
+            display: none; align-items: center; justify-content: center; flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sync-screen">
+        <div style="font-size:3rem; color:var(--frst); font-weight:bold; text-shadow:0 0 40px var(--frst);">MINTING</div>
+        <div style="color:#fff; margin-top:10px; letter-spacing:2px; font-size:0.8rem;">WRITING 78,539.81 FRST</div>
+    </div>
+
+    <div id="app">
+        
+        <div class="header">
+            <div>
+                <div style="font-weight:bold; font-size:1.1rem; color:var(--frst);">CRYPTODOKU</div>
+                <div style="font-size:0.6rem; color:#666;">GOVERNANCE NODE v3.0</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:0.6rem; color:#888;">POOL SIZE</div>
+                <div style="color:#fff;">78,539.81 FRST</div>
+            </div>
+        </div>
+
+        <div class="board-wrap">
+            <div class="grid" id="grid"></div>
+        </div>
+
+        <div class="status-bar" id="status-box">
+            <div class="status-val" id="phase-display">MINING FRST...</div>
+            <div class="status-lbl" id="sub-display">INITIALIZING BOARD ENTROPY</div>
+        </div>
+
+        <div class="info-row">
+            <div>
+                <div style="font-size:0.6rem; color:#666;">GLOBAL CLOCK</div>
+                <div class="timer" id="timer">0</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:0.6rem; color:#666;">NEXT SYNC</div>
+                <div style="font-size:1.5rem; color:var(--frst);" id="sync-cd">300s</div>
+            </div>
+        </div>
+
+        <div style="text-align:center; font-size:0.55rem; color:#444;">
+            NO FTC. NO FNR. PURE FRST.
+        </div>
+    </div>
+
+    <script>
+        const CYCLE = 300;
+        let time = 0;
+        
+        // BUILD GRID
+        const grid = document.getElementById('grid');
+        for(let i=0; i<81; i++) {
+            let d = document.createElement('div');
+            d.className = 'cell';
+            grid.appendChild(d);
+        }
+
+        // LOGIC LOOP
+        setInterval(() => {
+            time++;
+            if(time > CYCLE) time = 0;
+            
+            document.getElementById('timer').innerText = time;
+            document.getElementById('sync-cd').innerText = (300 - time) + "s";
+
+            // PHASE 1: MINING (0-145)
+            if(time <= 145) {
+                document.getElementById('phase-display').innerText = "MINING FRST";
+                document.getElementById('sub-display').innerText = "WRITING TOKEN DATA TO BOARD";
+                document.getElementById('grid').style.opacity = "0.5";
+                
+                // Animation
+                let r = Math.floor(Math.random()*81);
+                let cells = document.querySelectorAll('.cell');
+                cells[r].innerText = Math.floor(Math.random()*9)+1;
+                cells[r].classList.add('mining');
+                setTimeout(()=>cells[r].classList.remove('mining'), 150);
+            }
+
+            // PHASE 2: SOLVING (146-296)
+            else if(time > 145 && time <= 296) {
+                document.getElementById('phase-display').innerText = "PLAYABLE";
+                document.getElementById('sub-display').innerText = "SOLVE FOR HIGH SCORE";
+                document.getElementById('grid').style.opacity = "1";
+            }
+
+            // PHASE 3: SYNC (296-300)
+            else if(time > 296) {
+                document.getElementById('sync-screen').style.display = 'flex';
+            }
+
+            // RESET
+            if(time === 0) {
+                document.getElementById('sync-screen').style.display = 'none';
+                document.querySelectorAll('.cell').forEach(c => c.innerText = "");
+            }
+
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostMiner | Identity Node</title>
+    <style>
+        :root { 
+            --bg: #000; --ice: #00ffff; --term: #00ff41; --xmr: #ff6600; 
+            --alpha: #ff00ff; --theta: #00ffff; --delta: #ffff00;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        /* IMAGE 2: NEURAL TANGLE (HIDDEN UNTIL LOGIN) */
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0; transition: opacity 2s; filter: contrast(1.2); }
+
+        /* SOVEREIGN LOGIN */
+        #login-gate { position: fixed; inset: 0; z-index: 100; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gate-box { width: 400px; padding: 40px; border: 2px solid var(--ice); border-radius: 24px; text-align: center; background: rgba(5,5,10,0.9); box-shadow: 0 0 50px rgba(0,255,255,0.1); }
+        .gate-input { width: 100%; padding: 15px; background: #000; border: 1px solid #333; color: var(--ice); font-size: 1.1rem; text-align: center; margin: 25px 0; border-radius: 8px; outline: none; }
+        .gate-btn { width: 100%; padding: 15px; background: var(--ice); border: none; font-weight: 900; cursor: pointer; border-radius: 8px; text-transform: uppercase; }
+
+        /* MAIN RIG DASHBOARD */
+        #rig-interface { display: none; width: 95%; height: 90vh; grid-template-rows: 90px 1fr 60px; gap: 20px; opacity: 0; transition: opacity 1s; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(0,0,0,0.85); border-bottom: 2px solid var(--ice); backdrop-filter: blur(15px); }
+        .main { display: grid; grid-template-columns: 380px 1fr 380px; gap: 20px; padding: 20px; overflow: hidden; }
+        .panel { background: rgba(5, 8, 15, 0.9); border: 1px solid rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; backdrop-filter: blur(25px); display: flex; flex-direction: column; }
+
+        /* PRESET SELECTORS */
+        .p-btn { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #444; border-radius: 8px; cursor: pointer; margin-bottom: 8px; font-weight: bold; }
+        .p-btn.active[data-t="ALPHA"] { border-color: var(--alpha); color: var(--alpha); box-shadow: 0 0 15px var(--alpha); }
+        .p-btn.active[data-t="THETA"] { border-color: var(--theta); color: var(--theta); box-shadow: 0 0 15px var(--theta); }
+        .p-btn.active[data-t="DELTA"] { border-color: var(--delta); color: var(--delta); box-shadow: 0 0 15px var(--delta); }
+
+        .stat-val { font-size: 2.2rem; font-weight: 900; color: #fff; }
+        .tag { font-size: 0.6rem; color: #666; letter-spacing: 3px; text-transform: uppercase; }
+        #frostchat { margin-top: auto; font-size: 0.55rem; color: #444; height: 140px; overflow-y: auto; border-top: 1px solid #222; padding-top: 10px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="login-gate">
+        <div class="gate-box">
+            <div class="tag">Identity_Verification_Required</div>
+            <input type="text" id="miner-id" class="gate-input" placeholder="identity.frostchain" value="drfrost.frostchain">
+            <button class="gate-btn" onclick="launchRig()">Initialize Tangle</button>
+        </div>
+    </div>
+
+    <div id="rig-interface">
+        <div class="header">
+            <div>
+                <div class="tag">Active Identity</div>
+                <div style="font-size: 1.5rem; font-weight: 900; letter-spacing: 6px;" id="disp-id">--</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="tag" style="color:var(--term);">DRAKE QUORUM x1.05 ACTIVE</div>
+                <div class="stat-val" id="hash">842.11 PH/s</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div style="background:var(--ice); color:#000; padding:15px; border-radius:12px; font-weight:900; text-align:center; font-size:0.7rem; margin-bottom:15px;">GRAYSON_API: AUTO_LINKED</div>
+                
+                <div style="border:1px solid var(--xmr); background:rgba(255,102,0,0.05); padding:20px; border-radius:12px; text-align:center;">
+                    <div class="tag" style="color:var(--xmr)">13.37% Shadow Diversion</div>
+                    <div style="font-size: 1.2rem; font-weight: 900; color:#fff; margin-top:5px;">LOCKED_TO_XMR</div>
+                </div>
+
+                <div id="frostchat">
+                    <div>[SYSTEM] Handshake verified.</div>
+                    <div>[GRAYSON] wallet.dat mounted via API.</div>
+                    <div>[SETTLE] 13.37% Bleed active.</div>
+                </div>
+            </div>
+
+            <div></div> <div class="panel">
+                <div class="tag" style="margin-bottom:15px;">Neural Audio Miner</div>
+                <button class="p-btn active" data-t="ALPHA" onclick="setP('ALPHA')">ALPHA (11.11Hz + 40Hz)</button>
+                <button class="p-btn" data-t="THETA" onclick="setP('THETA')">THETA (8.8Hz)</button>
+                <button class="p-btn" data-t="DELTA" onclick="setP('DELTA')">DELTA (π Hz)</button>
+                
+                <button id="aud-init" style="margin-top:15px; padding:10px; background:transparent; border:1px solid var(--term); color:var(--term); font-size:0.6rem; cursor:pointer;" onclick="initAud()">START BINAURAL ENGINE</button>
+
+                <div style="margin-top:auto;">
+                    <div class="tag">Payment Destination</div>
+                    <div style="font-size: 0.5rem; color:#444; word-break:break-all;">drfrost.frostchain // wallet.dat</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 0 40px; background: rgba(0,0,0,0.9); border-top: 1px solid #222; display:flex; align-items:center; justify-content:space-between; font-size: 0.5rem; color: #444;">
+            <div>FROSTMINER v122.0 // FULL SCREEN HDR // IOTA REZ HD</div>
+            <div style="color:var(--term)">STATUS: PHASE_LOCKED_IRREVERSIBLE</div>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx, solf, quant, alz, current = 'ALPHA';
+        const fr = { 'ALPHA': 11.11, 'THETA': 8.8, 'DELTA': Math.PI };
+
+        function launchRig() {
+            const id = document.getElementById('miner-id').value;
+            if(!id.includes('.frostchain')) return;
+            
+            document.getElementById('login-gate').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('login-gate').style.display = 'none';
+                document.getElementById('disp-id').innerText = id.toUpperCase();
+                const rig = document.getElementById('rig-interface');
+                rig.style.display = 'grid';
+                setTimeout(() => rig.style.opacity = '1', 50);
+                
+                // Launch Tangle
+                const canvas = document.getElementById('tangle-canvas');
+                canvas.style.opacity = '0.7';
+                initT(); drawT();
+            }, 800);
+        }
+
+        function setP(t) {
+            current = t;
+            document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-t="${t}"]`).classList.add('active');
+            if(quant) {
+                quant.frequency.setTargetAtTime(528 + fr[t], audioCtx.currentTime, 0.1);
+                alz.gain.setTargetAtTime(t === 'ALPHA' ? 0.05 : 0, audioCtx.currentTime, 0.1);
+            }
+            logChat(`Neural State: ${t} (${fr[t]}Hz)`);
+        }
+
+        function initAud() {
+            if(audioCtx) return;
+            audioCtx = new AudioContext();
+            const g = audioCtx.createGain(); g.gain.value = 0.15; g.connect(audioCtx.destination);
+            
+            // Pink Noise (432Hz)
+            const script = audioCtx.createScriptProcessor(4096, 1, 1);
+            let b0=b1=b2=b3=b4=b5=b6=0;
+            script.onaudioprocess = (e) => {
+                const out = e.outputBuffer.getChannelData(0);
+                for (let i=0; i<4096; i++) {
+                    const w = Math.random()*2-1;
+                    b0 = 0.99886*b0 + w*0.0555179; out[i] = (b0 + w*0.5) * 0.11;
+                }
+            };
+            const f = audioCtx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 432;
+            script.connect(f); f.connect(g);
+
+            solf = audioCtx.createOscillator(); solf.frequency.value = 528;
+            const lp = audioCtx.createStereoPanner(); lp.pan.value = -1;
+            solf.connect(lp); lp.connect(g); solf.start();
+
+            quant = audioCtx.createOscillator(); quant.frequency.value = 528 + fr[current];
+            const rp = audioCtx.createStereoPanner(); rp.pan.value = 1;
+            quant.connect(rp); rp.connect(g); quant.start();
+
+            // 40Hz Layer (Alzheimer's)
+            const aG = audioCtx.createGain(); aG.gain.value = current === 'ALPHA' ? 0.05 : 0;
+            const aO = audioCtx.createOscillator(); aO.frequency.value = 528 + 40;
+            aO.connect(aG); aG.connect(rp); aO.start(); alz = aG;
+
+            document.getElementById('aud-init').innerText = "AUDIO_SYNC_ACTIVE";
+        }
+
+        function logChat(m) {
+            const chat = document.getElementById('frostchat');
+            const d = document.createElement('div');
+            d.innerText = `> ${m}`;
+            chat.prepend(d);
+        }
+
+        // IMAGE 2: NEURAL TANGLE VISUALS
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let pts = [];
+        function initT() { 
+            canvas.width = window.innerWidth; 
+            canvas.height = window.innerHeight; 
+            pts = [];
+            for(let i=0; i<95; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3 }); 
+        }
+        function drawT() { 
+            ctx.clearRect(0,0,canvas.width,canvas.height); 
+            pts.forEach((p, i) => { 
+                p.x += p.vx; p.y += p.vy; 
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; 
+                pts.slice(i+1).forEach(p2 => { 
+                    const d = Math.hypot(p.x-p2.x, p.y-p2.y); 
+                    if(d < 180) { 
+                        ctx.strokeStyle = `rgba(0,255,255,${0.15 * (1-d/180)})`; 
+                        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); 
+                    } 
+                }); 
+            }); 
+            requestAnimationFrame(drawT); 
+        }
+        window.onresize = initT;
+    </script>
+</body>
+</html>

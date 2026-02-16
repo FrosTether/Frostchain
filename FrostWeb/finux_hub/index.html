@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FINUX | AUTHORITY HUB</title>
+<style>
+  :root { --bg: #050505; --gold: #ffd700; --iota: #00ff41; --cyan: #00ffff; }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; margin: 0; text-align: center; }
+  .nav { padding: 25px; border-bottom: 1px solid #222; font-size: 11px; letter-spacing: 2px; }
+  .nav a { color: var(--gold); text-decoration: none; margin: 0 15px; font-weight: bold; }
+  .main-val { font-size: 4em; font-weight: 900; color: var(--iota); margin: 60px 0; text-shadow: 0 0 20px rgba(0,255,65,0.4); }
+  .box { border: 2px solid #1a1a1a; background: #0a0a0a; padding: 50px; margin: 0 auto; max-width: 700px; }
+  .btn { border: 1px solid var(--cyan); color: var(--cyan); padding: 15px 35px; text-decoration: none; font-size: 0.8em; font-weight: bold; display: inline-block; margin-top: 40px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="nav">
+  <a href="https://frstico.surge.sh">FRST ICO</a> | <a href="https://frostcrush.surge.sh">GAMES</a> | <a href="https://graysonswallet.surge.sh">IDENTITY</a>
+</div>
+<div style="margin-top: 50px; color: var(--gold); letter-spacing: 5px; font-weight: 900;">FINUX AUTHORITY HUB</div>
+<div class="box">
+  <div style="font-size: 0.7em; color: #666; letter-spacing: 3px;">SYSTEM LIQUIDITY ACCELERATION</div>
+  <div class="main-val" id="val">8,813,864.792</div>
+  <div style="font-size: 0.9em; color: var(--gold); letter-spacing: 2px;">STATUS: MASTER_NODE_ONLINE</div>
+</div>
+<a href="https://frstico.surge.sh" class="btn">ACCESS ICO PORTAL</a>
+<script>
+  let liquid = 8813864.792;
+  setInterval(() => { liquid *= 1.05; document.getElementById('val').innerText = liquid.toLocaleString(undefined, {minimumFractionDigits: 3}); }, 1000);
+</script>
+</body>
+</html>

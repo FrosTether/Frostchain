@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Federated v14</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --panel: rgba(10, 10, 10, 0.95); --cyan: #00ffff; --gold: #ffd700; --blue: #00d4ff; --pink: #ff00ff; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; user-select: none; }
+        
+        /* GATE */
+        #gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gate-box { border: 2px solid var(--pink); padding: 30px; width: 320px; text-align: center; box-shadow: 0 0 30px var(--pink); background: #050505; }
+        .gate-logo { font-size: 1.5rem; font-weight: bold; color: #fff; margin-bottom: 20px; text-shadow: 0 0 10px var(--pink); }
+        
+        input { width: 90%; background: #111; border: 1px solid #333; color: #fff; padding: 12px; margin-bottom: 10px; font-family: inherit; text-align: center; outline: none; }
+        input:focus { border-color: var(--pink); }
+        
+        .btn-main { background: var(--pink); color: #000; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+
+        /* DASHBOARD LAYOUT */
+        #dash { display: none; height: 100vh; grid-template-columns: 350px 1fr; grid-template-rows: 60px 1fr; position: relative; }
+        #tangle { position: absolute; inset: 0; z-index: 0; opacity: 0.2; pointer-events: none; }
+
+        /* HEADER */
+        .header { grid-column: 1 / -1; background: var(--panel); border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; }
+        .active-miner { font-size: 0.8rem; color: var(--pink); font-weight: bold; border-left: 2px solid var(--pink); padding-left: 10px; }
+
+        /* LEFT PANEL: MINING */
+        .left-panel { background: rgba(0,0,0,0.8); border-right: 1px solid #333; display: flex; flex-direction: column; padding: 15px; z-index: 10; overflow-y: auto; }
+        
+        .timer-box { border: 2px solid var(--pink); padding: 15px; margin-bottom: 20px; background: #150015; text-align: center; }
+        .timer-val { font-size: 2.5rem; font-weight: bold; color: #fff; text-shadow: 0 0 10px var(--pink); }
+        .timer-lbl { font-size: 0.7rem; color: var(--pink); letter-spacing: 2px; }
+
+        .stat-card { background: #0a0a0a; border: 1px solid #222; padding: 15px; margin-bottom: 10px; border-left: 4px solid #fff; }
+        .val { font-size: 1.2rem; font-weight: bold; }
+        .lbl { font-size: 0.7rem; color: #888; }
+        
+        /* CHAT */
+        .chat-panel { display: flex; flex-direction: column; position: relative; z-index: 10; background: rgba(0,0,0,0.5); }
+        .chat-log { flex: 1; overflow-y: auto; padding: 20px; }
+        .msg-bubble { background: rgba(10,10,10,0.8); border: 1px solid #333; padding: 8px 12px; display: inline-block; color: #ccc; margin-bottom: 5px; font-size: 0.8rem; }
+        .chat-input-area { padding: 15px; background: #000; border-top: 1px solid #333; display: flex; gap: 10px; }
+        .chat-input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 10px; font-family: inherit; }
+
+        @media (max-width: 700px) {
+            #dash { grid-template-columns: 1fr; grid-template-rows: 60px 320px 1fr; }
+            .left-panel { border-right: none; border-bottom: 1px solid #333; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle"></canvas>
+
+    <div id="gate">
+        <div class="gate-box">
+            <div class="gate-logo">FEDERATED NODE</div>
+            <div style="font-size:0.7rem; color:#888; margin-bottom:20px;">WHO IS MINING ON THIS NODE?</div>
+            
+            <input type="text" id="id-in" placeholder="username.frostchain">
+            <input type="password" id="pin-in" placeholder="PIN (4-6 Digits)" maxlength="6">
+            
+            <button class="btn-main" onclick="login()">START MINING</button>
+            <div id="err" style="color:var(--pink); font-size:0.7rem; margin-top:10px; height:15px;"></div>
+        </div>
+    </div>
+
+    <div id="dash">
+        <div class="header">
+            <div class="active-miner">
+                MINING FOR: <span id="user-display">GUEST</span> <span style="font-size:0.5rem; color:gold; margin-left:10px;">[ API BROADCASTING ]</span>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <div style="font-size:0.6rem; color:#444; font-family:monospace; border:1px solid #222; padding:5px;">NODE_V14_FEDERATED</div>
+                <button onclick="location.reload()" style="background:transparent; border:1px solid #333; color:#555; font-size:0.6rem; cursor:pointer;">SWITCH MINER</button>
+            </div>
+        </div>
+
+        <div class="left-panel">
+            <div class="timer-box">
+                <div class="timer-val" id="countdown">300</div>
+                <div class="timer-lbl">BLOCK COUNTDOWN (300S)</div>
+            </div>
+            
+            <div class="stat-card" style="border-left-color: var(--pink);">
+                <div class="val" id="frst-val">0.00</div>
+                <div class="lbl">FRST TOKEN REWARD</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--gold);">
+                <div class="val" id="ftc-val">0.00</div>
+                <div class="lbl">FTC COIN REWARD</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--blue);">
+                <div class="val" id="fnr-val">0.00</div>
+                <div class="lbl">FNR NODE REWARD</div>
+            </div>
+
+            <div style="font-size:0.7rem; color:#888; margin:10px 0;">RECENT BLOCKS</div>
+            <div style="flex:1; background:#000; border:1px solid #222; overflow-y:auto; padding:5px;" id="block-list"></div>
+        </div>
+
+        <div class="chat-panel">
+            <div class="chat-log" id="chat-box">
+                <div class="msg-bubble">> System: Shared Mining Subroutine Active.</div>
+                <div class="msg-bubble">> System: Rewards routing to federated identity.</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="msg-input" class="chat-input" placeholder="OTR Broadcast...">
+                <button class="btn-main" style="width:auto; margin:0; padding:0 20px; background:var(--term);" onclick="sendMsg()">SEND</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- AUTH ---
+        function login() {
+            const id = document.getElementById('id-in').value;
+            const pin = document.getElementById('pin-in').value;
+            if(id.includes('.frostchain') && pin.length >= 4) {
+                document.getElementById('gate').style.display = 'none';
+                document.getElementById('dash').style.display = 'grid';
+                document.getElementById('user-display').innerText = id.toUpperCase();
+                startConsensus(); 
+                initVisuals(); 
+            } else {
+                document.getElementById('err').innerText = "ERROR: INVALID .FROSTCHAIN IDENTITY";
+            }
+        }
+
+        // --- STRICT CONSENSUS (300S) ---
+        let balances = { frst: 0, ftc: 0, fnr: 0 };
+        let timeLeft = 300;
+        let blocks = 948000;
+
+        function startConsensus() {
+            setInterval(() => {
+                timeLeft--;
+                document.getElementById('countdown').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    mint();
+                    timeLeft = 300;
+                }
+            }, 1000);
+        }
+
+        function mint() {
+            const user = document.getElementById('user-display').innerText;
+            balances.frst += 31415.90;
+            balances.ftc += 13.37;
+            balances.fnr += 2.50;
+
+            document.getElementById('frst-val').innerText = balances.frst.toLocaleString();
+            document.getElementById('ftc-val').innerText = balances.ftc.toFixed(2);
+            document.getElementById('fnr-val').innerText = balances.fnr.toFixed(2);
+
+            blocks++;
+            const list = document.getElementById('block-list');
+            const row = document.createElement('div');
+            row.style.fontSize = "0.7rem";
+            row.style.borderBottom = "1px solid #111";
+            row.style.padding = "5px";
+            row.innerHTML = `<span style="color:var(--pink);">#${blocks}</span> <span style="color:#666;">MINED BY:</span> ${user}`;
+            list.prepend(row);
+        }
+
+        // --- VISUALS ---
+        function initVisuals() {
+            const c = document.getElementById('tangle');
+            const ctx = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            let nodes = Array.from({length:30}, () => ({
+                x:Math.random()*c.width, y:Math.random()*c.height,
+                vx:(Math.random()-.5)*2, vy:(Math.random()-.5)*2
+            }));
+            function draw() {
+                ctx.clearRect(0,0,c.width,c.height);
+                ctx.strokeStyle = "rgba(0,255,65,0.1)";
+                nodes.forEach(n => {
+                    n.x += n.vx; n.y += n.vy;
+                    if(n.x<0||n.x>c.width) n.vx*=-1;
+                    if(n.y<0||n.y>c.height) n.vy*=-1;
+                    nodes.forEach(n2 => {
+                        if(Math.hypot(n.x-n2.x, n.y-n2.y) < 150) {
+                            ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                        }
+                    });
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // --- CHAT ---
+        function sendMsg() {
+            const i = document.getElementById('msg-input');
+            const box = document.getElementById('chat-box');
+            if(i.value) {
+                const bubble = document.createElement('div');
+                bubble.className = "msg-bubble";
+                bubble.innerText = "> " + i.value;
+                box.appendChild(bubble);
+                i.value = "";
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>

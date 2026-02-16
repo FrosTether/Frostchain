@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FSP GOD-TIER V82 // SATOSHI_SIGNED</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { 
+  --bg: #000; --text: #e0e0e0; --orange: #ff6600; --iota: #00e0ff; 
+  --burgundy: #800020; --gold: #ffd700; --bch: #8dc351;
+}
+* { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+body { 
+  background: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; 
+  height: 100vh; overflow: hidden; display: flex; flex-direction: column; 
+}
+
+.header { background: #111; border-bottom: 2px solid var(--gold); padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+.auth-tag { font-size: 10px; color: var(--gold); letter-spacing: 1px; font-weight: bold; }
+
+.main { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+.grid { display: grid; grid-template-columns: repeat(9, 38px); grid-template-rows: repeat(9, 38px); gap: 2px; border: 4px solid #1a1a1a; padding: 4px; }
+.cell { width: 38px; height: 38px; background: #080808; border: 1px solid #111; display:flex; align-items:center; justify-content:center; }
+.cell.obj-iota::after { content: "•"; color: var(--iota); font-size: 28px; text-shadow: 0 0 10px var(--iota); }
+.cell.h-burgundy { background: var(--burgundy); }
+
+/* TERMINAL LOG */
+.log-wrap { width: 90%; height: 100px; background: rgba(10,10,10,0.9); border: 1px solid #222; margin-top: 20px; padding: 10px; overflow-y: hidden; }
+.log-line { font-size: 9px; line-height: 1.4; font-family: 'Courier New', monospace; margin-bottom: 4px; border-left: 2px solid var(--gold); padding-left: 10px; }
+.coinbase { color: var(--gold); font-weight: bold; }
+
+/* CLAIM OVERLAY */
+.claim-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.98); display: none; flex-direction: column;
+  align-items: center; justify-content: center; z-index: 100; border: 2px solid var(--gold);
+}
+.input-addr { background: #111; border: 1px solid #444; color: #fff; padding: 15px; width: 85%; font-family: monospace; margin: 20px 0; font-size: 11px; }
+
+.status-bar { background: #111; border-top: 2px solid var(--orange); padding: 15px; display: flex; justify-content: space-between; }
+.btn { padding: 10px 20px; border: none; font-family: inherit; font-weight: 900; cursor: pointer; }
+.btn-claim { background: var(--gold); color: #000; }
+
+</style>
+</head>
+<body onload="init()">
+
+<div class="header">
+  <div>FSP GOD-TIER <span style="color:var(--orange)">V82</span></div>
+  <div class="auth-tag">SIGNED_BY_SATOSHI</div>
+</div>
+
+<div class="main">
+  <div class="grid" id="grid"></div>
+  
+  <div class="log-wrap" id="log">
+    <div class="log-line coinbase">> COINBASE: "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"</div>
+    <div class="log-line">> SATOSHI_SIG_BRIDGE: ACTIVE</div>
+  </div>
+
+  <div class="claim-overlay" id="overlay">
+    <div style="color:var(--gold); font-size:14px; letter-spacing: 2px;">>> GENESIS VALIDATOR</div>
+    <input type="text" class="input-addr" placeholder="ENTER LEGACY OR CASH ADDRESS" id="target-addr">
+    <button class="btn btn-claim" style="width:85%" onclick="executeClaim()">CLAIM FROM GENESIS VAULT</button>
+    <button style="background:none; border:none; color:#444; margin-top:15px; cursor:pointer; font-size:10px;" onclick="toggle()">[ CANCEL ]</button>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div>HEIGHT: <span style="color:var(--orange)" id="height">1,675,750</span></div>
+  <button class="btn btn-claim" onclick="toggle()">CLAIM FORK</button>
+  <div>IOTA: <span style="color:var(--iota)">30.8071 Mi</span></div>
+</div>
+
+<script>
+const BLOCK_MS = 300000;
+const GENESIS_MSG = 'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks';
+
+function init() {
+  const g = document.getElementById('grid');
+  for(let i=0; i<81; i++) {
+    const c = document.createElement('div'); c.className = 'cell';
+    if(i===40) c.classList.add('obj-iota');
+    if(i===10 || i===70) c.classList.add('h-burgundy');
+    g.appendChild(c);
+  }
+  setInterval(tick, 1000);
+}
+
+function tick() {
+  const now = new Date();
+  const ms = now.getTime();
+  const slot = Math.floor(ms / BLOCK_MS);
+  document.getElementById('height').innerText = (1675750 + (slot - 5692149)).toLocaleString();
+  
+  // Every time a new slot starts, log the Genesis Message
+  if (window.lastLogSlot !== slot) {
+    window.lastLogSlot = slot;
+    writeLog(`COINBASE_MINT: "${GENESIS_MSG}"`, true);
+  }
+}
+
+function writeLog(msg, isGold = false) {
+  const log = document.getElementById('log');
+  const line = document.createElement('div');
+  line.className = isGold ? 'log-line coinbase' : 'log-line';
+  line.innerText = "> " + msg;
+  log.prepend(line);
+  if(log.children.length > 5) log.removeChild(log.lastChild);
+}
+
+function toggle() {
+  const o = document.getElementById('overlay');
+  o.style.display = (o.style.display === 'flex') ? 'none' : 'flex';
+}
+
+function executeClaim() {
+  const addr = document.getElementById('target-addr').value.trim();
+  if(!addr) return;
+  
+  writeLog(`INITIATING CLAIM FOR ${addr.substr(0,12)}...`);
+  
+  setTimeout(() => {
+    writeLog(`SATOSHI_SIG_VALIDATED: OK`, true);
+    setTimeout(() => {
+      writeLog(`MINTING FROM GENESIS VAULT (1:1 PARITY)`);
+      alert("GENESIS VALIDATION SUCCESSFUL\nREWARD ISSUED BY SATOSHI");
+      toggle();
+    }, 1000);
+  }, 1500);
+}
+</script>
+</body>
+</html>

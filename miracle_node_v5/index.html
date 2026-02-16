@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Frost Explorer</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --blue: #00d4ff; --pink: #ff00ff; --panel: rgba(0, 15, 0, 0.9); }
+        body { margin: 0; padding: 0; background: var(--bg); overflow: hidden; font-family: 'Courier New', monospace; color: var(--term); }
+        
+        /* INTERACTIVE TANGLE */
+        #tangle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.5; }
+
+        /* SECURITY PIN GATE */
+        #pin-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pin-box { border: 2px solid var(--term); padding: 40px; text-align: center; box-shadow: 0 0 20px var(--term); }
+        #pin-display { font-size: 2.5rem; letter-spacing: 15px; margin: 20px 0; color: #fff; height: 40px; }
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .num-btn { border: 1px solid var(--term); background: transparent; color: var(--term); padding: 15px; font-size: 1.2rem; cursor: pointer; border-radius: 5px; }
+        .num-btn:active { background: var(--term); color: #000; }
+
+        /* MAIN HUD */
+        #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: none; padding: 15px; box-sizing: border-box; display: grid; grid-template-columns: 350px 1fr; gap: 20px; pointer-events: none; }
+        .panel { background: var(--panel); border: 1px solid #222; padding: 15px; pointer-events: auto; }
+        
+        /* EXPLORER STYLES */
+        .explorer { overflow-y: auto; font-size: 0.75rem; border-left: 3px solid var(--blue); }
+        .block-card { border-bottom: 1px solid #111; padding: 10px 0; animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .hash { color: #888; font-family: monospace; font-size: 0.65rem; }
+        .reward-tag { display: inline-block; padding: 2px 5px; border-radius: 3px; font-size: 0.6rem; margin-right: 5px; font-weight: bold; }
+
+        /* REWARD HUD */
+        .wallet-hud { text-align: right; }
+        .token { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
+
+        .btn { background: transparent; border: 1px solid var(--term); color: var(--term); padding: 10px 20px; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="pin-gate">
+        <div class="pin-box">
+            <h2 id="pin-label">IDENTITY LOCK: PIN REQUIRED</h2>
+            <div id="pin-display">____</div>
+            <div class="numpad" id="numpad">
+                <button class="num-btn" onclick="press(1)">1</button><button class="num-btn" onclick="press(2)">2</button><button class="num-btn" onclick="press(3)">3</button>
+                <button class="num-btn" onclick="press(4)">4</button><button class="num-btn" onclick="press(5)">5</button><button class="num-btn" onclick="press(6)">6</button>
+                <button class="num-btn" onclick="press(7)">7</button><button class="num-btn" onclick="press(8)">8</button><button class="num-btn" onclick="press(9)">9</button>
+                <button class="num-btn" style="color:red;" onclick="clearPin()">C</button>
+                <button class="num-btn" onclick="press(0)">0</button>
+                <button class="num-btn" style="color:var(--gold);" onclick="checkPin()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="hud" style="display: none;">
+        <div class="panel explorer" id="explorer">
+            <div style="font-weight:bold; border-bottom: 1px solid var(--blue); margin-bottom:10px; padding-bottom:5px;">FROSTCHAIN EXPLORER</div>
+            <div id="block-list">
+                </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end;">
+            <div class="panel wallet-hud">
+                <div style="font-size:0.7rem; color:#888;">drfrost.frostchain</div>
+                <div class="token" style="color:var(--gold);">FTC: <span id="ftc-bal">0.00</span></div>
+                <div class="token" style="color:var(--blue);">FNR: <span id="fnr-bal">0.00</span></div>
+                <div class="token" style="color:var(--pink);">FRST: <span id="frst-bal">0.00</span></div>
+                <div style="font-size:0.6rem; color:var(--term);">NEWKIRK CODE: v2.1 ENFORCED</div>
+            </div>
+
+            <div class="panel" style="pointer-events: auto;">
+                <button class="btn" onclick="toggleFS()">FULLSCREEN</button>
+                <button class="btn" onclick="location.reload()" style="border-color:red; color:red;">LOCK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. PIN LOGIC ---
+        let currentPin = "";
+        const savedPin = localStorage.getItem('frost_pin');
+        if (!savedPin) document.getElementById('pin-label').innerText = "SET 4-DIGIT PIN";
+
+        function press(n) {
+            if (currentPin.length < 4) {
+                currentPin += n;
+                updateDisplay();
+            }
+        }
+        function clearPin() { currentPin = ""; updateDisplay(); }
+        function updateDisplay() {
+            document.getElementById('pin-display').innerText = "*".repeat(currentPin.length).padEnd(4, "_");
+        }
+
+        function checkPin() {
+            if (!savedPin) {
+                localStorage.setItem('frost_pin', currentPin);
+                alert("PIN SET. WELCOME TO THE FROST PROTOCOL.");
+                location.reload();
+            } else if (currentPin === savedPin) {
+                document.getElementById('pin-gate').style.display = 'none';
+                document.getElementById('hud').style.display = 'grid';
+                startExplorer();
+                initTangle();
+            } else {
+                alert("ACCESS DENIED");
+                clearPin();
+            }
+        }
+
+        // --- 2. EXPLORER LOGIC ---
+        let balances = { ftc: 0, fnr: 0, frst: 0 };
+        function startExplorer() {
+            setInterval(generateBlock, 8000); // New block every 8s for visual speed
+            generateBlock(); 
+        }
+
+        function generateBlock() {
+            const list = document.getElementById('block-list');
+            const blockHeight = Math.floor(937937 + (Date.now() / 1000000));
+            const hash = '0x' + [...Array(40)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+            
+            const ftc = 13.37, fnr = 2.5, frst = 31415.9;
+            balances.ftc += ftc; balances.fnr += fnr; balances.frst += frst;
+            
+            const card = document.createElement('div');
+            card.className = 'block-card';
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--term);">BLOCK #${blockHeight}</span>
+                    <span style="font-size:0.6rem; color:#444;">${new Date().toLocaleTimeString()}</span>
+                </div>
+                <div class="hash">${hash}</div>
+                <div style="margin-top:5px;">
+                    <span class="reward-tag" style="background:var(--gold); color:#000;">+13.37 FTC</span>
+                    <span class="reward-tag" style="background:var(--blue); color:#000;">+2.5 FNR</span>
+                    <span class="reward-tag" style="background:var(--pink); color:#000;">+31K FRST</span>
+                </div>
+            `;
+            list.prepend(card);
+            if (list.children.length > 10) list.removeChild(list.lastChild);
+            
+            document.getElementById('ftc-bal').innerText = balances.ftc.toLocaleString();
+            document.getElementById('fnr-bal').innerText = balances.fnr.toLocaleString();
+            document.getElementById('frst-bal').innerText = balances.frst.toLocaleString();
+        }
+
+        // --- 3. INTERACTIVE TANGLE ---
+        // Same high-performance canvas logic from previous build
+        function initTangle() {
+            const canvas = document.getElementById('tangle-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let particles = [];
+            class Node {
+                constructor() {
+                    this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 1.5; this.vy = (Math.random() - 0.5) * 1.5;
+                }
+                update() {
+                    this.x += this.vx; this.y += this.vy;
+                    if(this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if(this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }
+            }
+            for(let i=0; i<60; i++) particles.push(new Node());
+            function animate() {
+                ctx.fillStyle = 'rgba(0,0,0,0.1)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+                particles.forEach((p, i) => {
+                    p.update();
+                    for(let j=i; j<particles.length; j++) {
+                        let d = Math.hypot(p.x-particles[j].x, p.y-particles[j].y);
+                        if(d < 120) {
+                            ctx.strokeStyle = `rgba(0, 255, 65, ${1 - d/120})`;
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+                        }
+                    }
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+        function toggleFS() { document.documentElement.requestFullscreen(); }
+    </script>
+</body>
+</html>

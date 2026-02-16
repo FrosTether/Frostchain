@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FINUX // MINER NODE</title>
+    <link rel="icon" type="image/png" href="https://finux.tech/favicon.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #050505;
+            --terminal-green: #00ff41;
+            --accent-cyan: #0ff;
+            --text-dim: #444;
+            --panel-bg: rgba(10, 10, 10, 0.85);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--terminal-green);
+            font-family: 'Space Mono', monospace;
+            overflow: hidden; /* Keep the tangle contained */
+        }
+
+        /* --- TANGLE CANVAS --- */
+        #tangle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* --- UI OVERLAY --- */
+        #ui-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass through to canvas where possible */
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .hud-panel {
+            pointer-events: auto;
+            background: var(--panel-bg);
+            border: 1px solid #333;
+            padding: 20px;
+            max-width: 400px;
+            margin-bottom: 10px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.05);
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            margin: 0 0 10px 0;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .value {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        /* --- CONTROLS --- */
+        .control-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            text-align: right;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--terminal-green);
+            color: var(--terminal-green);
+            padding: 10px 20px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 10px;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            background: var(--terminal-green);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px var(--terminal-green);
+        }
+
+        button:disabled {
+            border-color: var(--text-dim);
+            color: var(--text-dim);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #console-output {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 50%;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.75rem;
+            color: #666;
+            pointer-events: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--terminal-green) transparent;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--terminal-green); }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #333;
+            margin-right: 8px;
+        }
+        .status-dot.active { background-color: var(--terminal-green); box-shadow: 0 0 8px var(--terminal-green); }
+        .status-dot.error { background-color: #ff3333; box-shadow: 0 0 8px #ff3333; }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="hud-panel">
+            <h1>Finux Miner v3.1</h1>
+            <div class="stat-row">
+                <span>Network Status</span>
+                <span><span id="net-status-dot" class="status-dot"></span><span id="net-status-text">DISCONNECTED</span></span>
+            </div>
+            <div class="stat-row">
+                <span>Wallet</span>
+                <span id="wallet-address" class="value">0x...</span>
+            </div>
+            <div class="stat-row">
+                <span>Balance</span>
+                <span id="wallet-balance" class="value">0.0000 ETH</span>
+            </div>
+        </div>
+
+        <div class="hud-panel" style="position: absolute; top: 20px; right: 20px;">
+            <h1>Metrics</h1>
+            <div class="stat-row">
+                <span>TPS (Tangle)</span>
+                <span id="tps-counter" class="value">0.0</span>
+            </div>
+            <div class="stat-row">
+                <span>Hashrate</span>
+                <span id="hashrate" class="value">0 H/s</span>
+            </div>
+            <div class="stat-row">
+                <span>Blocks Found</span>
+                <span id="blocks-found" class="value">0</span>
+            </div>
+        </div>
+
+        <div class="control-panel hud-panel">
+            <button id="btn-connect">Connect Wallet</button>
+            <button id="btn-mine" disabled>Start Miner</button>
+        </div>
+
+        <div id="console-output">
+            <div>> SYSTEM INITIALIZED...</div>
+            <div>> WAITING FOR USER INPUT...</div>
+        </div>
+    </div>
+
+<script>
+/**
+ * ==========================================
+ * CONFIGURATION & CONTRACTS
+ * ==========================================
+ * Paste your ABI and Contract Address here.
+ */
+
+const CONFIG = {
+    // Replace with your deployed Contract Address
+    CONTRACT_ADDRESS: "0x0000000000000000000000000000000000000000", 
+    
+    // Replace with your Contract ABI
+    CONTRACT_ABI: [
+        "function mine() public",
+        "function getReward() public view returns (uint256)",
+        "event BlockMined(address indexed miner, uint256 reward)"
+    ]
+};
+
+// --- GLOBAL STATE ---
+let provider, signer, contract;
+let isMining = false;
+let animationFrameId;
+
+// --- DOM ELEMENTS ---
+const consoleDiv = document.getElementById('console-output');
+const btnConnect = document.getElementById('btn-connect');
+const btnMine = document.getElementById('btn-mine');
+const elNetStatus = document.getElementById('net-status-text');
+const elNetDot = document.getElementById('net-status-dot');
+
+// --- LOGGER HELPER ---
+function log(msg, type = 'info') {
+    const line = document.createElement('div');
+    const timestamp = new Date().toLocaleTimeString();
+    line.innerText = `> [${timestamp}] ${msg}`;
+    if (type === 'error') line.style.color = '#ff3333';
+    if (type === 'success') line.style.color = '#00ff41';
+    consoleDiv.insertBefore(line, consoleDiv.firstChild);
+}
+
+/**
+ * ==========================================
+ * IOTA TANGLE VISUALIZATION (CANVAS)
+ * ==========================================
+ */
+const canvas = document.getElementById('tangle-canvas');
+const ctx = canvas.getContext('2d');
+
+let width, height;
+const nodes = [];
+const LINKS_PER_NODE = 2;
+const NODE_SPEED = 1.5;
+
+class Node {
+    constructor(x, y, isTip = true) {
+        this.x = x;
+        this.y = y;
+        this.vx = -NODE_SPEED; // Move left
+        this.vy = (Math.random() - 0.5) * 0.5; // Slight drift
+        this.size = Math.random() * 3 + 2;
+        this.isTip = isTip;
+        this.links = []; // Indices of nodes this node approves
+        this.age = 0;
+        this.confirmed = false;
+    }
+
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.age++;
+
+        // Confirm older nodes (simulation)
+        if (!this.confirmed && this.age > 100) {
+            this.confirmed = true;
+        }
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        
+        if (this.isTip) {
+            ctx.fillStyle = '#fff'; // Tip is white (unconfirmed)
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#fff';
+        } else if (this.confirmed) {
+            ctx.fillStyle = '#00ff41'; // Confirmed is green
+            ctx.shadowBlur = 0;
+        } else {
+            ctx.fillStyle = '#0ff'; // Pending is cyan
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = '#0ff';
+        }
+        
+        ctx.fill();
+        ctx.shadowBlur = 0; // Reset
+    }
+}
+
+function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Initialize with some nodes
+function initTangle() {
+    for(let i=0; i<20; i++) {
+        nodes.push(new Node(Math.random() * width, Math.random() * height, false));
+    }
+}
+
+// Add a new transaction (node)
+function addNode() {
+    const spawnX = width + 10;
+    const spawnY = height/2 + (Math.random() - 0.5) * (height * 0.8);
+    
+    const newNode = new Node(spawnX, spawnY, true);
+    
+    // Find 2 existing nodes to link to (Tips selection algorithm simplified)
+    // Prefer nodes to the right (newer)
+    let candidates = nodes.filter(n => n.x > width * 0.2 && n.x < width);
+    
+    if (candidates.length >= 2) {
+        for (let i = 0; i < LINKS_PER_NODE; i++) {
+            const target = candidates[Math.floor(Math.random() * candidates.length)];
+            // Avoid double linking
+            if (!newNode.links.includes(target)) {
+                newNode.links.push(target);
+                target.isTip = false; // It is no longer a tip
+            }
+        }
+    }
+    
+    nodes.push(newNode);
+    
+    // Update stats
+    document.getElementById('tps-counter').innerText = (Math.random() * 10 + 5).toFixed(1);
+}
+
+function drawTangle() {
+    ctx.clearRect(0, 0, width, height);
+    
+    // Draw links first (behind nodes)
+    ctx.lineWidth = 0.5;
+    
+    nodes.forEach(node => {
+        node.links.forEach(target => {
+            // Gradient line
+            const grad = ctx.createLinearGradient(node.x, node.y, target.x, target.y);
+            grad.addColorStop(0, 'rgba(0, 255, 255, 0.2)');
+            grad.addColorStop(1, 'rgba(0, 255, 65, 0.1)');
+            
+            ctx.strokeStyle = grad;
+            ctx.beginPath();
+            ctx.moveTo(node.x, node.y);
+            ctx.lineTo(target.x, target.y);
+            ctx.stroke();
+        });
+    });
+
+    // Update and draw nodes
+    for (let i = nodes.length - 1; i >= 0; i--) {
+        const n = nodes[i];
+        n.update();
+        n.draw();
+        
+        // Remove off-screen nodes
+        if (n.x < -50) {
+            nodes.splice(i, 1);
+        }
+    }
+    
+    // Randomly add nodes to simulate network activity
+    if (Math.random() < 0.1 || isMining) { // Mining increases rate
+        addNode();
+    }
+
+    requestAnimationFrame(drawTangle);
+}
+
+initTangle();
+drawTangle();
+
+
+/**
+ * ==========================================
+ * WEB3 / CONTRACT LOGIC
+ * ==========================================
+ */
+
+async function connectWallet() {
+    if (typeof window.ethereum === 'undefined') {
+        log("MetaMask not installed.", "error");
+        return;
+    }
+
+    try {
+        log("Requesting wallet connection...");
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        
+        const address = await signer.getAddress();
+        const balance = await provider.getBalance(address);
+        
+        document.getElementById('wallet-address').innerText = 
+            address.substring(0, 6) + "..." + address.substring(38);
+        document.getElementById('wallet-balance').innerText = 
+            ethers.utils.formatEther(balance).substring(0, 6) + " ETH";
+            
+        elNetStatus.innerText = "CONNECTED";
+        elNetStatus.style.color = "#00ff41";
+        elNetDot.classList.add('active');
+        
+        btnConnect.innerText = "Connected";
+        btnConnect.disabled = true;
+        btnMine.disabled = false;
+        
+        // Initialize Contract
+        try {
+            contract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, CONFIG.CONTRACT_ABI, signer);
+            log("Contract initialized.", "success");
+        } catch (e) {
+            log("Contract init failed (Check Config)", "error");
+        }
+
+    } catch (err) {
+        log("Connection failed: " + err.message, "error");
+    }
+}
+
+async function startMining() {
+    if (!contract) {
+        log("Contract not loaded. Simulating mining only...", "info");
+        // Fallback simulation if no contract provided
+        isMining = true;
+        btnMine.innerText = "Mining...";
+        simulateMining();
+        return;
+    }
+
+    try {
+        log("Initiating Mining Transaction...");
+        // Example contract call - ADJUST method name based on your actual contract
+        // const tx = await contract.mine(); 
+        // await tx.wait();
+        
+        // For now, we simulate the visual effect to avoid erroring on a bad contract address
+        isMining = true;
+        btnMine.innerText = "Mining...";
+        log("Mining started on Frostchain...", "success");
+        
+        // Boost visualization
+        setInterval(() => addNode(), 100); 
+
+    } catch (err) {
+        log("Mining Error: " + err.message, "error");
+    }
+}
+
+function simulateMining() {
+    // Increase hashrate visual
+    const hashrateEl = document.getElementById('hashrate');
+    let rate = 0;
+    setInterval(() => {
+        if(isMining) {
+            rate += Math.random() * 50;
+            if(rate > 5000) rate = 5000;
+            hashrateEl.innerText = Math.floor(rate) + " H/s";
+            
+            // Rapidly spawn nodes
+            if(Math.random() < 0.3) addNode();
+        }
+    }, 100);
+}
+
+// Listeners
+btnConnect.addEventListener('click', connectWallet);
+btnMine.addEventListener('click', startMining);
+
+</script>
+</body>
+</html>

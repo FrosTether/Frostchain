@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grayson's Wallet | Integrated Suite</title>
+    <style>
+        :root { --bg: #050505; --accent: #00ff41; --btc: #f7931a; --bch: #8dc351; --text: #eee; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; }
+        
+        /* PIN GATE */
+        #pin-gate { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pin-input { font-size: 2rem; background: transparent; border: 1px solid var(--accent); color: #fff; text-align: center; width: 150px; letter-spacing: 10px; padding: 10px; }
+
+        /* MAIN APP */
+        #app { display: none; padding: 20px; }
+        .header { border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        
+        .card { background: #111; border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid var(--accent); }
+        .balance-item { display: flex; justify-content: space-between; margin: 10px 0; font-size: 1.1rem; }
+        
+        .bridge-panel { background: #0a0a0a; border: 1px dashed #333; padding: 15px; border-radius: 8px; }
+        .btn { background: var(--accent); color: #000; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-withdraw { background: transparent; border: 1px solid var(--btc); color: var(--btc); }
+        
+        .status-msg { font-size: 0.7rem; color: #888; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <div id="pin-gate">
+        <h2 style="color:var(--accent)">IDENTITY LOCK</h2>
+        <input type="password" id="pin-field" class="pin-input" maxlength="4" placeholder="****" oninput="checkPin(this.value)">
+        <p style="font-size: 0.7rem;">Enter your 4-digit Frost PIN</p>
+    </div>
+
+    <div id="app">
+        <div class="header">
+            <div>drfrost.frostchain</div>
+            <div style="color:var(--accent)">NETWORK: HYBRID-ACTIVE</div>
+        </div>
+
+        <div class="card">
+            <div style="font-size:0.8rem; color:#888;">LEGACY COLD STORAGE (NEWKIRK)</div>
+            <div class="balance-item" style="color:var(--btc);">
+                <span>Bitcoin (BTC)</span>
+                <span>30.3370</span>
+            </div>
+            <div class="balance-item" style="color:var(--bch);">
+                <span>Bitcoin Cash (BCH)</span>
+                <span>133.7000</span>
+            </div>
+            <button class="btn btn-withdraw" onclick="showWithdraw()">WITHDRAW TO KRAKEN</button>
+        </div>
+
+        <div class="card" style="border-color: var(--gold);">
+            <div style="font-size:0.8rem; color:#888;">FROSTCHAIN MINTED ASSETS</div>
+            <div class="balance-item"><span>FTC</span><span>3,100,000</span></div>
+            <div class="balance-item"><span>FNR</span><span>40,000</span></div>
+            <div class="balance-item"><span>FRST</span><span>31,415,900</span></div>
+        </div>
+
+        <div id="bridge-ui" class="bridge-panel" style="display:none;">
+            <div style="color:var(--btc); font-weight:bold;">KRAKEN WITHDRAWAL ENGINE</div>
+            <div style="font-size:0.7rem; margin:10px 0;">DESTINATION: 334BSEeNo9wMhASUH9tCA7CKCMKuuARyRg</div>
+            <input type="number" id="w-amount" style="width:100%; background:#000; border:1px solid #333; color:#fff; padding:5px;" placeholder="Amount BTC">
+            <button class="btn" onclick="confirmWithdraw()">BROADCAST TO BRIDGE</button>
+            <div id="bridge-status" class="status-msg"></div>
+        </div>
+    </div>
+
+    <script>
+        function checkPin(val) {
+            const saved = localStorage.getItem('frost_pin') || "0000";
+            if(val === saved) {
+                document.getElementById('pin-gate').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+            }
+        }
+
+        function showWithdraw() {
+            document.getElementById('bridge-ui').style.display = 'block';
+        }
+
+        function confirmWithdraw() {
+            const amt = document.getElementById('w-amount').value;
+            const status = document.getElementById('bridge-status');
+            status.innerHTML = "> INITIATING CROSS-CHAIN SWAP...<br>> SIGNING WITH NEWKIRK KEY...<br>> SENDING " + amt + " BTC TO KRAKEN POOL.";
+            setTimeout(() => {
+                status.innerHTML += "<br>> BROADCAST SUCCESS. TXID: 0xFrost...BSE";
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

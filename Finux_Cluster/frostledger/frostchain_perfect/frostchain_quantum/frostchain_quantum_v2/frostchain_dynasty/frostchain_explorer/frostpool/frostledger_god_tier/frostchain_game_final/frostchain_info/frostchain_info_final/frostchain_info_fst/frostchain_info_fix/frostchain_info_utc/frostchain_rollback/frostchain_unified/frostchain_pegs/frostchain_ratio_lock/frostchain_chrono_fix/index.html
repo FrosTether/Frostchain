@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FROSTCHAIN // CHRONO_LOCKED</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --core: #00fbff; --gold: #ffd700; --bg: #050505; --panel: #0a0a0a; --border: #1a1a1a; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; font-size: 12px; overflow-x: hidden; }
+
+.nav { background: #000; border-bottom: 2px solid var(--core); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+.brand { font-size: 1.4em; color: var(--core); font-weight: bold; letter-spacing: 2px; }
+.clock { background: #111; padding: 5px 10px; border: 1px solid #333; color: #fff; font-size: 11px; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; gap: 20px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+.card { background: var(--panel); border: 1px solid var(--border); padding: 20px; position: relative; border-left: 4px solid var(--core); }
+.card.gold { border-left-color: var(--gold); }
+
+.lbl { font-size: 9px; color: #555; text-transform: uppercase; margin-bottom: 5px; }
+.val { font-size: 1.8em; color: #fff; font-weight: bold; }
+
+.tangle-pulse { 
+  background: #000; padding: 12px; border: 1px dashed var(--core); 
+  display: flex; align-items: center; gap: 10px; font-size: 10px; color: var(--core);
+}
+.node { width: 8px; height: 8px; background: var(--core); border-radius: 50%; animation: pulse 4s infinite; }
+
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); margin-top: 10px; }
+th { text-align: left; padding: 12px; background: #111; color: #666; font-size: 9px; }
+td { padding: 12px; border-bottom: 1px solid #1a1a1a; font-family: monospace; font-size: 11px; color: #ddd; }
+.utc-time { color: var(--core); font-weight: bold; }
+
+@keyframes pulse { 0% { opacity: 0; transform: scale(1.5); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="brand">FROSTCHAIN // INFO</div>
+  <div class="clock" id="clock">UTC...</div>
+</div>
+
+<div class="container">
+  <div class="stats">
+    <div class="card">
+      <div class="lbl">Minable Pool (Remaining)</div>
+      <div class="val" id="mine-pool">65,630,000</div>
+    </div>
+    <div class="card gold">
+      <div class="lbl">Current Frost Height</div>
+      <div class="val" id="fst-h">1,675,420</div>
+    </div>
+    <div class="card">
+      <div class="lbl">BCH Anchor</div>
+      <div class="val" id="bch-h">837,710</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Next Mint In</div>
+      <div class="val" style="color:var(--gold)" id="timer">--:--</div>
+    </div>
+  </div>
+
+  <div class="tangle-pulse">
+    <div class="node"></div>
+    <span>TANGLE_SYNC: 4.0s HEARTBEAT ACTIVE</span>
+  </div>
+
+  <table>
+    <thead><tr><th>HEIGHT</th><th>TYPE</th><th>ANCHOR</th><th>REWARD</th><th>TIMESTAMP (UTC)</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+</div>
+
+<script>
+const BLOCK_MS = 300000; // 5 MINUTES EXACT
+const GENESIS_H = 1675420;
+const GENESIS_T = 1707633600000; // Fixed Anchor
+
+function update() {
+  const now = new Date();
+  const ms = now.getTime();
+  document.getElementById('clock').innerText = now.toUTCString();
+
+  // TIMER LOGIC
+  const next = Math.ceil(ms / BLOCK_MS) * BLOCK_MS;
+  const diff = Math.floor((next - ms) / 1000);
+  const m = Math.floor(diff / 60);
+  const s = (diff % 60).toString().padStart(2, '0');
+  document.getElementById('timer').innerText = `${m}:${s}`;
+
+  // MINT TRIGGER (Crosses 300s boundary)
+  if (diff === 299 || !window.lastSlot) {
+    refresh(ms);
+  }
+}
+
+function refresh(ms) {
+  const slot = Math.floor(ms / BLOCK_MS);
+  if (window.lastSlot === slot) return;
+  window.lastSlot = slot;
+
+  const h = GENESIS_H + (slot - 5692112); // Stabilized Height math
+  const bchH = Math.floor(h / 2);
+  const pool = 65630000 - ((slot % 10000) * 13.37);
+
+  document.getElementById('fst-h').innerText = h.toLocaleString();
+  document.getElementById('bch-h').innerText = bchH.toLocaleString();
+  document.getElementById('mine-pool').innerText = Math.floor(pool).toLocaleString();
+
+  const tbody = document.getElementById('rows');
+  tbody.innerHTML = '';
+  
+  for(let i=0; i<12; i++) {
+    const curSlot = slot - i;
+    const curH = GENESIS_H + (curSlot - 5692112);
+    const curAnchor = Math.floor(curH / 2);
+    const time = new Date(curSlot * BLOCK_MS);
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:#fff">${curH}</td>
+      <td style="color:var(--core)">FST_BLOCK</td>
+      <td style="color:#555">#${curAnchor}</td>
+      <td>13.37 FTC</td>
+      <td class="utc-time">${time.toUTCString().split(' ')[4]}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+setInterval(update, 1000);
+update();
+</script>
+</body>
+</html>

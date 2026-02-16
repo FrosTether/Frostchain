@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FROSTMINER // HARMONIC_HUM</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { --bg: #000; --core: #00e0ff; --gold: #ffd700; --hum: rgba(0, 224, 255, 0.03); --active: #4caf50; }
+* { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+body { 
+  background: var(--bg); color: #ccc; font-family: 'Share Tech Mono', monospace; 
+  height: 100vh; overflow: hidden; display: flex; flex-direction: column; 
+  position: relative;
+}
+
+/* THE QUANTUM HUM (Visual) */
+body::before {
+  content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, var(--hum) 0px, transparent 1px);
+  background-size: 100% 3px; pointer-events: none; animation: hum-drift 10s linear infinite;
+}
+@keyframes hum-drift { from { background-position: 0 0; } to { background-position: 0 100px; } }
+
+/* UI COMPONENTS */
+.header { background: #0a0a0a; border-bottom: 2px solid var(--core); padding: 15px; display: flex; justify-content: space-between; }
+.hum-status { font-size: 9px; color: var(--core); letter-spacing: 2px; }
+
+.main { flex-grow: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; z-index: 10; }
+.display { background: rgba(5,5,5,0.8); border: 1px solid #1a1a1a; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 2px solid var(--core); }
+.val { font-size: 3.8em; color: #fff; font-weight: bold; text-shadow: 0 0 15px var(--core); }
+.lbl { font-size: 9px; color: #555; text-transform: uppercase; margin-bottom: 5px; }
+
+.boost-tag { background: var(--gold); color: #000; font-weight: bold; font-size: 10px; padding: 2px 10px; margin-top: 10px; visibility: hidden; border-radius: 2px; }
+
+.controls { background: rgba(10,10,10,0.8); border: 1px solid #1a1a1a; padding: 20px; border-top: 2px solid var(--gold); }
+.btn { width: 100%; padding: 12px; background: #222; border: 1px solid #333; color: #fff; cursor: pointer; font-family: inherit; margin-bottom: 15px; }
+.btn.on { background: var(--core); color: #000; border: none; font-weight: bold; }
+</style>
+</head>
+<body onload="init()">
+
+<div class="header">
+  <div style="font-weight:bold;">FROSTMINER <span style="color:var(--core)">V1.1</span></div>
+  <div class="hum-status">QUANTUM_HUM: <span style="color:var(--active)">ACTIVE</span></div>
+</div>
+
+<div class="main">
+  <div class="display" id="d-box">
+    <div class="lbl">AGGREGATE G-FORCE</div>
+    <div class="val" id="h-val">0.00</div>
+    <div style="font-size:12px; color:var(--core)">SHA-256 TH/S</div>
+    <div class="boost-tag" id="b-tag">+13.37% GENIUS_BOOST</div>
+  </div>
+
+  <div class="controls">
+    <div class="lbl" style="color:var(--gold); margin-bottom:15px;">SETTLEMENT_SYNC</div>
+    <button class="btn" id="m-btn" onclick="toggleM()">START MINER</button>
+    <button class="btn" id="g-btn" onclick="toggleG()">LINK_GAME_ENGINE</button>
+
+    <div style="margin-top:20px;">
+      <div class="lbl">ALWAYS-ON PROTOCOLS</div>
+      <div style="font-size:11px; display:flex; justify-content:space-between; margin-top:5px;">
+        <span>FNR_MINT:</span> <span style="color:var(--active)">STREAMING</span>
+      </div>
+      <div style="font-size:11px; display:flex; justify-content:space-between; margin-top:5px;">
+        <span>FRST_SYNC:</span> <span style="color:var(--active)">LOCKED</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let mining = false;
+let gaming = false;
+
+function init() { setInterval(tick, 1000); }
+
+function toggleM() {
+  mining = !mining;
+  document.getElementById('m-btn').innerText = mining ? "STOP MINER" : "START MINER";
+  document.getElementById('m-btn').classList.toggle('on');
+}
+
+function toggleG() {
+  gaming = !gaming;
+  document.getElementById('g-btn').innerText = gaming ? "UNLINK_GAME" : "LINK_GAME_ENGINE";
+  document.getElementById('g-btn').classList.toggle('on');
+  document.getElementById('b-tag').style.visibility = gaming ? "visible" : "hidden";
+}
+
+function tick() {
+  if(!mining) { document.getElementById('h-val').innerText = "0.00"; return; }
+  
+  let base = (Math.random() * 20 + 80);
+  if(gaming) base *= 1.1337;
+  
+  document.getElementById('h-val').innerText = base.toFixed(2);
+}
+</script>
+</body>
+</html>

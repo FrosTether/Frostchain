@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Immutable Shared Pool</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --xmr: #ff6600; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #tangle-canvas { position: fixed; inset: 0; z-index: 1; opacity: 0.4; }
+        #ui-layer { position: relative; z-index: 10; display: grid; grid-template-rows: 70px 1fr 100px; height: 100vh; pointer-events: none; }
+        #ui-layer * { pointer-events: auto; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 30px; border-bottom: 1px solid rgba(0,255,65,0.2); background: rgba(0,0,0,0.9); }
+        .main-content { display: grid; grid-template-columns: 380px 1fr 320px; gap: 20px; padding: 20px; }
+        
+        .glass { background: rgba(0,0,0,0.85); border: 1px solid #222; padding: 15px; border-radius: 4px; }
+        .xmr-addr { color: var(--xmr); font-size: 0.55rem; word-break: break-all; margin-top: 5px; font-weight: bold; border: 1px solid var(--xmr); padding: 5px; display: block; }
+
+        .freq-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
+        .freq-card { border: 1px solid #111; padding: 10px; text-align: center; background: #080808; font-size: 0.6rem; transition: 0.3s; }
+        .freq-card.active { border-color: var(--cyan); box-shadow: 0 0 15px rgba(0,255,255,0.2); }
+
+        .reward-display { border-left: 4px solid var(--gold); padding-left: 15px; margin: 15px 0; }
+        .reward-val { font-size: 1.6rem; font-weight: bold; color: #fff; }
+        
+        .btn-mine { width: 100%; padding: 18px; background: var(--term); color: #000; font-weight: bold; border: none; margin-top: 20px; cursor: pointer; text-transform: uppercase; }
+        .btn-mine.active { background: #ff3333; color: #fff; }
+
+        .m-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #111; font-size: 0.65rem; color: #555; }
+        .footer { background: rgba(0,0,0,0.95); border-top: 1px solid #222; padding: 0 30px; display: flex; justify-content: space-between; align-items: center; }
+        .lbl { font-size: 0.55rem; color: #444; text-transform: uppercase; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="header">
+            <div style="font-weight:bold; letter-spacing:3px;">MIRACLE_POOL // <span style="color:var(--cyan)">SHARED_MINER</span></div>
+            <div style="text-align:right;"><div class="lbl">CARRIER</div><div style="color:var(--gold); font-size:1rem;">741.frostchain</div></div>
+        </div>
+
+        <div class="main-content">
+            <div class="glass">
+                <div class="lbl">XMR_CONTRACT_ROOT</div>
+                <span class="xmr-addr">4AEreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab</span>
+                
+                <div class="reward-display">
+                    <div class="lbl">NETWORK_BLOCK_REWARD</div>
+                    <div class="reward-val">13.37 FTC</div>
+                    <div class="reward-val" style="color:var(--xmr); font-size:1.2rem;">+ 2.5 XMR</div>
+                </div>
+
+                <div class="lbl" style="margin-top:10px;">SHARED_RESERVOIR_CAPS</div>
+                <div class="freq-grid" id="grid"></div>
+            </div>
+
+            <div></div> <div class="glass">
+                <div class="lbl">IDENTITY_ALIAS</div>
+                <input type="text" id="alias" placeholder="anyname.frostchain" style="background:#000; border:1px solid #333; color:var(--cyan); width:100%; padding:12px; margin-top:8px; font-family:inherit;">
+                
+                <button id="mine-btn" class="btn-mine" onclick="toggleMining()">Join Shared Pool</button>
+
+                <div class="lbl" style="margin-top:20px;">NODE_MINT_LOG (SHARED)</div>
+                <div id="m-list" style="margin-top:10px;"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div style="font-size:0.6rem; color:#333;">FROSTCHAIN v75.0 // FIXED SUPPLY // NO UNLIMITED MINTING</div>
+            <div style="text-align:right;">
+                <div class="lbl">NEXT_BLOCK_EPOCH</div>
+                <div style="font-size:3.5rem; color:#fff; font-weight:bold;" id="timer">300</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const freqs = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        const grid = document.getElementById('grid');
+        
+        // HARD-CODED 1/9TH SUPPLY STATE
+        let reservoirs = {};
+        const INITIAL_SUPPLY = 100000000 / 9;
+
+        freqs.forEach(f => {
+            reservoirs[f] = INITIAL_SUPPLY;
+            const card = document.createElement('div');
+            card.className = 'freq-card'; card.id = `f-${f}`;
+            card.innerHTML = `<div style="color:#444;">${f}Hz</div><div id="val-${f}" style="color:#fff; font-size:0.5rem;">${INITIAL_SUPPLY.toLocaleString(undefined, {maximumFractionDigits:0})}</div>`;
+            grid.appendChild(card);
+        });
+
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [], isRunning = false;
+
+        function initTangle() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<60; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3});
+        }
+
+        function drawTangle() {
+            if(!isRunning) return;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.strokeStyle = 'rgba(0, 255, 65, 0.2)';
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1;
+                if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                particles.slice(i+1).forEach(p2 => {
+                    let d = Math.hypot(p.x-p2.x, p.y-p2.y);
+                    if(d<150) { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); }
+                });
+            });
+            requestAnimationFrame(drawTangle);
+        }
+
+        function toggleMining() {
+            isRunning = !isRunning;
+            const btn = document.getElementById('mine-btn');
+            if(isRunning) { btn.innerText = "Exit Pool"; btn.classList.add('active'); initTangle(); drawTangle(); resonance(); }
+            else { btn.innerText = "Join Shared Pool"; btn.classList.remove('active'); }
+        }
+
+        function resonance() {
+            if(!isRunning) return;
+            const f = freqs[Math.floor(Math.random()*freqs.length)];
+            
+            // SUBTRACT REWARD FROM RESERVOIR (Supply Logic)
+            if(reservoirs[f] >= 13.37) {
+                reservoirs[f] -= 13.37;
+                document.getElementById(`val-${f}`).innerText = reservoirs[f].toLocaleString(undefined, {maximumFractionDigits:0});
+                
+                document.querySelectorAll('.freq-card').forEach(c => c.classList.remove('active'));
+                document.getElementById(`f-${f}`).classList.add('active');
+                
+                const log = document.getElementById('m-list');
+                const row = document.createElement('div');
+                row.className = 'm-row';
+                row.innerHTML = `<span style="color:var(--cyan)">${f}Hz_RESONANCE</span><span>-13.37 FTC (Remaining)</span>`;
+                log.prepend(row);
+                if(log.childNodes.length > 8) log.removeChild(log.lastChild);
+            } else {
+                alert(`${f}Hz Reservoir Depleted.`);
+            }
+            
+            setTimeout(resonance, 30000 + Math.random()*20000); // Simulated block hit time within the 300s window
+        }
+
+        let t = 300;
+        setInterval(() => { if(isRunning) { t--; if(t<0) t=300; document.getElementById('timer').innerText = t; }}, 1000);
+    </script>
+</body>
+</html>

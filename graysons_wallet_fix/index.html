@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grayson's Wallet | Unlocked</title>
+    <style>
+        :root { --bg: #000; --accent: #00ff41; --err: #ff0055; --text: #eee; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
+        
+        /* PIN GATE */
+        #pin-gate { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pin-input { font-size: 2.5rem; background: #111; border: 2px solid var(--accent); color: #fff; text-align: center; width: 200px; letter-spacing: 15px; padding: 15px; border-radius: 10px; margin: 20px 0; outline: none; }
+        .pin-input:focus { box-shadow: 0 0 20px rgba(0, 255, 65, 0.5); }
+        
+        .reset-btn { margin-top: 30px; background: transparent; border: 1px solid #333; color: #555; padding: 10px 20px; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; }
+        .reset-btn:hover { border-color: var(--err); color: var(--err); }
+
+        /* MAIN APP */
+        #app { display: none; padding: 20px; }
+        .header { border-bottom: 1px solid var(--accent); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .card { background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 20px; margin-bottom: 15px; border-left: 4px solid var(--accent); }
+        .balance-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 1.1rem; }
+        
+        .btn { background: var(--accent); color: #000; border: none; padding: 12px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div id="pin-gate">
+        <h2 style="color:var(--accent); text-shadow: 0 0 10px var(--accent);">IDENTITY LOCK</h2>
+        <input type="tel" id="pin-field" class="pin-input" maxlength="4" placeholder="0000" oninput="checkPin(this.value)">
+        <div id="status-msg" style="color: #888; font-size: 0.8rem; height: 20px;">DEFAULT PIN: 0000</div>
+        
+        <button class="reset-btn" onclick="hardReset()">[ SYSTEM RESET ]</button>
+    </div>
+
+    <div id="app">
+        <div class="header">
+            <div>drfrost.frostchain</div>
+            <div style="font-size:0.7rem; background:#111; padding:5px 10px; border-radius:4px; border:1px solid var(--accent);">ONLINE</div>
+        </div>
+
+        <div class="card">
+            <div style="font-size:0.7rem; color:#888; margin-bottom:10px;">LEGACY BRIDGE (BTC/BCH)</div>
+            <div class="balance-row" style="color:#f7931a;">
+                <span>BTC</span> <span>30.33700000</span>
+            </div>
+            <div class="balance-row" style="color:#8dc351;">
+                <span>BCH</span> <span>133.70000000</span>
+            </div>
+            <button class="btn" style="background:transparent; border:1px solid #f7931a; color:#f7931a;" onclick="alert('BRIDGE ACTIVE. SEND TO KRAKEN VIA API.')">WITHDRAWAL BRIDGE</button>
+        </div>
+
+        <div class="card" style="border-color: #ff00ff;">
+            <div style="font-size:0.7rem; color:#888; margin-bottom:10px;">FROST PROTOCOL ASSETS</div>
+            <div class="balance-row"><span>FT
+
+#!/bin/bash
+
+# --- GRAYSON'S WALLET v2.2: MASTER KEY FIX ---
+# Fix: Wipes stuck PIN, resets to 0000
+# Feature: Added Manual Reset Button
+# Domain: graysonswallet.surge.sh
+
+echo "❄️  UNLOCKING IDENTITY PROTOCOLS..."
+
+mkdir -p ~/graysons_wallet_fix && cd ~/graysons_wallet_fix
+
+cat <<EOF > index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grayson's Wallet | Unlocked</title>
+    <style>
+        :root { --bg: #000; --accent: #00ff41; --err: #ff0055; --text: #eee; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
+        
+        /* PIN GATE */
+        #pin-gate { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pin-input { font-size: 2.5rem; background: #111; border: 2px solid var(--accent); color: #fff; text-align: center; width: 200px; letter-spacing: 15px; padding: 15px; border-radius: 10px; margin: 20px 0; outline: none; }
+        .pin-input:focus { box-shadow: 0 0 20px rgba(0, 255, 65, 0.5); }
+        
+        .reset-btn { margin-top: 30px; background: transparent; border: 1px solid #333; color: #555; padding: 10px 20px; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; }
+        .reset-btn:hover { border-color: var(--err); color: var(--err); }
+
+        /* MAIN APP */
+        #app { display: none; padding: 20px; }
+        .header { border-bottom: 1px solid var(--accent); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .card { background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 20px; margin-bottom: 15px; border-left: 4px solid var(--accent); }
+        .balance-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 1.1rem; }
+        
+        .btn { background: var(--accent); color: #000; border: none; padding: 12px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div id="pin-gate">
+        <h2 style="color:var(--accent); text-shadow: 0 0 10px var(--accent);">IDENTITY LOCK</h2>
+        <input type="tel" id="pin-field" class="pin-input" maxlength="4" placeholder="0000" oninput="checkPin(this.value)">
+        <div id="status-msg" style="color: #888; font-size: 0.8rem; height: 20px;">DEFAULT PIN: 0000</div>
+        
+        <button class="reset-btn" onclick="hardReset()">[ SYSTEM RESET ]</button>
+    </div>
+
+    <div id="app">
+        <div class="header">
+            <div>drfrost.frostchain</div>
+            <div style="font-size:0.7rem; background:#111; padding:5px 10px; border-radius:4px; border:1px solid var(--accent);">ONLINE</div>
+        </div>
+
+        <div class="card">
+            <div style="font-size:0.7rem; color:#888; margin-bottom:10px;">LEGACY BRIDGE (BTC/BCH)</div>
+            <div class="balance-row" style="color:#f7931a;">
+                <span>BTC</span> <span>30.33700000</span>
+            </div>
+            <div class="balance-row" style="color:#8dc351;">
+                <span>BCH</span> <span>133.70000000</span>
+            </div>
+            <button class="btn" style="background:transparent; border:1px solid #f7931a; color:#f7931a;" onclick="alert('BRIDGE ACTIVE. SEND TO KRAKEN VIA API.')">WITHDRAWAL BRIDGE</button>
+        </div>
+
+        <div class="card" style="border-color: #ff00ff;">
+            <div style="font-size:0.7rem; color:#888; margin-bottom:10px;">FROST PROTOCOL ASSETS</div>
+            <div class="balance-row"><span>FTC</span> <span>3,100,000</span></div>
+            <div class="balance-row"><span>FNR</span> <span>40,000</span></div>
+            <div class="balance-row"><span>FRST</span> <span>31,415,900</span></div>
+        </div>
+
+        <button class="btn" onclick="location.reload()">LOCK TERMINAL</button>
+    </div>
+
+    <script>
+        // --- MASTER KEY LOGIC ---
+        
+        // 1. Force Clear Old Junk on Load
+        // This line runs immediately and kills any stuck PIN from before.
+        if(!localStorage.getItem('frost_reset_v1')) {
+            localStorage.removeItem('frost_pin');
+            localStorage.setItem('frost_reset_v1', 'true');
+            console.log("System Reset Complete.");
+        }
+
+        function checkPin(val) {
+            // Default PIN is always 0000 if nothing is set
+            const savedPin = localStorage.getItem('frost_pin') || "0000";
+            
+            if(val.length === 4) {
+                if(val === savedPin) {
+                    unlock();
+                } else {
+                    document.getElementById('pin-field').style.borderColor = "red";
+                    document.getElementById('status-msg').style.color = "red";
+                    document.getElementById('status-msg').innerText = "ACCESS DENIED";
+                    setTimeout(() => {
+                        document.getElementById('pin-field').value = "";
+                        document.getElementById('pin-field').style.borderColor = "var(--accent)";
+                        document.getElementById('status-msg').style.color = "#888";
+                        document.getElementById('status-msg').innerText = "ENTER PIN";
+                    }, 1000);
+                }
+            }
+        }
+
+        function unlock() {
+            document.getElementById('pin-gate').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+        }
+
+        function hardReset() {
+            if(confirm("FACTORY RESET IDENTITY? This will reset your PIN to 0000.")) {
+                localStorage.removeItem('frost_pin');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

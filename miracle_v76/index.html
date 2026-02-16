@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | Master Terminal</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --xmr: #ff6600; --alpha: #ff00ff; --theta: #00ffff; --delta: #ff9900; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        /* IOTA TANGLE BACKGROUND */
+        #tangle-canvas { position: fixed; inset: 0; z-index: 1; opacity: 0.6; }
+        
+        /* UI OVERLAY */
+        #ui-layer { position: relative; z-index: 10; display: grid; grid-template-rows: 60px 1fr 60px; height: 100vh; pointer-events: none; }
+        #ui-layer * { pointer-events: auto; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(0,255,65,0.3); background: rgba(0,0,0,0.9); }
+        .main { display: grid; grid-template-columns: 350px 1fr 350px; gap: 20px; padding: 20px; overflow: hidden; }
+        
+        .panel { background: rgba(0,0,0,0.85); border: 1px solid #222; padding: 15px; display: flex; flex-direction: column; overflow-y: auto; max-height: 100%; border-radius: 4px; }
+        
+        /* RESERVOIRS */
+        .freq-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; }
+        .freq-card { border: 1px solid #111; padding: 5px; text-align: center; background: #050505; font-size: 0.55rem; transition: 0.2s; }
+        .freq-card.active { border-color: var(--cyan); box-shadow: 0 0 10px var(--cyan); color: #fff; }
+
+        /* FROSTCHAT */
+        #chat-box { flex-grow: 1; border: 1px solid #333; background: #000; margin-top: 10px; padding: 10px; overflow-y: auto; font-size: 0.6rem; color: #888; }
+        .chat-msg { margin-bottom: 4px; border-bottom: 1px solid #111; padding-bottom: 2px; }
+        .chat-user { color: var(--gold); font-weight: bold; }
+        .chat-input { background: #111; border: 1px solid #333; color: #fff; width: 100%; padding: 8px; margin-top: 5px; }
+
+        /* MINER CONTROLS */
+        .btn-mine { width: 100%; padding: 15px; background: var(--term); color: #000; font-weight: bold; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 15px; }
+        .btn-mine.active { background: #ff3333; color: #fff; }
+        
+        .brainwave-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 15px; }
+        .wave-btn { background: #000; border: 1px solid #444; color: #666; padding: 8px; cursor: pointer; font-size: 0.6rem; text-align: center; }
+        .wave-btn.active.alpha { border-color: var(--alpha); color: var(--alpha); box-shadow: 0 0 8px var(--alpha); }
+        .wave-btn.active.theta { border-color: var(--theta); color: var(--theta); box-shadow: 0 0 8px var(--theta); }
+        .wave-btn.active.delta { border-color: var(--delta); color: var(--delta); box-shadow: 0 0 8px var(--delta); }
+
+        .log-row { display: flex; justify-content: space-between; font-size: 0.6rem; border-bottom: 1px solid #222; padding: 4px 0; }
+        
+        .footer { background: rgba(0,0,0,0.95); border-top: 1px solid #222; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+        .lbl { font-size: 0.5rem; color: #555; text-transform: uppercase; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="header">
+            <div style="font-weight:bold; letter-spacing:2px; font-size:1.1rem;">MIRACLE_NODE // <span style="color:var(--term)">v76.0</span></div>
+            <div style="text-align:right;">
+                <div class="lbl">CARRIER_BLOCK</div>
+                <div style="color:var(--gold); font-size:0.9rem;">741.frostchain</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="lbl">SOLFEGGIO_1/9TH_RESERVOIRS</div>
+                <div class="freq-grid" id="grid"></div>
+                
+                <div class="lbl" style="margin-top:20px;">FROSTCHAT_RELAY</div>
+                <div id="chat-box"></div>
+                <input type="text" id="chat-in" class="chat-input" placeholder="Broadcast to Node..." onkeypress="sendChat(event)">
+            </div>
+
+            <div></div>
+
+            <div class="panel">
+                <div class="lbl">MINER_IDENTITY</div>
+                <input type="text" id="alias" placeholder="name.frostchain" style="background:#000; border:1px solid #333; color:var(--cyan); width:100%; padding:10px; margin:5px 0 15px 0; font-family:inherit;">
+                
+                <div class="lbl">BRAINWAVE_MODULATION</div>
+                <div class="brainwave-bar">
+                    <div id="btn-alpha" class="wave-btn" onclick="setWave('alpha')">ALPHA [11.11Hz]</div>
+                    <div id="btn-theta" class="wave-btn" onclick="setWave('theta')">THETA [6.3Hz]</div>
+                    <div id="btn-delta" class="wave-btn" onclick="setWave('delta')">DELTA [Pi Hz]</div>
+                </div>
+
+                <button id="mine-btn" class="btn-mine" onclick="toggleMining()">INITIALIZE MINER</button>
+
+                <div class="lbl">REWARD_METRICS (SHARED)</div>
+                <div style="border:1px solid var(--gold); padding:10px; margin-bottom:15px; text-align:center;">
+                    <div style="font-size:1.2rem; color:#fff;">13.37 FTC</div>
+                    <div style="font-size:0.9rem; color:var(--xmr);">+ 2.50 XMR</div>
+                </div>
+
+                <div class="lbl">ENTROPY_LOG</div>
+                <div id="m-list" style="margin-top:5px;"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div style="font-size:0.6rem; color:#444;">IOTA_TANGLE_HD // ALPHA_THETA_DELTA // NO_WITHDRAW</div>
+            <div style="text-align:right;">
+                <div class="lbl">EPOCH_TIMER</div>
+                <div style="font-size:2rem; color:#fff; font-weight:bold;" id="timer">300</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG
+        const freqs = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        const supply = (100000000 / 9).toFixed(0);
+        let reservoirs = {};
+        let currentWave = 'alpha';
+        let isMining = false;
+
+        // INIT RESERVOIRS
+        const grid = document.getElementById('grid');
+        freqs.forEach(f => {
+            reservoirs[f] = parseInt(supply);
+            const d = document.createElement('div');
+            d.className = 'freq-card'; d.id = `f-${f}`;
+            d.innerHTML = `<div>${f}Hz</div><div id="v-${f}" style="color:#666;">${(reservoirs[f]/1000000).toFixed(1)}M</div>`;
+            grid.appendChild(d);
+        });
+
+        // TANGLE VISUALIZER
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initTangle() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<100; i++) particles.push({
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+                vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5
+            });
+        }
+
+        function drawTangle() {
+            if(!isMining) return;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.strokeStyle = 'rgba(0, 255, 65, 0.4)'; // NEON GREEN LINES
+            ctx.lineWidth = 0.8;
+            
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1;
+                if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                
+                // Draw Connections
+                particles.slice(i+1).forEach(p2 => {
+                    if(Math.hypot(p.x-p2.x, p.y-p2.y) < 120) {
+                        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+                    }
+                });
+                
+                // Draw Nodes
+                ctx.fillStyle = '#00ff41'; ctx.fillRect(p.x-1,p.y-1,2,2);
+            });
+            requestAnimationFrame(drawTangle);
+        }
+
+        // CONTROLS
+        function setWave(w) {
+            currentWave = w;
+            document.querySelectorAll('.wave-btn').forEach(b => b.className = 'wave-btn');
+            document.getElementById(`btn-${w}`).classList.add('active', w);
+        }
+
+        function toggleMining() {
+            isMining = !isMining;
+            const btn = document.getElementById('mine-btn');
+            if(isMining) {
+                btn.innerText = "TERMINATE LOOP"; btn.classList.add('active');
+                initTangle(); drawTangle(); miningLoop();
+            } else {
+                btn.innerText = "INITIALIZE MINER"; btn.classList.remove('active');
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+            }
+        }
+
+        function miningLoop() {
+            if(!isMining) return;
+            // Select Resonance Freq
+            const f = freqs[Math.floor(Math.random()*freqs.length)];
+            
+            // Subtract Supply
+            if(reservoirs[f] > 0) {
+                reservoirs[f] -= 13.37;
+                document.getElementById(`v-${f}`).innerText = (reservoirs[f]/1000000).toFixed(6)+"M";
+                
+                // Highlight Reservoir
+                document.querySelectorAll('.freq-card').forEach(c => c.classList.remove('active'));
+                document.getElementById(`f-${f}`).classList.add('active');
+                
+                // Log
+                const log = document.getElementById('m-list');
+                const row = document.createElement('div');
+                row.className = 'log-row';
+                row.innerHTML = `<span style="color:var(--cyan)">${f}Hz :: ${currentWave.toUpperCase()}</span><span>-13.37 FTC</span>`;
+                log.prepend(row);
+                if(log.children.length > 8) log.removeChild(log.lastChild);
+            }
+            
+            // Random interval based on Brainwave state
+            const delay = currentWave === 'alpha' ? 3000 : (currentWave === 'theta' ? 5000 : 1000);
+            setTimeout(miningLoop, delay + Math.random()*2000);
+        }
+
+        // FROSTCHAT
+        function sendChat(e) {
+            if(e.key === 'Enter') {
+                const txt = document.getElementById('chat-in').value;
+                const name = document.getElementById('alias').value || "Guest";
+                if(!txt) return;
+                
+                const box = document.getElementById('chat-box');
+                const line = document.createElement('div');
+                line.className = 'chat-msg';
+                line.innerHTML = `<span class="chat-user">[${name}]</span>: ${txt}`;
+                box.appendChild(line);
+                document.getElementById('chat-in').value = '';
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+
+        // GLOBAL TIMER
+        let t = 300;
+        setInterval(() => { if(isMining) { t--; if(t<0) t=300; document.getElementById('timer').innerText = t; }}, 1000);
+        
+        // Init
+        setWave('alpha');
+        window.onresize = initTangle;
+    </script>
+</body>
+</html>

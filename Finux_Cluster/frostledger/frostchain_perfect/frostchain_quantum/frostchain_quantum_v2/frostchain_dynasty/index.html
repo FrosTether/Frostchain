@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FROSTCHAIN // DYNASTY_ENGINE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+:root {
+  --core: #00fbff;     /* FRST Cyan */
+  --fnr: #ff6600;      /* FNR Orange */
+  --fai: #ff0055;      /* FAI Red */
+  --drake: #9900ff;    /* Joey Bonez Purple */
+  --gold: #ffd700;     /* Satoshi Gold */
+  --bg: #020202;
+  --glass: rgba(10, 10, 16, 0.95);
+  --flux: 1.0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+
+body {
+  background: var(--bg);
+  color: var(--core);
+  font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* DYNASTY BACKGROUND - SUBTLE SATOSHI GOLD MESH */
+body::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: 
+    radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.05) 0%, transparent 60%),
+    linear-gradient(0deg, rgba(0,0,0,0) 99%, var(--core) 100%);
+  background-size: 100% 100%, 100% 40px;
+  pointer-events: none; z-index: 0;
+  animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline { 0% { background-position: 0 0, 0 0; } 100% { background-position: 0 0, 0 100%; } }
+
+.ui-layer { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; padding: 15px; }
+
+/* TOP BAR */
+.top-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 2px solid var(--core); padding-bottom: 10px; margin-bottom: 10px;
+  background: var(--glass); box-shadow: 0 0 20px rgba(0, 251, 255, 0.1);
+}
+
+.block-stat { color: var(--gold); font-weight: bold; text-shadow: 0 0 10px var(--gold); }
+.drake-stat { color: var(--drake); display: none; animation: pulse 0.5s infinite; }
+
+/* GRID AREA */
+.game-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+
+.grid {
+  display: grid; grid-template-columns: repeat(9, 42px); grid-template-rows: repeat(9, 42px);
+  gap: 2px; background: rgba(0,0,0,0.8); padding: 4px;
+  border: 2px solid var(--core);
+  box-shadow: 0 0 40px rgba(0, 251, 255, 0.1);
+  position: relative;
+}
+
+.cell {
+  width: 42px; height: 42px; background: rgba(0, 251, 255, 0.05);
+  transition: all 0.1s; border: 1px solid rgba(0, 251, 255, 0.1);
+}
+
+.cell.filled {
+  background: var(--core); border-color: #fff;
+  box-shadow: 0 0 calc(var(--flux) * 10px) var(--core);
+}
+
+/* JOEY BONEZ DRAKE MODE */
+body.drake-active .grid { border-color: var(--drake); box-shadow: 0 0 50px var(--drake); }
+body.drake-active .cell.filled { background: var(--drake); box-shadow: 0 0 20px var(--drake); }
+body.drake-active .drake-stat { display: block; }
+
+/* DOCK */
+.dock { display: flex; gap: 15px; justify-content: center; margin-top: 15px; height: 80px; }
+.piece-box {
+  width: 70px; height: 70px; border: 1px dashed rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center; cursor: grab;
+}
+.piece-box.selected { border: 2px solid var(--core); background: rgba(0,251,255,0.2); }
+.mini-block { width: 14px; height: 14px; background: var(--core); margin: 1px; }
+
+/* CONTROLS */
+.controls-bar {
+  display: flex; gap: 10px; margin-top: auto; padding-top: 10px; border-top: 1px solid #333;
+}
+.btn {
+  flex: 1; padding: 12px; font-family: 'Share Tech Mono'; font-size: 11px;
+  background: #111; border: 1px solid #444; color: #666; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.btn.active { border-color: var(--fnr); color: var(--fnr); background: rgba(255, 102, 0, 0.1); }
+.btn.wallet { border-color: var(--gold); color: var(--gold); }
+.btn.wallet:hover { background: var(--gold); color: #000; box-shadow: 0 0 20px var(--gold); }
+
+/* CYBER TERMINAL OVERLAY */
+.cyber-terminal {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 80%; max-width: 500px; background: rgba(0, 0, 0, 0.95);
+  border: 2px solid var(--core); padding: 20px;
+  font-family: 'Courier New', monospace; color: var(--core);
+  display: none; z-index: 100;
+  box-shadow: 0 0 100px rgba(0, 251, 255, 0.5);
+}
+.term-line { margin-bottom: 5px; font-size: 12px; }
+.term-blink { animation: blink 1s infinite; }
+@keyframes blink { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+
+</style>
+</head>
+<body onload="init()">
+
+<div class="ui-layer">
+  
+  <div class="top-bar">
+    <div style="font-size:10px;">
+      <div style="color:#888;">BLOCK_HEIGHT</div>
+      <div class="block-stat" id="block-height">937,482</div>
+    </div>
+    
+    <div style="text-align:center;">
+      <div class="drake-stat">JOEY BONEZ QUORUM +1</div>
+      <div style="font-size:10px; color:#888;">QUANTUM FLUX</div>
+      <div><span id="flux-val">1.0</span>φ</div>
+    </div>
+
+    <div style="text-align:right;">
+      <div style="font-size:10px; color:#888;">LIQUIDITY POOL</div>
+      <div style="color:var(--gold);">∞ SATOSHI_BACKED</div>
+    </div>
+  </div>
+
+  <div class="game-area">
+    <div class="grid" id="grid"></div>
+    <div class="dock" id="dock"></div>
+    
+    <div class="cyber-terminal" id="terminal">
+      <div class="term-line" style="color:#fff; border-bottom:1px solid #333; padding-bottom:5px;">>> BLOCK_REWARD_INTERCEPT // v215</div>
+      <div class="term-line" id="term-hash">HASH: 0x...</div>
+      <div class="term-line" style="color:var(--gold);">>> INJECTING SATOSHI LIQUIDITY [BTC/BCH]...</div>
+      <div class="term-line">>> LIQUIDITY_BRIDGE: <span style="color:var(--core);">ACTIVE</span></div>
+      <div class="term-line">>> REWARD: <span style="color:#fff;">+256 FTC</span></div>
+      <div class="term-line term-blink" style="margin-top:10px; color:var(--core);">_DYNASTY_GROWTH_CONFIRMED</div>
+    </div>
+  </div>
+
+  <div class="controls-bar">
+    <button class="btn active" onclick="toggleFNR()" id="btn-fnr">
+      <span>FNR HUM</span>
+      <span style="font-size:9px;">● ENGAGED</span>
+    </button>
+    <button class="btn" onclick="toggleFAI()" id="btn-fai">
+      <span>GHOST MODE</span>
+    </button>
+    <button class="btn" onclick="mulligan()">
+      <span>MULLIGAN</span>
+    </button>
+    <button class="btn wallet" onclick="openWallet()">
+      <span>GRAYSON'S WALLET</span>
+      <span style="font-size:9px;">⇄ BRIDGE</span>
+    </button>
+  </div>
+
+</div>
+
+<script>
+// CONSTANTS
+const REWARDS = { FRST: 314.15, FTC: 13.37 };
+let state = {
+  grid: Array(81).fill(0),
+  flux: 1.0,
+  drakeMode: false,
+  quorumCount: 0,
+  blockHeight: 937482
+};
+
+let currentPieces = [];
+let selectedPiece = null;
+
+// --- QUANTUM FLUX ---
+setInterval(() => {
+  state.flux = 1.0 + Math.sin(Date.now()/500) * 0.5;
+  document.documentElement.style.setProperty('--flux', state.flux);
+  document.getElementById('flux-val').innerText = state.flux.toFixed(2);
+}, 100);
+
+// --- BLOCK HEIGHT TICKER ---
+setInterval(() => {
+  // Simulate block finding every few seconds
+  if(Math.random() > 0.95) {
+    state.blockHeight++;
+    document.getElementById('block-height').innerText = state.blockHeight.toLocaleString();
+    triggerTerminal();
+  }
+}, 2000);
+
+function init() { renderGrid(); spawnPieces(); }
+
+function renderGrid() {
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  state.grid.forEach((val, i) => {
+    let d = document.createElement('div');
+    d.className = val ? 'cell filled' : 'cell';
+    d.onclick = () => place(i);
+    g.appendChild(d);
+  });
+}
+
+function spawnPieces() {
+  const d = document.getElementById('dock');
+  d.innerHTML = '';
+  currentPieces = [];
+  const shapes = [[[1]], [[1,1]], [[1],[1]], [[1,1],[1,1]], [[1,0],[1,0],[1,1]]];
+  
+  for(let i=0; i<3; i++) {
+    let s = shapes[Math.floor(Math.random() * shapes.length)];
+    currentPieces.push({ shape: s, placed: false });
+    let b = document.createElement('div');
+    b.className = 'piece-box';
+    b.onclick = (e) => select(e, i);
+    // Draw mini
+    let m = document.createElement('div'); m.style.display='grid'; m.style.gridTemplateColumns=`repeat(${s[0].length},14px)`;
+    s.forEach(r => r.forEach(c => {
+      let v = document.createElement('div'); v.className = c?'mini-block':'mini-block empty'; m.appendChild(v);
+    }));
+    b.appendChild(m); d.appendChild(b);
+  }
+}
+
+function select(e, i) {
+  if(currentPieces[i].placed) return;
+  document.querySelectorAll('.piece-box').forEach(b => b.classList.remove('selected'));
+  e.currentTarget.classList.add('selected');
+  selectedPiece = currentPieces[i].shape;
+}
+
+function place(idx) {
+  if(!selectedPiece) return;
+  state.grid[idx] = 1;
+  
+  // JOEY BONEZ LOGIC: Chance to trigger Quorum on placement
+  if(Math.random() > 0.7) triggerDrakeCode();
+  
+  renderGrid();
+  selectedPiece = null;
+  document.querySelectorAll('.piece-box').forEach(b => b.classList.remove('selected'));
+  setTimeout(() => { state.grid[idx] = 0; renderGrid(); }, 400);
+}
+
+// --- FEATURE LOGIC ---
+
+function triggerDrakeCode() {
+  state.quorumCount++;
+  state.drakeMode = true;
+  document.body.classList.add('drake-active');
+  
+  // Visual pulse
+  setTimeout(() => {
+    state.drakeMode = false;
+    document.body.classList.remove('drake-active');
+  }, 2000);
+}
+
+function triggerTerminal() {
+  const t = document.getElementById('terminal');
+  document.getElementById('term-hash').innerText = "HASH: 0x" + Math.random().toString(16).substr(2, 8);
+  t.style.display = 'block';
+  
+  // Hide after 3s
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+function openWallet() {
+  // SIMULATED WALLET LINK
+  alert("ACCESSING GRAYSON'S WALLET BRIDGE...\n\n> BRIDGE: OPEN\n> LIQUIDITY: INFINITE (SATOSHI_KEYS)\n> STATUS: READY FOR TRANSFER");
+}
+
+function mulligan() { spawnPieces(); }
+function toggleFNR() { /* Logic handled by class toggling for visuals in this version */ }
+function toggleFAI() { document.body.classList.toggle('ghost-mode'); }
+
+</script>
+</body>
+</html>

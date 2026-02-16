@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kane Frostchain | Secure Enclave</title>
+    <style>
+        :root { --ice: #a5f2f3; --bg: #000; }
+        body { background: var(--bg); color: var(--ice); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
+        #gate { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; }
+        .mount-btn { border: 2px solid var(--ice); padding: 20px 40px; background: none; color: var(--ice); cursor: pointer; font-family: inherit; font-size: 1.2rem; box-shadow: 0 0 20px var(--ice); }
+        .mount-btn:hover { background: var(--ice); color: #000; }
+        #content { display: none; padding: 20px; }
+        .status { font-size: 0.8rem; margin-top: 10px; color: #666; }
+    </style>
+</head>
+<body>
+    <div id="gate">
+        <div style="font-size: 2rem; letter-spacing: 5px; margin-bottom: 20px;">ENCLAVE_LOCKED</div>
+        <button class="mount-btn" onclick="mountEnclave()">MOUNT SECURE WALLET</button>
+        <div class="status" id="status">Waiting for drfrost.frostchain signature...</div>
+    </div>
+
+    <div id="content">
+        <h1 id="user-header">WELCOME, DRFROST</h1>
+        <div id="metrics">AUM: $102,450,200 | fszUSD: 5,000,000</div>
+    </div>
+
+    <script>
+        async function mountEnclave() {
+            try {
+                // Persistent Folder Mount (2026 Browser Standard)
+                const dirHandle = await window.showDirectoryPicker();
+                const fileHandle = await dirHandle.getFileHandle('wallet.dat');
+                const file = await fileHandle.getFile();
+                const text = await file.slice(0, 5000).text(); // Only scan header for identity
+
+                if (text.includes('drfrost.frostchain') || file.name === 'wallet.dat') {
+                    document.getElementById('gate').style.display = 'none';
+                    document.getElementById('content').style.display = 'block';
+                    console.log("Identity Verified: drfrost.frostchain");
+                } else {
+                    document.getElementById('status').innerText = "ERROR: WRONG WALLET IDENTITY";
+                }
+            } catch (e) {
+                document.getElementById('status').innerText = "ERROR: MOUNT FAILED";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Graysons | 13.37% Hub</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --kane: #d400ff; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; }
+        
+        #gate { height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-box { width: 100%; max-width: 400px; border: 1px solid #222; padding: 30px; border-radius: 15px; background: #080808; text-align: center; }
+
+        input { background: #000; border: 1px solid #333; color: var(--term); width: 100%; padding: 15px; margin: 10px 0; font-family: inherit; font-size: 1.1rem; border-radius: 8px; text-align: center; }
+        .btn { background: var(--term); color: #000; border: none; width: 100%; padding: 18px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+        
+        /* DASHBOARD */
+        #dash { display: none; max-width: 500px; margin: 0 auto; min-height: 100vh; flex-direction: column; border-left: 1px solid #222; border-right: 1px solid #222; }
+        .header { padding: 20px; border-bottom: 2px solid var(--term); display: flex; justify-content: space-between; align-items: center; }
+        
+        .asset-card { background: #0a0a0a; border: 1px solid #222; padding: 20px; border-radius: 12px; margin: 15px; position: relative; }
+        .asset-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+        
+        .c-frst::before { background: var(--kane); }
+        .c-ftc::before { background: var(--term); }
+        .c-fnr::before { background: var(--cyan); }
+
+        .lbl { font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+        .val { font-size: 1.8rem; font-weight: bold; margin-top: 5px; }
+        .sell-tag { font-size: 0.55rem; color: var(--gold); border: 1px solid var(--gold); padding: 2px 6px; border-radius: 4px; margin-top: 10px; display: inline-block; }
+
+        .btn-util { background: #111; color: var(--term); border: 1px solid var(--term); width: 100%; padding: 15px; margin-top: 10px; font-weight: bold; cursor: pointer; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div id="gate">
+        <div class="auth-box">
+            <h2 style="color:var(--term)">FROST ID</h2>
+            <input type="text" id="id-input" placeholder="name.frostchain">
+            <input type="password" id="pin-input" maxlength="6" placeholder="4-6 DIGIT PIN">
+            <button class="btn" onclick="authenticate()">LOG IN</button>
+        </div>
+    </div>
+
+    <div id="dash">
+        <div class="header">
+            <div><div class="lbl">IDENTITY</div><div id="id-tag" style="color:var(--cyan)">-</div></div>
+            <div style="text-align:right;"><div class="lbl">NODE</div><div style="color:var(--term)">v4.0 ACTIVE</div></div>
+        </div>
+
+        <div class="asset-card c-fnr">
+            <div class="lbl">Reserve (FNR)</div>
+            <div class="val">4,412,100.00</div>
+            <div class="sell-tag">SALE ALLOCATION: 400,000.00</div>
+            <div style="font-size:0.5rem; color:#444; margin-top:5px;">(13.37% OF 33,000,000 TOTAL)</div>
+        </div>
+
+        <div class="asset-card c-ftc">
+            <div class="lbl">Frostcoin (FTC)</div>
+            <div class="val">11,870,000.01</div>
+            <div class="sell-tag">SALE ALLOCATION: 1,000,000.00</div>
+        </div>
+
+        <div class="asset-card c-frst">
+            <div class="lbl">Governance (FRST)</div>
+            <div class="val">3,145,900.00</div>
+            <div class="sell-tag">FULL SELL-OFF ACTIVE</div>
+        </div>
+
+        <div style="padding:15px;">
+            <button class="btn-util" onclick="alert('PrivateSend Mixed Settling...')">PRIVATESEND TRANSACTION</button>
+            <button class="btn-util" style="border-color:#333; color:#888;" onclick="alert('WalletConnect v2 Linked')">WALLETCONNECT</button>
+        </div>
+    </div>
+
+    <script>
+        function authenticate() {
+            const name = document.getElementById('id-input').value;
+            const pin = document.getElementById('pin-input').value;
+            if(!name || (pin.length !== 4 && pin.length !== 6)) return;
+
+            document.getElementById('gate').style.display = 'none';
+            document.getElementById('dash').style.display = 'flex';
+            document.getElementById('id-tag').innerText = name.includes('.frostchain') ? name : name + ".frostchain";
+        }
+    </script>
+</body>
+</html>

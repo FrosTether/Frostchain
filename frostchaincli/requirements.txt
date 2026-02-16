@@ -1,0 +1,6 @@
+# Frost Protocol Terminal Requirements
+Flask==3.1.2
+Flask-Cors==3.0.8
+rich==13.7.0
+requests==2.32.5
+cryptography==46.0.3

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kane | Liquidity DEX</title>
+    <style>
+        :root { --bg: #010101; --btc: #f7931a; --bch: #0ac18e; --kane: #d400ff; --term: #33ff00; --frst: #ff00ff; --gold: #ffd700; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
+        #app { display: grid; grid-template-rows: 60px 1fr 140px; height: 100%; max-width: 1000px; margin: 0 auto; border-left: 1px solid #222; border-right: 1px solid #222; }
+
+        /* HEADER */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 2px solid var(--kane); background: #000; }
+        .pool-stat { font-size: 0.65rem; color: #666; }
+
+        /* MAIN CONTENT */
+        .main { padding: 15px; overflow-y: auto; display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+
+        /* DEX INTERFACE */
+        .dex-box { background: #0a0a0a; border: 1px solid #222; padding: 20px; border-radius: 8px; box-shadow: 0 0 30px rgba(212, 0, 255, 0.1); }
+        .swap-input { background: #000; border: 1px solid #333; color: #fff; padding: 15px; width: 100%; box-sizing: border-box; font-family: inherit; font-size: 1.1rem; margin-top: 5px; }
+        .label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-top: 15px; display: block; }
+        .btn-swap { background: var(--kane); color: #fff; border: none; padding: 18px; width: 100%; margin-top: 20px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
+        
+        /* POOL TELEMETRY */
+        .pool-panel { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .asset-card { background: #080808; border: 1px solid #222; padding: 12px; border-left: 4px solid #333; }
+        .val { font-size: 1.1rem; font-weight: bold; }
+        .ticker { font-size: 0.6rem; color: #666; }
+
+        /* LOG/DEX FEED */
+        .footer { background: #000; border-top: 1px solid #333; padding: 10px 20px; overflow-y: auto; font-size: 0.7rem; color: #555; }
+        .success { color: var(--term); }
+        .slippage { color: #ff3333; font-style: italic; }
+
+        @media (max-width: 800px) { .main { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div>
+                <div style="font-weight:bold; font-size:1.1rem; color:var(--kane);">KANEFROSTCHAIN</div>
+                <div class="pool-stat">DEX_AMM v4.0: <span style="color:var(--term);">ONLINE</span></div>
+            </div>
+            <div style="text-align:right; font-size:0.75rem;">
+                TVL: <span id="tvl-val" style="color:var(--gold);">$1.2M</span>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="pool-panel">
+                <div class="asset-card" style="border-color: var(--btc);"><span class="label">wfBTC POOL</span><div class="val" id="wfbtc-pool">10.5000</div><div class="ticker">Newkirk Yield Reserve</div></div>
+                <div class="asset-card" style="border-color: var(--bch);"><span class="label">wfBCH POOL</span><div class="val" id="wfbch-pool">150.0000</div><div class="ticker">Atomic Swap Liquidity</div></div>
+                <div class="asset-card" style="border-color: var(--gold);"><span class="label">FTC POOL</span><div class="val" id="ftc-pool">11,870,000</div><div class="ticker">Frostcoin Genesis</div></div>
+                <div class="asset-card" style="border-color: var(--fnr);"><span class="label">FNR POOL</span><div class="val" id="fnr-pool">4,412,100</div><div class="ticker">Reserve Liquidity</div></div>
+            </div>
+
+            <div class="dex-box">
+                <span class="label">Pay</span>
+                <select id="pay-select" class="swap-input" style="padding:10px; font-size:0.9rem;">
+                    <option value="wfbtc">wfBTC (Newkirk)</option>
+                    <option value="wfbch">wfBCH (Newkirk)</option>
+                    <option value="ftc">FTC (Frostcoin)</option>
+                </select>
+                <input type="number" id="pay-amt" class="swap-input" placeholder="0.00" oninput="calcSwap()">
+
+                <div style="text-align:center; padding:10px; color:var(--kane);">⇅</div>
+
+                <span class="label">Receive (Est. with 0.3% Fee)</span>
+                <select id="get-select" class="swap-input" style="padding:10px; font-size:0.9rem;">
+                    <option value="ftc">FTC (Frostcoin)</option>
+                    <option value="fnr">FNR (Reserve)</option>
+                    <option value="frst">FRST (Governance)</option>
+                </select>
+                <div id="est-out" style="font-size:1.5rem; font-weight:bold; color:var(--term); margin-top:10px;">0.0000</div>
+                <div id="price-impact" style="font-size:0.6rem; color:#444;">Price Impact: 0.00%</div>
+
+                <button class="btn-swap" onclick="swap()">Swap Assets</button>
+            </div>
+        </div>
+
+        <div class="footer" id="log">
+            <div>> DEX Kernel Initialized. Ready for Atomic Settlement.</div>
+            <div>> Liquidity provided by Newkirk Stratum Mining.</div>
+        </div>
+    </div>
+
+    <script>
+        // DEX RESERVES (x * y = k)
+        let pools = {
+            wfbtc: 10.5,
+            wfbch: 150.0,
+            ftc: 11870000,
+            fnr: 4412100,
+            frst: 157079.63
+        };
+
+        function calcSwap() {
+            const payAsset = document.getElementById('pay-select').value;
+            const getAsset = document.getElementById('get-select').value;
+            const payAmt = parseFloat(document.getElementById('pay-amt').value);
+            
+            if(!payAmt || payAmt <= 0) return clearEst();
+
+            const rIn = pools[payAsset];
+            const rOut = pools[getAsset];
+
+            // AMM Formula: dy = (y * dx) / (x + dx) [with 0.3% fee]
+            const fee = 0.003;
+            const amtInWithFee = payAmt * (1 - fee);
+            const amtOut = (rOut * amtInWithFee) / (rIn + amtInWithFee);
+            
+            const impact = (amtInWithFee / rIn) * 100;
+
+            document.getElementById('est-out').innerText = amtOut.toLocaleString(undefined, {maximumFractionDigits: 6});
+            document.getElementById('price-impact').innerText = `Price Impact: ${impact.toFixed(4)}%`;
+            if(impact > 5) document.getElementById('price-impact').style.color = "#ff3333";
+            else document.getElementById('price-impact').style.color = "#444";
+        }
+
+        function clearEst() {
+            document.getElementById('est-out').innerText = "0.0000";
+            document.getElementById('price-impact').innerText = "Price Impact: 0.00%";
+        }
+
+        function swap() {
+            const payAsset = document.getElementById('pay-select').value;
+            const getAsset = document.getElementById('get-select').value;
+            const payAmt = parseFloat(document.getElementById('pay-amt').value);
+            const amtOut = parseFloat(document.getElementById('est-out').innerText.replace(/,/g, ''));
+
+            if(!payAmt || payAmt <= 0) return alert("Enter amount.");
+
+            // Update Reserves
+            pools[payAsset] += payAmt;
+            pools[getAsset] -= amtOut;
+
+            logIt(`Swapped ${payAmt} ${payAsset.toUpperCase()} for ${amtOut.toFixed(4)} ${getAsset.toUpperCase()}`, "success");
+            updatePools();
+            calcSwap();
+        }
+
+        function updatePools() {
+            for(let key in pools) {
+                const el = document.getElementById(key+'-pool');
+                if(el) el.innerText = pools[key].toLocaleString();
+            }
+        }
+
+        function logIt(msg, type="") {
+            const d = document.createElement('div');
+            d.className = type;
+            d.innerText = `[${new Date().toLocaleTimeString()}] > ${msg}`;
+            const log = document.getElementById('log');
+            log.appendChild(d);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        updatePools();
+    </script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grayson's Wallet | v6.1</title>
+    <style>
+        :root { --bg: #000; --accent: #00ff41; --text: #fff; --panel: #111; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; user-select: none; }
+
+        /* SCREENS */
+        .screen { position: fixed; inset: 0; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+        .screen.active { display: flex; }
+
+        /* INPUTS */
+        .input-box { background: #111; border: 1px solid #333; color: #fff; padding: 15px; margin-bottom: 15px; width: 250px; text-align: center; font-family: inherit; font-size: 1rem; }
+        .input-box:focus { border-color: var(--accent); outline: none; }
+        
+        .pin-input { font-size: 1.5rem; letter-spacing: 5px; }
+
+        .btn { background: var(--accent); color: #000; border: none; padding: 15px 30px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 280px; margin-top: 10px; }
+        
+        /* APP HEADER */
+        .header { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; background: #0a0a0a; }
+        .user-badge { color: var(--accent); font-weight: bold; }
+        
+        /* ASSETS */
+        .content { padding: 20px; }
+        .asset-card { background: #111; border: 1px solid #333; padding: 15px; margin-bottom: 10px; border-left: 3px solid #ccc; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+
+    <div id="screen-setup" class="screen">
+        <h2 style="color:var(--accent)">INITIAL SETUP</h2>
+        <p style="color:#888; font-size:0.8rem; margin-bottom:20px;">CREATE YOUR IDENTITY</p>
+        
+        <input type="text" id="new-user" class="input-box" placeholder="username.frostchain">
+        <input type="number" id="new-pin" class="input-box pin-input" placeholder="SET 4-DIGIT PIN" oninput="if(this.value.length>4) this.value=this.value.slice(0,4)">
+        
+        <button class="btn" onclick="createAccount()">CREATE WALLET</button>
+    </div>
+
+    <div id="screen-login" class="screen">
+        <h2 style="color:var(--accent)">IDENTITY LOCK</h2>
+        <div id="welcome-msg" style="color:#888; margin-bottom:20px;">WELCOME BACK</div>
+        
+        <input type="password" id="login-pin" class="input-box pin-input" placeholder="ENTER PIN" maxlength="4">
+        <button class="btn" onclick="login()">UNLOCK</button>
+        
+        <div style="margin-top:20px; font-size:0.7rem; color:#555; cursor:pointer;" onclick="reset()">[ RESET WALLET ]</div>
+    </div>
+
+    <div id="screen-app" style="display:none;">
+        <div class="header">
+            <span id="app-username" class="user-badge">drfrost.frostchain</span>
+            <span style="font-size:0.7rem; border:1px solid #333; padding:3px 6px;">ONLINE</span>
+        </div>
+
+        <div class="content">
+            <div style="text-align:center; margin-bottom:30px;">
+                <div style="font-size:2rem; font-weight:bold;">$12.8M</div>
+                <div style="color:#666; font-size:0.8rem;">TOTAL ASSETS</div>
+            </div>
+
+            <div class="asset-card" style="border-left-color: #ff00ff;">
+                <span>FRST</span> <span>31,415,900</span>
+            </div>
+            <div class="asset-card" style="border-left-color: gold;">
+                <span>FTC</span> <span>3,100,000</span>
+            </div>
+            <div class="asset-card" style="border-left-color: #00d4ff;">
+                <span>FNR</span> <span>40,000</span>
+            </div>
+            
+            <button class="btn" style="width:100%; margin-top:20px; background:#222; color:#fff;" onclick="location.reload()">LOCK</button>
+        </div>
+    </div>
+
+    <script>
+        // INIT
+        const storedPin = localStorage.getItem('frost_pin');
+        const storedUser = localStorage.getItem('frost_user');
+
+        if (storedPin && storedUser) {
+            // RETURNING USER
+            document.getElementById('screen-login').classList.add('active');
+            document.getElementById('welcome-msg').innerText = "USER: " + storedUser;
+        } else {
+            // NEW USER
+            document.getElementById('screen-setup').classList.add('active');
+        }
+
+        // CREATE
+        function createAccount() {
+            const user = document.getElementById('new-user').value;
+            const pin = document.getElementById('new-pin').value;
+
+            if (!user.includes('.frostchain')) {
+                alert("USERNAME MUST END IN .frostchain");
+                return;
+            }
+            if (pin.length !== 4) {
+                alert("PIN MUST BE 4 DIGITS");
+                return;
+            }
+
+            localStorage.setItem('frost_user', user);
+            localStorage.setItem('frost_pin', pin);
+            
+            alert("IDENTITY SECURED.");
+            location.reload();
+        }
+
+        // LOGIN
+        function login() {
+            const input = document.getElementById('login-pin').value;
+            if (input === localStorage.getItem('frost_pin')) {
+                document.getElementById('screen-login').classList.remove('active');
+                document.getElementById('screen-app').style.display = 'block';
+                document.getElementById('app-username').innerText = localStorage.getItem('frost_user');
+            } else {
+                alert("INVALID PIN");
+            }
+        }
+
+        // RESET
+        function reset() {
+            if(confirm("WIPE DATA AND CREATE NEW IDENTITY?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

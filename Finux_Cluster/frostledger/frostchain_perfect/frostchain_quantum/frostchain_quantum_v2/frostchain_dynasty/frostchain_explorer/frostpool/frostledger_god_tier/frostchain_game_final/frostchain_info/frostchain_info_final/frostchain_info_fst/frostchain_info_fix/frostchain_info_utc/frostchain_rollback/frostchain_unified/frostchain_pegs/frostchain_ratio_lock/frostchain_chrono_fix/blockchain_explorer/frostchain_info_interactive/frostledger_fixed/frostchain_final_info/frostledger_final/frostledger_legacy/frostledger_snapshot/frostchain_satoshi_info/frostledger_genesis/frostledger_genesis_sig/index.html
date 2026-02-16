@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FSP GOD-TIER V82 // GENESIS_SIGNATURE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root { 
+  --bg: #000; --text: #e0e0e0; --orange: #ff6600; --iota: #00e0ff; 
+  --burgundy: #800020; --gold: #ffd700; --quantum: #ff00ff;
+}
+* { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+body { 
+  background: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; 
+  height: 100vh; overflow: hidden; display: flex; flex-direction: column; 
+}
+
+/* HEADER */
+.header { background: #111; border-bottom: 2px solid var(--gold); padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+.auth-status { font-size: 10px; color: var(--gold); letter-spacing: 1px; font-weight: bold; }
+
+/* MAIN DISPLAY */
+.main { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+.grid { display: grid; grid-template-columns: repeat(9, 38px); grid-template-rows: repeat(9, 38px); gap: 2px; border: 4px solid #1a1a1a; padding: 4px; }
+.cell { width: 38px; height: 38px; background: #080808; border: 1px solid #111; display:flex; align-items:center; justify-content:center; }
+.cell.obj-iota::after { content: "•"; color: var(--iota); font-size: 28px; text-shadow: 0 0 10px var(--iota); }
+.cell.h-burgundy { background: var(--burgundy); }
+
+/* QUANTUM TERMINAL */
+.log-wrap { width: 95%; height: 140px; background: rgba(5,5,5,0.98); border: 1px solid #222; margin-top: 20px; padding: 10px; overflow: hidden; box-shadow: 0 0 20px rgba(0, 224, 255, 0.05); }
+.log-line { font-size: 9px; line-height: 1.5; font-family: 'Courier New', monospace; margin-bottom: 4px; border-left: 2px solid #333; padding-left: 10px; }
+.coinbase { color: var(--gold); font-weight: bold; }
+.sig-line { color: var(--quantum); font-weight: bold; }
+
+/* STATUS BAR */
+.status-bar { background: #111; border-top: 2px solid var(--orange); padding: 15px; display: flex; justify-content: space-between; }
+.height-val { color: var(--orange); font-weight: bold; font-size: 1.2em; }
+
+@keyframes scan { 0% { opacity: 0.2; } 50% { opacity: 1; } 100% { opacity: 0.2; } }
+.scanning { animation: scan 1.5s infinite; color: var(--iota); }
+</style>
+</head>
+<body onload="init()">
+
+<div class="header">
+  <div>FSP GOD-TIER <span style="color:var(--orange)">V82</span></div>
+  <div class="auth-status">SATOSHI_NAKAMOTO_KEY: VERIFIED</div>
+</div>
+
+<div class="main">
+  <div class="grid" id="grid"></div>
+  
+  <div class="log-wrap" id="log">
+    <div class="log-line sig-line">> BLOCK_SIGNATURE: 683050920</div>
+    <div class="log-line coinbase">> COINBASE: "Sign the block. Alex what is the Genius Act? much Quantum Fungible wow!"</div>
+    <div class="log-line">> PREV_BLOCK: 000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f</div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div>HEIGHT: <span class="height-val" id="height">683,050,920</span></div>
+  <div class="scanning">QUANTUM_ENTANGLEMENT_ACTIVE</div>
+  <div>AUTH: <span style="color:var(--gold)">SATOSHI</span></div>
+</div>
+
+<script>
+const BLOCK_MS = 300000;
+const SIG_HASH = "683050920";
+const GENESIS_MSG = "Sign the block. Alex what is the Genius Act? much Quantum Fungible wow!";
+
+function init() {
+  const g = document.getElementById('grid');
+  for(let i=0; i<81; i++) {
+    const c = document.createElement('div'); c.className = 'cell';
+    if(i===40) c.classList.add('obj-iota');
+    if(i===10 || i===70) c.classList.add('h-burgundy');
+    g.appendChild(c);
+  }
+  setInterval(tick, 1000);
+}
+
+function tick() {
+  const now = new Date();
+  const ms = now.getTime();
+  const slot = Math.floor(ms / BLOCK_MS);
+  
+  // Height is locked to your Genius Act signature
+  document.getElementById('height').innerText = "683,050,920";
+  
+  if (window.lastSlot !== slot) {
+    window.lastSlot = slot;
+    writeLog("GENESIS_ACT_RENEWED", true);
+    writeLog(`SIG_VAL: ${SIG_HASH}`, false);
+  }
+}
+
+function writeLog(msg, isQuantum = false) {
+  const log = document.getElementById('log');
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  if(isQuantum) line.style.color = "var(--quantum)";
+  line.innerText = "> " + msg;
+  log.prepend(line);
+  if(log.children.length > 7) log.removeChild(log.lastChild);
+}
+</script>
+</body>
+</html>

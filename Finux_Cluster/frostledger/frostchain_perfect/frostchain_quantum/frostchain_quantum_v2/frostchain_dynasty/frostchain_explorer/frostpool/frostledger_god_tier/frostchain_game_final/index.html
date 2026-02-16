@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FROSTCHAIN MINER // CRYPTODOKU</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+:root {
+  --core: #00fbff;     /* FRST Cyan */
+  --fnr: #ff6600;      /* FNR Orange */
+  --fai: #ff0055;      /* FAI Red */
+  --drake: #9900ff;    /* Joey Bonez Purple */
+  --gold: #ffd700;     /* Satoshi Gold */
+  --bg: #000;
+  --glass: rgba(10, 20, 30, 0.95);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+
+body {
+  background: var(--bg);
+  color: var(--core);
+  font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* BACKGROUND MESH */
+body::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 251, 255, 0.05) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* UI LAYER */
+.ui-layer { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; padding: 10px; }
+
+/* HUD */
+.hud {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--glass); border-bottom: 2px solid var(--core);
+  padding: 10px; margin-bottom: 10px;
+}
+.stat-box { text-align: center; }
+.lbl { font-size: 9px; color: #666; letter-spacing: 1px; }
+.val { font-size: 14px; font-weight: bold; }
+.gold { color: var(--gold); text-shadow: 0 0 5px var(--gold); }
+
+/* GRID */
+.game-wrap { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+.grid {
+  display: grid; grid-template-columns: repeat(9, 10vw); grid-template-rows: repeat(9, 10vw);
+  max-width: 400px; max-height: 400px;
+  gap: 1px; background: rgba(0,20,20,0.8); padding: 2px;
+  border: 1px solid var(--core);
+  box-shadow: 0 0 30px rgba(0, 251, 255, 0.1);
+}
+@media (min-width: 500px) { .grid { grid-template-columns: repeat(9, 40px); grid-template-rows: repeat(9, 40px); } }
+
+.cell { background: rgba(0, 251, 255, 0.02); border: 1px solid rgba(0, 251, 255, 0.1); }
+.cell.filled {
+  background: var(--core); border-color: #fff;
+  box-shadow: 0 0 10px var(--core);
+}
+
+/* DRAKE MODE */
+body.drake-mode .grid { border-color: var(--drake); box-shadow: 0 0 50px var(--drake); }
+body.drake-mode .cell.filled { background: var(--drake); box-shadow: 0 0 20px var(--drake); }
+
+/* DOCK */
+.dock { display: flex; gap: 10px; justify-content: center; margin-top: 20px; height: 80px; width: 100%; }
+.piece {
+  width: 70px; height: 70px; border: 1px dashed rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.piece.selected { background: rgba(0,251,255,0.1); border: 1px solid var(--core); }
+.mini { width: 12px; height: 12px; background: var(--core); margin: 1px; }
+
+/* TERMINAL POPUP */
+.terminal {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 80%; max-width: 350px; background: rgba(0,0,0,0.95);
+  border: 2px solid var(--gold); padding: 20px;
+  font-family: 'Courier New', monospace; font-size: 11px;
+  color: var(--gold); z-index: 100; display: none; text-align: left;
+}
+
+/* CONTROLS */
+.ctrl-bar {
+  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px;
+  margin-top: auto; padding-top: 10px; border-top: 1px solid #222;
+}
+.btn {
+  background: #111; border: 1px solid #333; color: #666;
+  padding: 12px 0; font-family: 'Share Tech Mono'; font-size: 10px;
+  cursor: pointer; display: flex; flex-direction: column; align-items: center;
+}
+.btn.active { border-color: var(--fnr); color: var(--fnr); background: rgba(255,102,0,0.1); }
+.btn.ghost { border-color: var(--fai); color: var(--fai); background: rgba(255,0,85,0.1); }
+.btn.wallet { border-color: var(--gold); color: var(--gold); }
+
+/* FNR BAR */
+.hum-track { width: 100%; height: 4px; background: #222; margin-top: 5px; }
+.hum-fill { height: 100%; background: var(--fnr); width: 0%; transition: width 0.1s; }
+
+</style>
+</head>
+<body onload="boot()">
+
+<div class="ui-layer">
+  <div class="hud">
+    <div class="stat-box">
+      <div class="lbl">BLOCK_HEIGHT</div>
+      <div class="val gold" id="block-h">937,550</div>
+    </div>
+    <div class="stat-box">
+      <div class="lbl">QUANTUM_FLUX</div>
+      <div class="val"><span id="flux">1.0</span>φ</div>
+    </div>
+    <div class="stat-box">
+      <div class="lbl">REWARD_POOL</div>
+      <div class="val"><span id="frst">0.0</span> FRST</div>
+    </div>
+  </div>
+
+  <div class="game-wrap">
+    <div class="grid" id="grid"></div>
+    <div class="terminal" id="term">
+      <div style="border-bottom:1px solid #444; margin-bottom:5px;">>> SATOSHI_LIQUIDITY_INJECT</div>
+      <div>HASH: <span id="thash" style="color:#fff">...</span></div>
+      <div style="color:var(--core)">REWARD: +13.37 FTC</div>
+      <div style="color:#666; font-size:9px; margin-top:5px;">CONFIRMED_ON_CHAIN</div>
+    </div>
+  </div>
+
+  <div class="dock" id="dock"></div>
+  <div class="hum-track"><div class="hum-fill" id="hum"></div></div>
+
+  <div class="ctrl-bar">
+    <button class="btn active" id="btn-fnr" onclick="toggleFNR()">
+      <span>FNR HUM</span><span>● ON</span>
+    </button>
+    <button class="btn" id="btn-fai" onclick="toggleFAI()">
+      <span>GHOST</span><span>○ OFF</span>
+    </button>
+    <button class="btn" onclick="mulligan()">
+      <span>MULLIGAN</span><span>↺</span>
+    </button>
+    <button class="btn wallet" onclick="wallet()">
+      <span>GRAYSON</span><span>⇄</span>
+    </button>
+  </div>
+</div>
+
+<script>
+// CORE ENGINE
+const CONFIG = { FRST: 314.15, FTC: 13.37 };
+let state = {
+  grid: Array(81).fill(0),
+  frst: 0, flux: 1.0, block: 937550,
+  fnrOn: true, faiOn: false
+};
+let pieces = [];
+let sel = null;
+
+function boot() { renderGrid(); spawn(); loop(); }
+
+function loop() {
+  const t = Date.now()/500;
+  state.flux = 1.0 + Math.sin(t)*0.5;
+  document.getElementById('flux').innerText = state.flux.toFixed(2);
+  document.getElementById('hum').style.width = ((state.flux-0.5)*100)+'%';
+  
+  if(Math.random() > 0.995) blockEvent();
+  requestAnimationFrame(loop);
+}
+
+function renderGrid() {
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  state.grid.forEach((v,i) => {
+    let c = document.createElement('div');
+    c.className = v ? 'cell filled' : 'cell';
+    c.onclick = () => place(i);
+    g.appendChild(c);
+  });
+}
+
+function spawn() {
+  const d = document.getElementById('dock');
+  d.innerHTML = '';
+  pieces = [];
+  const sh = [[[1]], [[1,1]], [[1],[1]], [[1,1],[1,1]], [[1,0],[1,0],[1,1]]];
+  for(let i=0; i<3; i++) {
+    let s = sh[Math.floor(Math.random()*sh.length)];
+    pieces.push({shape:s, used:false});
+    let b = document.createElement('div');
+    b.className = 'piece';
+    b.onclick = (e) => select(e,i);
+    let m = document.createElement('div');
+    m.style.display='grid'; m.style.gridTemplateColumns=`repeat(${s[0].length},12px)`;
+    s.forEach(r => r.forEach(v => {
+      let div = document.createElement('div');
+      div.className = v ? 'mini' : 'mini empty';
+      if(!v) div.style.background='transparent';
+      m.appendChild(div);
+    }));
+    b.appendChild(m); d.appendChild(b);
+  }
+}
+
+function select(e, i) {
+  if(pieces[i].used) return;
+  document.querySelectorAll('.piece').forEach(p => p.classList.remove('selected'));
+  e.currentTarget.classList.add('selected');
+  sel = pieces[i];
+}
+
+function place(i) {
+  if(!sel) return;
+  state.grid[i] = 1;
+  let mult = state.faiOn ? 0.45 : 1.0;
+  
+  // JOEY BONEZ DRAKE MODE
+  if(Math.random() > 0.8) {
+    document.body.classList.add('drake-mode');
+    setTimeout(() => document.body.classList.remove('drake-mode'), 500);
+    mult *= 2;
+  }
+
+  state.frst += CONFIG.FRST * mult;
+  document.getElementById('frst').innerText = state.frst.toFixed(1);
+  renderGrid();
+  sel.used = true;
+  sel = null;
+  document.querySelectorAll('.piece').forEach(p => p.classList.remove('selected'));
+  setTimeout(() => { state.grid[i] = 0; renderGrid(); }, 500);
+}
+
+function blockEvent() {
+  state.block++;
+  document.getElementById('block-h').innerText = state.block.toLocaleString();
+  const term = document.getElementById('term');
+  document.getElementById('thash').innerText = '0x' + Math.random().toString(16).substr(2,8);
+  term.style.display = 'block';
+  setTimeout(() => term.style.display='none', 2000);
+}
+
+function toggleFNR() {
+  state.fnrOn = !state.fnrOn;
+  document.getElementById('btn-fnr').className = state.fnrOn ? 'btn active' : 'btn';
+}
+function toggleFAI() {
+  state.faiOn = !state.faiOn;
+  document.getElementById('btn-fai').className = state.faiOn ? 'btn ghost' : 'btn';
+}
+function mulligan() { spawn(); }
+function wallet() { alert(">> GRAYSON BRIDGE: ACTIVE"); }
+
+</script>
+</body>
+</html>

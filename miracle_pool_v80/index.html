@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Pool | Quantum Aggregator</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --xmr: #ff6600; --btc: #f7931a; --bch: #8dc351; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        /* TANGLE BG */
+        #tangle-canvas { position: fixed; inset: 0; z-index: 1; opacity: 0.4; }
+        
+        /* UI GRID */
+        #ui-layer { position: relative; z-index: 10; display: grid; grid-template-rows: 60px 1fr 70px; height: 100vh; pointer-events: none; }
+        #ui-layer * { pointer-events: auto; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(0,255,65,0.3); background: rgba(0,0,0,0.95); }
+        .main { display: grid; grid-template-columns: 320px 1fr 340px; gap: 20px; padding: 20px; overflow: hidden; }
+        .panel { background: rgba(0,0,0,0.9); border: 1px solid #333; padding: 15px; display: flex; flex-direction: column; border-radius: 4px; overflow-y: auto; max-height: 100%; }
+
+        /* POOL STATS */
+        .pool-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #222; font-size: 0.7rem; }
+        .pool-tag { font-weight: bold; padding: 2px 6px; border-radius: 3px; color: #000; font-size: 0.6rem; }
+        .btc { background: var(--btc); } .bch { background: var(--bch); } .xmr { background: var(--xmr); }
+
+        /* REWARD CAPSULE */
+        .cap-box { border: 2px solid var(--gold); padding: 15px; text-align: center; margin-bottom: 20px; background: rgba(255, 215, 0, 0.05); }
+        .cap-val { font-size: 1.4rem; color: #fff; font-weight: bold; }
+        .cap-lbl { font-size: 0.6rem; color: #888; letter-spacing: 1px; margin-top: 5px; }
+
+        /* CONTROLS */
+        .btn-mine { width: 100%; padding: 15px; background: var(--term); color: #000; font-weight: bold; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.9rem; margin-top: auto; }
+        .btn-mine:hover { background: #33ff66; }
+        .btn-mine.active { background: #ff3333; color: #fff; }
+
+        /* LOG */
+        .log-row { display: flex; justify-content: space-between; font-size: 0.6rem; border-bottom: 1px solid #222; padding: 4px 0; color: #666; }
+        .success { color: var(--term); }
+
+        .footer { background: rgba(0,0,0,0.95); border-top: 1px solid #333; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+        .lbl { font-size: 0.5rem; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="header">
+            <div style="font-weight:bold; letter-spacing:2px; font-size:1.1rem;">MIRACLE_POOL // <span style="color:var(--cyan)">AGGREGATOR</span></div>
+            <div style="text-align:right;">
+                <div class="lbl">POOL_TARGET</div>
+                <div style="color:var(--gold); font-size:0.9rem;">13.37 FTC / 2.5 FNR (MAX)</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="lbl">CONNECTED_QUANTUM_MINERS</div>
+                <div class="pool-row">
+                    <span><span class="pool-tag btc">BTC</span> Worker_01</span>
+                    <span id="btc-hash">0.00 PH/s</span>
+                </div>
+                <div class="pool-row">
+                    <span><span class="pool-tag bch">BCH</span> Worker_02</span>
+                    <span id="bch-hash">0.00 PH/s</span>
+                </div>
+                <div class="pool-row">
+                    <span><span class="pool-tag xmr">XMR</span> Worker_03</span>
+                    <span id="xmr-hash">0.00 MH/s</span>
+                </div>
+                <div class="pool-row" style="border-top:1px solid #444; margin-top:10px; padding-top:10px;">
+                    <span style="color:var(--cyan)">TOTAL_POOL_HASHRATE</span>
+                    <span id="total-hash" style="color:#fff; font-weight:bold;">0.00 EH/s</span>
+                </div>
+
+                <div class="lbl" style="margin-top:20px;">FROSTCHAT_POOL_RELAY</div>
+                <div id="chat-box" style="height:150px; overflow-y:auto; border:1px solid #222; padding:5px; margin-bottom:5px; font-size:0.6rem;">
+                    <div style="color:#666;">> Pool Connected. Waiting for cycle...</div>
+                </div>
+                <input type="text" id="chat-in" placeholder="Message Pool..." style="background:#111; border:1px solid #333; color:#fff; width:100%; padding:8px;" onkeypress="sendChat(event)">
+            </div>
+
+            <div></div>
+
+            <div class="panel">
+                <div class="lbl">PAYOUT_HANDLE (.frostchain)</div>
+                <input type="text" id="alias" placeholder="Enter Your Handle" style="background:#000; border:1px solid #333; color:var(--cyan); width:100%; padding:10px; margin-bottom:20px; font-family:inherit; font-size:0.9rem;">
+
+                <div class="cap-box">
+                    <div class="cap-val">13.37 FTC</div>
+                    <div class="cap-lbl">HARD CAP REWARD</div>
+                </div>
+                <div class="cap-box" style="border-color:var(--xmr); background:rgba(255,100,0,0.05);">
+                    <div class="cap-val">2.50 FNR</div>
+                    <div class="cap-lbl">HARD CAP REWARD</div>
+                </div>
+
+                <div class="lbl">DISTRIBUTION_LOG</div>
+                <div id="log-box" style="flex-grow:1; overflow-y:auto; font-size:0.6rem; color:#666;"></div>
+
+                <button id="mine-btn" class="btn-mine" onclick="togglePool()">START POOL CYCLE</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div style="font-size:0.6rem; color:#666;">IOTA_TANGLE_HD // RESOURCE_POOLING_ACTIVE // CAPPED_EMISSION</div>
+            <div style="text-align:right;">
+                <div class="lbl">BLOCK_TIMER (300s)</div>
+                <div style="font-size:2rem; color:#fff; font-weight:bold;" id="timer">300</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isMining = false;
+        let timerInterval = null;
+        let timeRemaining = 300;
+        
+        // VISUALIZER SETUP
+        const canvas = document.getElementById('tangle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initTangle() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<60; i++) particles.push({
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+                vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3, size: Math.random()*2
+            });
+        }
+
+        function drawTangle() {
+            if(!isMining) return;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1;
+                if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                
+                particles.slice(i+1).forEach(p2 => {
+                    if(Math.hypot(p.x-p2.x, p.y-p2.y) < 100) {
+                        ctx.strokeStyle = 'rgba(0, 255, 65, 0.15)';
+                        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+                    }
+                });
+                ctx.fillStyle = '#00ff41'; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(drawTangle);
+        }
+
+        // POOL LOGIC
+        function togglePool() {
+            isMining = !isMining;
+            const btn = document.getElementById('mine-btn');
+            
+            if(isMining) {
+                btn.innerText = "STOP POOL"; btn.classList.add('active');
+                initTangle(); drawTangle(); startTimer();
+                updateHashrates();
+            } else {
+                btn.innerText = "START POOL CYCLE"; btn.classList.remove('active');
+                stopTimer();
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                resetHashrates();
+            }
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeRemaining = 300;
+            document.getElementById('timer').innerText = timeRemaining;
+            
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                document.getElementById('timer').innerText = timeRemaining;
+                
+                // HASHRATE FLUCTUATION SIM
+                if(timeRemaining % 5 === 0) updateHashrates();
+
+                if(timeRemaining <= 0) {
+                    distributeReward();
+                    timeRemaining = 300;
+                }
+            }, 1000); // 1 Second Real Time
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('timer').innerText = "300";
+        }
+
+        function updateHashrates() {
+            document.getElementById('btc-hash').innerText = (40 + Math.random()*5).toFixed(2) + " PH/s";
+            document.getElementById('bch-hash').innerText = (12 + Math.random()*2).toFixed(2) + " PH/s";
+            document.getElementById('xmr-hash').innerText = (300 + Math.random()*50).toFixed(2) + " MH/s";
+            document.getElementById('total-hash').innerText = (52 + Math.random()*7).toFixed(2) + " PH/s (Aggregated)";
+        }
+
+        function resetHashrates() {
+            document.getElementById('btc-hash').innerText = "0.00 PH/s";
+            document.getElementById('bch-hash').innerText = "0.00 PH/s";
+            document.getElementById('xmr-hash').innerText = "0.00 MH/s";
+            document.getElementById('total-hash').innerText = "0.00 EH/s";
+        }
+
+        function distributeReward() {
+            const alias = document.getElementById('alias').value || "Unknown_Pool_Member";
+            const log = document.getElementById('log-box');
+            
+            // STRICT HARD CAP ENFORCEMENT
+            // Even if hashrate is massive, reward is clamped
+            const ftcReward = 13.37; 
+            const fnrReward = 2.50;
+
+            const row = document.createElement('div');
+            row.className = 'log-row';
+            row.innerHTML = `<span class="success">>> BLOCK CLEARED</span> <span>${alias}: +${ftcReward} FTC / +${fnrReward} FNR</span>`;
+            log.prepend(row);
+        }
+        
+        // CHAT
+        function sendChat(e) {
+            if(e.key === 'Enter') {
+                const txt = document.getElementById('chat-in').value;
+                const box = document.getElementById('chat-box');
+                box.innerHTML += `<div style="margin-bottom:2px;"><span style="color:var(--gold)">[User]</span>: ${txt}</div>`;
+                document.getElementById('chat-in').value = '';
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+        
+        window.onresize = initTangle;
+    </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FROSTSCAN | DIGITAL CERTIFICATES</title>
+<style>
+  :root { 
+    --bg: #050505; --cyan: #00ffff; --iota: #00ff41; --gold: #ffd700; 
+    --panel: #0a0a0a; --border: #222; --plat: #e5e4e2; 
+  }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; margin: 0; padding: 0; }
+  .sidebar { width: 340px; height: 100vh; background: var(--panel); border-right: 1px solid var(--border); position: fixed; padding: 15px; }
+  .main { margin-left: 360px; padding: 20px; }
+  
+  .brand { color: var(--cyan); font-size: 1.5em; font-weight: 900; text-shadow: 0 0 10px var(--cyan); margin-bottom: 25px; }
+  
+  /* CERTIFICATE CARD */
+  .cert-card { 
+    border: 2px dashed var(--plat); padding: 15px; border-radius: 12px; 
+    background: linear-gradient(135deg, rgba(229,228,226,0.1), transparent); 
+    margin-bottom: 25px; position: relative; 
+  }
+  .cert-header { font-size: 0.6em; color: var(--plat); font-weight: bold; letter-spacing: 2px; }
+  .cert-val { font-size: 1.4em; font-weight: 900; color: #fff; margin: 10px 0; }
+  .cert-status { font-size: 0.6em; color: var(--iota); font-weight: bold; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+  .card { background: var(--panel); border: 1px solid var(--border); padding: 15px; }
+  .card h3 { font-size: 0.6em; color: #666; margin: 0; }
+  .card .v { font-size: 1.1em; font-weight: bold; margin-top: 5px; }
+
+  /* LOGS */
+  #terminal { background: #000; border: 1px solid #222; padding: 10px; height: 150px; font-size: 0.65em; color: var(--cyan); overflow-y: hidden; }
+  .log-entry { border-left: 2px solid var(--plat); padding-left: 8px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="brand">FROSTSCAN v310</div>
+  
+  <div class="cert-card">
+    <div class="cert-header">PLATINUM CERTIFICATE #001</div>
+    <div class="cert-val">133.24 PLAT</div>
+    <div style="font-size:0.5em; color:#888;">COLLATERAL: 1,000.00 FTC</div>
+    <div style="font-size:0.7em; color:var(--gold); margin: 5px 0;">VALUE: $283,000.00</div>
+    <div class="cert-status">STATUS: SECURED IN DIGITAL VAULT</div>
+  </div>
+
+  <div style="font-size:0.6em; color:var(--iota); border:1px solid #333; padding:10px;">
+    AUTHORITY: drfrost.frostchain<br>
+    GENESIS STAKE: 13,370,000 FTC
+  </div>
+</div>
+
+<div class="main">
+  <div class="stats-grid">
+    <div class="card" style="border-top: 2px solid var(--cyan);"><h3>FTC SPOT</h3><div class="v">$283.00</div></div>
+    <div class="card" style="border-top: 2px solid var(--plat);"><h3>PLAT VALUE (CERT)</h3><div class="v">$2,123.98</div></div>
+    <div class="card" style="border-top: 2px solid var(--gold);"><h3>TREASURY VALUE</h3><div class="v">$283,000.00</div></div>
+  </div>
+
+  <div id="terminal">
+    <div class="log-entry">> INITIALIZING CERTIFICATE ISSUANCE...</div>
+    <div class="log-entry">> 1,000 FTC LOCKED IN PROTOCOL VAULT.</div>
+    <div class="log-entry">> CERTIFICATE #001 SIGNED BY drfrost.frostchain.</div>
+    <div class="log-entry">> PARITY VERIFIED: $283,000 USD EQUIVALENT.</div>
+    <div class="log-entry">> TANGLE SETTLEMENT CONFIRMED.</div>
+  </div>
+
+  <div style="height:300px; margin-top:20px; background:var(--panel); border:1px solid var(--border);">
+    <canvas id="tangle" style="width:100%; height:100%;"></canvas>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('tangle');
+const ctx = canvas.getContext('2d');
+function resize() { canvas.width=canvas.offsetWidth; canvas.height=canvas.offsetHeight; }
+window.onresize=resize; resize();
+
+let nodes = [];
+function loop() {
+  ctx.fillStyle='rgba(5,5,5,0.2)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  if(Math.random()>0.9) nodes.push({x:canvas.width, y:Math.random()*canvas.height, vx:-(2+Math.random()*3)});
+  nodes.forEach((n,i) => {
+    n.x += n.vx;
+    ctx.fillStyle = (Math.random() > 0.5) ? '#00ffff' : '#e5e4e2';
+    ctx.beginPath(); ctx.arc(n.x, n.y, 2, 0, Math.PI*2); ctx.fill();
+    if(n.x < -10) nodes.splice(i,1);
+  });
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

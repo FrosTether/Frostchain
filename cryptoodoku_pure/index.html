@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cryptodoku | Independent Node</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --cyan: #00ffff; --sol: #9945ff; --err: #ff3333; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #tangle-bg { position: fixed; inset: 0; z-index: 1; opacity: 0.15; pointer-events: none; }
+        
+        #app { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; position: relative; z-index: 10; padding: 20px; box-sizing: border-box;
+        }
+
+        .header { 
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 60px; border-bottom: 2px solid var(--gold);
+            display: flex; justify-content: space-between; align-items: center; padding: 0 30px;
+            background: #000;
+        }
+
+        /* GAME BOARD */
+        .doku-container {
+            width: 100%; max-width: 500px;
+            background: #0a0a0a; border: 1px solid #333; padding: 20px;
+            position: relative;
+        }
+        
+        .grid {
+            display: grid; grid-template-columns: repeat(9, 1fr); gap: 2px;
+            background: #444; border: 2px solid #666;
+            aspect-ratio: 1;
+        }
+
+        .cell {
+            background: #000; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: bold;
+            transition: 0.1s;
+        }
+        
+        /* PHASES */
+        .cell.writing { color: var(--sol); background: #1a0520; }
+        .cell.solved { color: var(--term); }
+        .grid.locked { opacity: 0.3; pointer-events: none; }
+
+        /* HUD */
+        .hud { width: 100%; max-width: 500px; display: flex; justify-content: space-between; margin-top: 15px; font-size: 0.8rem; }
+        .phase-lbl { font-weight: bold; text-transform: uppercase; }
+
+        /* OVERLAYS */
+        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 50; text-align: center; }
+        
+        .big-timer { font-size: 4rem; color: #fff; font-weight: bold; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .sync-msg { font-size: 2.5rem; color: var(--gold); text-shadow: 0 0 30px var(--gold); animation: pulse 0.5s infinite; }
+        
+        @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.02);} 100%{transform:scale(1);} }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-bg"></canvas>
+
+    <div class="header">
+        <div>CRYPTODOKU <span style="color:var(--gold)">v2.0</span></div>
+        <div style="text-align:right;">
+            <div style="font-size:0.6rem; color:#888;">BLOCK REWARD</div>
+            <div style="color:var(--gold); font-weight:bold;">78,539.81 FRST</div>
+        </div>
+    </div>
+
+    <div id="app">
+        
+        <div class="doku-container">
+            <div id="write-overlay" class="overlay" style="display:none;">
+                <div style="color:var(--sol); font-size:1.5rem; margin-bottom:10px;">WRITING PHASE</div>
+                <div style="font-size:0.8rem; color:#ccc;">MINING ENTROPY TO BOARD</div>
+                <div style="font-size:3rem; margin:20px 0; font-family:'Courier New';" id="mining-hash">0x8F...</div>
+                <div style="font-size:0.7rem; color:#666;">PLAYABLE IN: <span id="unlock-timer">145s</span></div>
+            </div>
+
+            <div class="grid" id="grid"></div>
+        </div>
+
+        <div class="hud">
+            <div>
+                <div style="color:#666;">STATUS</div>
+                <div class="phase-lbl" id="status-text" style="color:var(--sol)">MINING...</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="color:#666;">GLOBAL CLOCK</div>
+                <div style="color:#fff; font-weight:bold; font-size:1.2rem;" id="timer">0</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="color:#666;">NEXT MINT</div>
+                <div style="color:var(--gold);" id="sync-cd">300s</div>
+            </div>
+        </div>
+
+        <div style="margin-top:20px; font-size:0.7rem; color:#444; max-width:500px; text-align:center;">
+            157,079.63 FRST TOTAL POOL / 2 = <span style="color:#fff">78,539.81 FRST</span> PER GAME
+            <br>PEG: 50,000 DOGE / 5 MIN
+        </div>
+
+    </div>
+
+    <div id="sync-screen" style="position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:100; display:none; align-items:center; justify-content:center; flex-direction:column;">
+        <div class="sync-msg">TANGLE SYNC</div>
+        <div style="color:var(--cyan); margin-top:20px; letter-spacing:4px;">MINTING REWARDS...</div>
+        <div style="color:#fff; font-size:2rem; margin-top:10px;">78,539.81 FRST</div>
+    </div>
+
+    <script>
+        const CYCLE = 300;
+        let time = 0;
+        
+        // Init Grid
+        const grid = document.getElementById('grid');
+        for(let i=0; i<81; i++){
+            let c = document.createElement('div');
+            c.className = 'cell';
+            grid.appendChild(c);
+        }
+
+        // Tangle BG
+        const cvs = document.getElementById('tangle-bg');
+        const ctx = cvs.getContext('2d');
+        cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+        let nodes = Array(40).fill().map(()=>({x:Math.random()*cvs.width, y:Math.random()*cvs.height, vx:(Math.random()-.5), vy:(Math.random()-.5)}));
+        
+        function drawTangle(){
+            ctx.clearRect(0,0,cvs.width,cvs.height);
+            nodes.forEach(n=>{
+                n.x+=n.vx; n.y+=n.vy;
+                if(n.x<0||n.x>cvs.width)n.vx*=-1; if(n.y<0||n.y>cvs.height)n.vy*=-1;
+                nodes.forEach(n2=>{
+                    let d = Math.hypot(n.x-n2.x, n.y-n2.y);
+                    if(d<150){
+                        ctx.strokeStyle = time >= 296 ? '#ffd700' : '#00ff41';
+                        ctx.lineWidth = time >= 296 ? 2 : 1;
+                        ctx.globalAlpha = 1 - d/150;
+                        ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                    }
+                });
+            });
+            requestAnimationFrame(drawTangle);
+        }
+        drawTangle();
+
+        // LOGIC LOOP
+        setInterval(() => {
+            time++;
+            if(time > CYCLE) time = 0;
+
+            document.getElementById('timer').innerText = time;
+            document.getElementById('sync-cd').innerText = (300 - time) + "s";
+            
+            // PHASE 1: WRITE (0-145)
+            if(time <= 145) {
+                document.getElementById('write-overlay').style.display = 'flex';
+                document.getElementById('status-text').innerText = "MINING (WRITING)";
+                document.getElementById('status-text').style.color = "var(--sol)";
+                document.getElementById('unlock-timer').innerText = (145 - time) + "s";
+                document.getElementById('grid').classList.add('locked');
+                
+                // Writing Animation (Simulating Mining)
+                let r = Math.floor(Math.random()*81);
+                let cells = document.querySelectorAll('.cell');
+                cells[r].innerText = Math.floor(Math.random()*9)+1;
+                cells[r].classList.add('writing');
+                document.getElementById('mining-hash').innerText = "0x" + Math.random().toString(16).substr(2,8).toUpperCase();
+                
+                setTimeout(()=>cells[r].classList.remove('writing'), 100);
+            }
+
+            // PHASE 2: SOLVE (146-296)
+            else if(time > 145 && time <= 296) {
+                document.getElementById('write-overlay').style.display = 'none';
+                document.getElementById('status-text').innerText = "PLAYABLE (SOLVE)";
+                document.getElementById('status-text').style.color = "var(--term)";
+                document.getElementById('grid').classList.remove('locked');
+            }
+
+            // PHASE 3: SYNC (296-300)
+            else if(time > 296) {
+                document.getElementById('sync-screen').style.display = 'flex';
+            }
+
+            if(time === 0) {
+                 document.getElementById('sync-screen').style.display = 'none';
+                 // Reset board for next block
+                 document.querySelectorAll('.cell').forEach(c => c.innerText = "");
+            }
+
+        }, 1000);
+
+    </script>
+</body>
+</html>

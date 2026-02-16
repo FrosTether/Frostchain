@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FrostChain | Admin Console</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --panel: #111; --warn: #ff0055; }
+        body { background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; padding: 20px; max-width: 800px; margin: 0 auto; }
+        
+        .header { border-bottom: 2px solid var(--term); padding-bottom: 10px; margin-bottom: 30px; display: flex; justify-content: space-between; }
+        .box { border: 1px solid #333; background: #050505; padding: 20px; margin-bottom: 20px; }
+        .box h3 { margin-top: 0; color: #fff; border-bottom: 1px dashed #333; padding-bottom: 10px; }
+        
+        input { background: #111; border: 1px solid #444; color: #fff; padding: 10px; width: 100%; box-sizing: border-box; font-family: inherit; margin-bottom: 10px; }
+        
+        button { background: #222; border: 1px solid var(--term); color: var(--term); padding: 10px 20px; cursor: pointer; font-weight: bold; text-transform: uppercase; margin-right: 10px; }
+        button:hover { background: var(--term); color: #000; }
+        button.danger { border-color: var(--warn); color: var(--warn); }
+        button.danger:hover { background: var(--warn); color: #000; }
+
+        .log { height: 150px; overflow-y: auto; background: #000; border: 1px solid #333; padding: 10px; font-size: 0.8rem; color: #888; }
+        .log div { margin-bottom: 5px; }
+        .success { color: var(--term); }
+        .warn { color: var(--warn); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div style="font-size:1.5rem; font-weight:bold;">FROST ADMIN</div>
+        <div>STATUS: <span style="color:var(--term)">SUPERUSER</span></div>
+    </div>
+
+    <div class="box">
+        <h3>TRANSACTION AUTHORIZER</h3>
+        <div style="font-size:0.8rem; margin-bottom:10px;">PENDING QUEUE: 0</div>
+        <input type="text" id="tx-hash" placeholder="Paste TX Hash or Signature...">
+        <button onclick="authorize()">AUTHORIZE TX</button>
+        <button class="danger" onclick="reject()">REJECT</button>
+    </div>
+
+    <div class="box">
+        <h3>AIRDROP DEPLOYMENT</h3>
+        <p style="font-size:0.8rem; color:#aaa;">TARGET: studer_boys.frostchain (Multi-Sig)</p>
+        
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <div style="flex:1; border:1px solid #333; padding:10px;">
+                <div style="font-size:1.5rem;">200,000</div>
+                <div style="font-size:0.7rem; color:var(--term);">FTC (Frost Token)</div>
+            </div>
+            <div style="flex:1; border:1px solid #333; padding:10px;">
+                <div style="font-size:1.5rem;">10,000</div>
+                <div style="font-size:0.7rem; color:#00d4ff;">FNR (Frost Node)</div>
+            </div>
+        </div>
+
+        <button onclick="executeAirdrop()">EXECUTE AIRDROP</button>
+    </div>
+
+    <div class="box">
+        <h3>SYSTEM LOG</h3>
+        <div class="log" id="sys-log">
+            <div>> SYSTEM READY.</div>
+            <div>> CONNECTED TO GRAYSON API.</div>
+        </div>
+    </div>
+
+    <script>
+        function log(msg, type="normal") {
+            const box = document.getElementById('sys-log');
+            const div = document.createElement('div');
+            div.innerText = "> " + msg;
+            if(type === 'success') div.className = 'success';
+            if(type === 'warn') div.className = 'warn';
+            box.prepend(div);
+        }
+
+        function authorize() {
+            const hash = document.getElementById('tx-hash').value;
+            if(hash.length > 10) {
+                log("VALIDATING SIGNATURE...", "normal");
+                setTimeout(() => {
+                    log("TX AUTHORIZED: " + hash.substring(0, 10) + "...", "success");
+                    document.getElementById('tx-hash').value = "";
+                }, 800);
+            } else {
+                log("ERROR: INVALID HASH", "warn");
+            }
+        }
+
+        function reject() {
+            log("TX REJECTED BY ADMIN.", "warn");
+            document.getElementById('tx-hash').value = "";
+        }
+
+        function executeAirdrop() {
+            if(confirm("CONFIRM AIRDROP TO STUDER BOYS?")) {
+                log("INITIATING AIRDROP PROTOCOL...", "normal");
+                setTimeout(() => log("MINTING 200,000 FTC...", "normal"), 500);
+                setTimeout(() => log("MINTING 10,000 FNR...", "normal"), 1000);
+                setTimeout(() => log("TRANSFER COMPLETE. TXID: 0xStuder...777", "success"), 2000);
+            }
+        }
+    </script>
+</body>
+</html>

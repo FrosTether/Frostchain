@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cryptodoku | FRST v2.2</title>
+    <style>
+        :root { --bg: #050005; --frst: #ff00ff; --glass: rgba(255, 0, 255, 0.1); --text: #f0f; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #app { 
+            display: flex; flex-direction: column; 
+            height: 100vh; padding: 20px; box-sizing: border-box; 
+            max-width: 600px; margin: 0 auto;
+        }
+
+        .header { 
+            border-bottom: 2px solid var(--frst);
+            padding-bottom: 15px; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* THE BOARD */
+        .board-wrap {
+            position: relative;
+            background: rgba(20, 0, 20, 0.8);
+            border: 1px solid var(--frst);
+            padding: 5px;
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.15);
+        }
+
+        .grid {
+            display: grid; grid-template-columns: repeat(9, 1fr); gap: 2px;
+            background: var(--frst); border: 2px solid var(--frst);
+            aspect-ratio: 1;
+        }
+
+        .cell {
+            background: #000; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; font-weight: bold;
+        }
+        
+        .cell.mining { background: #300030; color: var(--frst); }
+        .cell.solved { background: #000; color: #fff; }
+
+        /* FRST LOG (Replaces the Yellow Box) */
+        .frst-log {
+            margin-top: 20px;
+            border: 1px solid var(--frst);
+            background: #000;
+            padding: 15px;
+            font-size: 0.7rem;
+            color: #fff;
+            min-height: 80px;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+
+        .log-line { margin-bottom: 5px; }
+        .log-val { color: var(--frst); font-weight: bold; font-size: 1.1rem; }
+
+        /* STATS BAR */
+        .stats { display: flex; justify-content: space-between; margin-top: 20px; font-size: 0.8rem; }
+        .timer-big { font-size: 2rem; color: #fff; font-weight: bold; }
+
+        /* OVERLAY FOR SYNC */
+        #sync-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100;
+            display: none; align-items: center; justify-content: center; flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sync-overlay">
+        <div style="font-size:3rem; color:var(--frst); font-weight:bold; text-shadow:0 0 30px var(--frst);">MINTING FRST</div>
+        <div style="color:#fff; margin-top:10px; letter-spacing:2px;">WRITING 78,539.81 TOKENS</div>
+    </div>
+
+    <div id="app">
+        <div class="header">
+            <div style="font-weight:bold; font-size:1.2rem;">CRYPTODOKU</div>
+            <div style="text-align:right;">
+                <div style="font-size:0.6rem; color:#888;">REWARD POOL</div>
+                <div style="color:var(--frst); font-weight:bold;">78,539.81 FRST</div>
+            </div>
+        </div>
+
+        <div class="board-wrap">
+            <div class="grid" id="grid"></div>
+        </div>
+
+        <div class="frst-log" id="console">
+            <div class="log-line">> SYSTEM READY.</div>
+            <div class="log-line">> WAITING FOR CYCLE...</div>
+        </div>
+
+        <div class="stats">
+            <div>
+                <div style="color:#666;">PHASE</div>
+                <div id="phase-lbl" style="color:var(--frst); font-weight:bold;">INIT</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="color:#666;">CYCLE CLOCK</div>
+                <div class="timer-big" id="timer">0</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="color:#666;">NEXT MINT</div>
+                <div id="mint-cd">300s</div>
+            </div>
+        </div>
+        
+        <div style="margin-top:20px; text-align:center; font-size:0.6rem; color:#444;">
+            FROST GOVERNANCE NODE v2.2
+        </div>
+    </div>
+
+    <script>
+        const CYCLE = 300;
+        let time = 0;
+        
+        // BUILD GRID
+        const grid = document.getElementById('grid');
+        for(let i=0; i<81; i++) {
+            let d = document.createElement('div');
+            d.className = 'cell';
+            grid.appendChild(d);
+        }
+
+        const log = document.getElementById('console');
+
+        setInterval(() => {
+            time++;
+            if(time > CYCLE) time = 0;
+            
+            document.getElementById('timer').innerText = time;
+            document.getElementById('mint-cd').innerText = (300 - time) + "s";
+
+            // PHASE 1: WRITING (0-145)
+            if(time <= 145) {
+                document.getElementById('phase-lbl').innerText = "MINING (WRITE)";
+                
+                // Animation
+                let r = Math.floor(Math.random()*81);
+                let cells = document.querySelectorAll('.cell');
+                cells[r].innerText = Math.floor(Math.random()*9)+1;
+                cells[r].classList.add('mining');
+                setTimeout(()=>cells[r].classList.remove('mining'), 150);
+
+                // LOGIC: Show FRST mining, NOT FTC
+                log.innerHTML = `
+                    <div class="log-line">> GENERATING PUZZLE ENTROPY...</div>
+                    <div class="log-line" style="color:#fff">MINING HASH: 0x${Math.random().toString(16).substr(2,8)}</div>
+                    <div class="log-line">ACCUMULATING: <span class="log-val">+${(time * 541.6).toFixed(2)} FRST</span></div>
+                `;
+            }
+
+            // PHASE 2: SOLVING (146-296)
+            else if(time > 145 && time <= 296) {
+                document.getElementById('phase-lbl').innerText = "PLAYABLE (SOLVE)";
+                log.innerHTML = `
+                    <div class="log-line" style="color:#fff">> BOARD UNLOCKED.</div>
+                    <div class="log-line">SCORING ACTIVE.</div>
+                    <div class="log-line">POTENTIAL REWARD: <span class="log-val">78,539.81 FRST</span></div>
+                `;
+            }
+
+            // PHASE 3: SYNC (296-300)
+            else if(time > 296) {
+                document.getElementById('sync-overlay').style.display = 'flex';
+            }
+
+            if(time === 0) {
+                document.getElementById('sync-overlay').style.display = 'none';
+                document.querySelectorAll('.cell').forEach(c => c.innerText = "");
+            }
+
+        }, 1000);
+    </script>
+</body>
+</html>

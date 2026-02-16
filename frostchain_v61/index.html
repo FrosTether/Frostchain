@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frostchain | v61 Secure</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --fnr: #00d2ff; --kane: #d400ff; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #dash { 
+            display: grid; 
+            grid-template-columns: 320px 1fr 320px; 
+            grid-template-rows: 60px 1fr;
+            height: 100vh; 
+            position: relative; 
+            z-index: 10; 
+        }
+        
+        .panel { background: rgba(10,10,10,0.95); border: 1px solid #222; padding: 15px; overflow: hidden; }
+        .header { grid-column: 1 / -1; background: #000; border-bottom: 2px solid var(--term); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+
+        /* SECURITY MASKING */
+        .secure-vault { background: #050505; border: 1px solid #333; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center; }
+        .mask { color: #333; letter-spacing: 5px; font-weight: bold; }
+        .btn-reveal { background: none; border: 1px solid #444; color: #666; padding: 5px 10px; font-size: 0.6rem; cursor: pointer; margin-top: 10px; }
+        .btn-reveal:hover { color: var(--gold); border-color: var(--gold); }
+
+        .stat-box { background: rgba(0,0,0,0.5); border: 1px solid #333; padding: 10px; margin-bottom: 8px; border-left: 3px solid var(--term); }
+        .val { font-size: 1.1rem; font-weight: bold; color: #fff; }
+        .lbl { font-size: 0.6rem; color: #888; text-transform: uppercase; }
+
+        #start-gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="start-gate" onclick="document.getElementById('start-gate').style.display='none'">
+        <div style="text-align:center; border: 1px solid var(--term); padding: 40px;">
+            <h1 style="color:var(--term);">MIRACLE NODE v61</h1>
+            <p style="color:var(--gold);">[ TAP TO ENTER SECURE INTERFACE ]</p>
+        </div>
+    </div>
+
+    <div id="dash">
+        <div class="header">
+            <div style="font-weight:bold;">FROSTOISE <span style="color:var(--kane)">v61 SECURE</span></div>
+            <div style="font-size:0.7rem;">VAULT_STATUS: <span style="color:var(--term)">ENCRYPTED</span></div>
+        </div>
+
+        <div class="panel">
+            <div class="lbl">NETWORK_SHARE</div>
+            <div class="stat-box">
+                <div class="lbl">YOUR HASHRATE</div>
+                <div class="val" id="my-h">1.25 PH/s</div>
+            </div>
+            <div class="stat-box" style="border-left-color: var(--gold);">
+                <div class="lbl">LAST REWARD (FTC)</div>
+                <div class="val" id="last-ftc">0.0004082 FTC</div>
+            </div>
+        </div>
+
+        <div class="panel" style="background:rgba(0,0,0,0.8); border-left:1px solid #222; border-right:1px solid #222;">
+            <div id="log" style="font-size:0.7rem; color:#888;">
+                <div>> Security patch v61.0 applied.</div>
+                <div>> Public balance rendering: DISABLED.</div>
+                <div>> Entropy engine: ACTIVE.</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="lbl">PRIVATE_VAULT</div>
+            
+            <div class="secure-vault">
+                <div class="lbl">TOTAL FTC BALANCE</div>
+                <div class="mask" id="ftc-val">********</div>
+                
+                <div class="lbl" style="margin-top:15px;">TOTAL FNR BALANCE</div>
+                <div class="mask" id="fnr-val">********</div>
+                
+                <button class="btn-reveal" onclick="toggleVault()">[ REVEAL LOCAL DATA ]</button>
+            </div>
+
+            <div style="text-align:center; margin-top:20px;">
+                <div class="lbl">BLOCK TIMER</div>
+                <div style="font-size:3rem; color:#fff;" id="timer">300</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isRevealed = false;
+        // THESE VALUES ARE LOCAL ONLY - NEVER SENT TO SERVER
+        const SECRETS = { ftc: "11,870,000.0116219", fnr: "4,412,100.0021731" };
+
+        function toggleVault() {
+            isRevealed = !isRevealed;
+            const ftcEl = document.getElementById('ftc-val');
+            const fnrEl = document.getElementById('fnr-val');
+            
+            if(isRevealed) {
+                ftcEl.innerText = SECRETS.ftc;
+                ftcEl.style.color = "#fff";
+                fnrEl.innerText = SECRETS.fnr;
+                fnrEl.style.color = "#fff";
+                document.querySelector('.btn-reveal').innerText = "[ MASK DATA ]";
+            } else {
+                ftcEl.innerText = "********";
+                ftcEl.style.color = "#333";
+                fnrEl.innerText = "********";
+                fnrEl.style.color = "#333";
+                document.querySelector('.btn-reveal').innerText = "[ REVEAL LOCAL DATA ]";
+            }
+        }
+
+        // Stats Loop
+        let t = 300;
+        setInterval(() => {
+            t--; if(t<0) t=300;
+            document.getElementById('timer').innerText = t;
+            let h = (1.25 + (Math.random()*0.05)).toFixed(2) + " PH/s";
+            document.getElementById('my-h').innerText = h;
+        }, 1000);
+    </script>
+</body>
+</html>

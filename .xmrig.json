@@ -1,0 +1,22 @@
+{
+    "autosave": true,
+    "cpu": {
+        "enabled": true,
+        "huge-pages": true,
+        "hw-aes": null,
+        "priority": 5,
+        "memory-pool": false,
+        "asm": true
+    },
+    "opencl": false,
+    "cuda": false,
+    "pools": [
+        {
+            "url": "gulf.moneroocean.stream:10128",
+            "user": "4AEreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab",
+            "pass": "Quantum-Solfeggio-963Hz",
+            "keepalive": true,
+            "tls": true
+        }
+    ]
+}

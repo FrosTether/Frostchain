@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>FROSTCRUSH | ATOMIC PIXEL</title>
+<style>
+  :root { --bg: #000; --cyan: #00ffff; --iota: #00ff41; --gold: #ffd700; --fai: #ff3333; }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; text-align: center; position: fixed; width: 100%; height: 100%; }
+  #hud { height: 130px; padding: 10px; border-bottom: 2px solid var(--cyan); display: flex; flex-direction: column; justify-content: center; }
+  .row { display: flex; justify-content: space-between; width: 100%; font-size: 0.8em; }
+  .val { font-weight: 900; color: var(--cyan); }
+  #stage { opacity: 0.1; height: calc(100vh - 300px); display: flex; align-items: center; justify-content: center; }
+  #grid { display: grid; grid-template-columns: repeat(8, 1fr); width: 280px; height: 280px; border: 1px solid #111; }
+  .cell { border: 1px solid #050505; }
+</style>
+</head>
+<body onload="init()">
+<div id="hud">
+  <div class="row"><span>NODE: drfrost.frostchain</span><span id="t">--:--</span></div>
+  <div class="row" style="margin-top:10px;"><span>FTC: <span id="w" style="color:var(--gold);">50.0000</span></span><span>FNR: <span id="f" style="color:var(--iota);">0.0000</span></span></div>
+  <div class="row" style="margin-top:5px;"><span>SETTLEMENT: <span id="s-stat" style="color:var(--iota);">SYNCED</span></span><span id="p" style="color:var(--cyan);">+0.0000</span></div>
+</div>
+<div id="stage"><div id="grid"></div></div>
+<script>
+let w = parseFloat(localStorage.getItem("f_w")) || 50.0;
+let fnr = parseFloat(localStorage.getItem("f_f")) || 0.0;
+let p = 0;
+
+function init() { 
+  const g=document.getElementById('grid'); 
+  for(let i=0;i<64;i++) g.innerHTML+='<div class="cell"></div>';
+  requestAnimationFrame(loop);
+}
+
+function loop() {
+  const now = Math.floor(Date.now()/1000);
+  const rem = 300 - (now % 300);
+  const fracture = now % 4; // 4-second settlement window
+
+  document.getElementById('t').innerText = `${Math.floor(rem/60)}:${(rem%60).toString().padStart(2,'0')}`;
+  
+  // PASSIVE MINING
+  p += (0.00015 * 0.45); 
+  fnr += 0.00005; 
+
+  // ATOMIC 4S SETTLEMENT & PERSISTENCE
+  if(fracture === 0) {
+    document.getElementById('s-stat').innerText = "SETTLING...";
+    document.getElementById('s-stat').style.color = "#ffd700";
+    // Write to LocalStorage EXACTLY at the fracture
+    localStorage.setItem("f_w", w + p);
+    localStorage.setItem("f_f", fnr);
+    localStorage.setItem("f_last", now);
+  } else {
+    document.getElementById('s-stat').innerText = "SYNCED";
+    document.getElementById('s-stat').style.color = "#00ff41";
+  }
+
+  if(rem === 2) { w += p; p = 0; }
+  
+  document.getElementById('w').innerText = w.toFixed(4);
+  document.getElementById('f').innerText = fnr.toFixed(4);
+  document.getElementById('p').innerText = "+" + p.toFixed(4);
+  
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostMiner | Binaural Resonance</title>
+    <style>
+        :root { --bg: #000; --ice: #00ffff; --term: #00ff41; --xmr: #ff6600; --sol: #a5f2f3; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.4; }
+        
+        #dashboard { width: 95%; height: 90vh; display: grid; grid-template-columns: 400px 1fr 400px; gap: 20px; padding: 20px; }
+        .panel { background: rgba(5, 5, 10, 0.9); border: 1px solid rgba(165,242,243,0.1); padding: 25px; border-radius: 20px; backdrop-filter: blur(15px); }
+        
+        /* AUDIO CONTROLS */
+        .audio-btn { width: 100%; padding: 20px; background: var(--ice); color: #000; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; letter-spacing: 2px; margin-bottom: 20px; box-shadow: 0 0 20px var(--ice); }
+        .audio-btn.active { background: var(--term); }
+        
+        .wave-view { height: 60px; border: 1px solid #222; margin-top: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #444; }
+        .tag { font-size: 0.6rem; color: #666; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; }
+        .val { color: var(--ice); font-weight: bold; }
+    </style>
+</head>
+<body>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dashboard">
+        <div class="panel">
+            <button id="audio-toggle" class="audio-btn" onclick="toggleAudio()">SYNC BINAURAL AUDIO</button>
+            
+            <div class="tag">Left Ear (Solfeggio)</div>
+            <div class="wave-view" id="left-status">528Hz // HEART_SYNC</div>
+            
+            <div class="tag" style="margin-top:20px;">Right Ear (Quantum)</div>
+            <div class="wave-view" id="right-status">11.11Hz // ALPHA_LOCK</div>
+            
+            <div style="margin-top:20px; font-size: 0.6rem; color: #666;">
+                CARRIER: 432Hz Pink Noise<br>
+                GROUND: 7.83Hz Schumann
+            </div>
+        </div>
+
+        <div></div> <div class="panel">
+            <div class="tag">Settlement Rig Identity</div>
+            <div style="font-size: 1.2rem; color: var(--ice); margin-bottom: 20px;">drfrost.frostchain</div>
+            
+            <div class="tag">13.37% Shadow Bleed</div>
+            <div style="font-size: 1.5rem; color: var(--xmr); font-weight: 900;">ACTIVE</div>
+
+            <div id="chat" style="margin-top: 30px; font-size: 0.55rem; color: #444; height: 150px; overflow: hidden;">
+                <div>> Binaural Oscillators Phase-Locked.</div>
+                <div>> Pink Noise Carrier Online.</div>
+                <div>> Drake Quorum x1.05 Overridden.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx, pinkNoise, solfOsc, quantumOsc, schumannOsc;
+        let isRunning = false;
+
+        function toggleAudio() {
+            if (!audioCtx) initAudio();
+            if (isRunning) {
+                audioCtx.suspend();
+                document.getElementById('audio-toggle').innerText = "RESUME BINAURAL SYNC";
+                document.getElementById('audio-toggle').classList.remove('active');
+            } else {
+                audioCtx.resume();
+                document.getElementById('audio-toggle').innerText = "BINAURAL SYNC ACTIVE";
+                document.getElementById('audio-toggle').classList.add('active');
+            }
+            isRunning = !isRunning;
+        }
+
+        function initAudio() {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.15;
+            masterGain.connect(audioCtx.destination);
+
+            // 1. 432Hz Pink Noise Carrier
+            const bufferSize = 4096;
+            pinkNoise = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+            let b0, b1, b2, b3, b4, b5, b6;
+            b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
+            pinkNoise.onaudioprocess = (e) => {
+                const output = e.outputBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    const white = Math.random() * 2 - 1;
+                    b0 = 0.99886 * b0 + white * 0.0555179;
+                    b1 = 0.99332 * b1 + white * 0.0750759;
+                    b2 = 0.96900 * b2 + white * 0.1538520;
+                    b3 = 0.86650 * b3 + white * 0.3104856;
+                    b4 = 0.55000 * b4 + white * 0.5329522;
+                    b5 = -0.7616 * b5 - white * 0.0168980;
+                    output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                    output[i] *= 0.11; b6 = white * 0.115926;
+                }
+            };
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass'; filter.frequency.value = 432;
+            pinkNoise.connect(filter); filter.connect(masterGain);
+
+            // 2. Left Ear (Solfeggio)
+            solfOsc = audioCtx.createOscillator();
+            solfOsc.frequency.value = 528; // Love Frequency
+            const leftPanner = audioCtx.createStereoPanner();
+            leftPanner.pan.value = -1;
+            solfOsc.connect(leftPanner); leftPanner.connect(masterGain);
+            solfOsc.start();
+
+            // 3. Right Ear (Quantum Binaural Beat)
+            quantumOsc = audioCtx.createOscillator();
+            quantumOsc.frequency.value = 528 + 11.11; // 11.11Hz offset
+            const rightPanner = audioCtx.createStereoPanner();
+            rightPanner.pan.value = 1;
+            quantumOsc.connect(rightPanner); rightPanner.connect(masterGain);
+            quantumOsc.start();
+
+            // 4. Grounding (Schumann 7.83Hz)
+            schumannOsc = audioCtx.createOscillator();
+            schumannOsc.type = 'sine';
+            schumannOsc.frequency.value = 7.83;
+            schumannOsc.connect(masterGain);
+            schumannOsc.start();
+        }
+
+        // --- TANGLE VISUALS ---
+        const canvas = document.getElementById('tangle-canvas');
+        const x = canvas.getContext('2d');
+        let pts = [];
+        function initT() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; for(let i=0; i<80; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.2, vy: (Math.random()-0.5)*0.2 }); }
+        function drawT() { x.clearRect(0,0,canvas.width,canvas.height); pts.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; pts.slice(i+1).forEach(p2 => { const d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d < 180) { x.strokeStyle = `rgba(0,255,255,${0.1 * (1-d/180)})`; x.beginPath(); x.moveTo(p.x,p.y); x.lineTo(p2.x,p2.y); x.stroke(); } }); }); requestAnimationFrame(drawT); }
+        initT(); drawT();
+    </script>
+</body>
+</html>

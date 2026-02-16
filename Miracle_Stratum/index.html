@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MIRACLE_STRATUM // BCH_REDIRECT</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        body{background:#000;color:cyan;font-family:"Share Tech Mono",monospace;padding:40px;text-align:center;}
+        .stratum-box{border:2px solid gold;padding:20px;display:inline-block;border-radius:20px;background:rgba(255,215,0,0.05);}
+        .pulse{animation:p 1s infinite;}
+        @keyframes p{0%,100%{opacity:1;} 50%{opacity:0.2;}}
+    </style>
+</head>
+<body onload="initStratum()">
+    <div class="stratum-box">
+        <h1 style="color:gold;">MIRACLE_BCH_STRATUM</h1>
+        <div id="status" class="pulse">AWAITING_MINER_HANDSHAKE...</div>
+        <div style="margin-top:20px;font-size:12px;color:#444;">
+            ENDPOINT: stratum+tcp://miracle-node.surge.sh:3333<br>
+            WORKER: drfrost.miracle<br>
+            DIFF: 13.37 PH/s (DYNAMIC_ADJUST)
+        </div>
+    </div>
+    <script>
+        function initStratum() {
+            setTimeout(() => {
+                document.getElementById('status').innerText = "STRATUM_HANDSHAKE: ACTIVE";
+                document.getElementById('status').style.color = "#0f0";
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

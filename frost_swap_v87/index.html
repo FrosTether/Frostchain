@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FrostSwap | Liquidity Pool</title>
+    <style>
+        :root { 
+            --bg: #050510; 
+            --term: #00ff41; 
+            --liq: #9d00ff; /* Liquidity Purple */
+            --btc: #f7931a; 
+            --ftc: #00ffff;
+            --panel: rgba(20, 20, 35, 0.9);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        /* BACKGROUND CHART */
+        #depth-canvas { position: fixed; inset: 0; z-index: 0; opacity: 0.3; }
+        
+        /* UI LAYER */
+        #ui-layer { position: relative; z-index: 10; display: grid; grid-template-rows: 70px 1fr 60px; height: 100vh; pointer-events: none; }
+        #ui-layer * { pointer-events: auto; }
+
+        /* HEADER */
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; padding: 0 30px; 
+            background: rgba(0,0,0,0.8); border-bottom: 2px solid var(--liq); 
+            box-shadow: 0 0 20px rgba(157, 0, 255, 0.3); backdrop-filter: blur(5px);
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; letter-spacing: 2px; }
+        
+        /* METRICS BAR */
+        .metric { text-align: right; margin-left: 30px; }
+        .m-val { font-size: 1.1rem; color: #fff; font-weight: bold; text-shadow: 0 0 10px var(--liq); }
+        .m-lbl { font-size: 0.6rem; color: #888; letter-spacing: 1px; }
+
+        /* MAIN DASHBOARD */
+        .main { display: grid; grid-template-columns: 1fr 400px; gap: 30px; padding: 30px; }
+        
+        /* PANELS */
+        .card { 
+            background: var(--panel); border: 1px solid #333; padding: 25px; border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column;
+        }
+
+        /* POOL VISUALS */
+        .pool-visual { flex-grow: 1; display: flex; align-items: flex-end; justify-content: space-around; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        .vat { width: 100px; background: #222; border-radius: 8px 8px 0 0; position: relative; overflow: hidden; border: 1px solid #444; }
+        .liquid { position: absolute; bottom: 0; left: 0; right: 0; transition: height 1s; }
+        .l-btc { background: linear-gradient(to top, #5c3a00, var(--btc)); height: 85%; }
+        .l-ftc { background: linear-gradient(to top, #005c5c, var(--ftc)); height: 45%; }
+        .vat-label { text-align: center; margin-top: 10px; font-weight: bold; font-size: 0.8rem; }
+
+        /* SWAP INTERFACE */
+        .input-group { background: #111; border: 1px solid #333; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+        .input-row { display: flex; justify-content: space-between; align-items: center; }
+        .coin-sel { font-weight: bold; display: flex; align-items: center; gap: 5px; }
+        .amt { font-size: 1.2rem; background: transparent; border: none; color: #fff; text-align: right; width: 150px; }
+        
+        .btn-swap { 
+            background: var(--liq); color: #fff; font-weight: bold; border: none; padding: 18px; 
+            width: 100%; border-radius: 8px; cursor: pointer; font-size: 1rem; margin-top: 10px; 
+            box-shadow: 0 0 15px var(--liq); transition: 0.2s;
+        }
+        .btn-swap:hover { transform: scale(1.02); box-shadow: 0 0 25px var(--liq); }
+
+        /* EARNINGS */
+        .earnings-box { margin-top: 20px; background: rgba(0, 255, 65, 0.05); border: 1px solid var(--term); padding: 15px; border-radius: 8px; }
+
+        /* LOG */
+        .log-box { margin-top: 20px; height: 150px; overflow-y: auto; font-size: 0.7rem; color: #888; border-top: 1px solid #333; padding-top: 10px; }
+        .log-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+
+        .footer { background: rgba(0,0,0,0.9); border-top: 1px solid #333; padding: 0 30px; display: flex; alignItems: center; justify-content: space-between; font-size: 0.7rem; color: #666; }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="depth-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="header">
+            <div class="logo">FROST<span style="color:var(--liq)">SWAP</span></div>
+            <div style="display:flex;">
+                <div class="metric">
+                    <div class="m-val" id="tvl">$42,891,050</div>
+                    <div class="m-lbl">TOTAL VALUE LOCKED</div>
+                </div>
+                <div class="metric">
+                    <div class="m-val" id="vol-24h">$1,205,400</div>
+                    <div class="m-lbl">24H VOLUME</div>
+                </div>
+                <div class="metric">
+                    <div class="m-val" style="color:var(--term)" id="fees-earned">$0.00</div>
+                    <div class="m-lbl">YOUR FEES (0.3%)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="card">
+                <div style="color:#aaa; letter-spacing:1px; margin-bottom:20px;">NEWKIRK LIQUIDITY POOL (V2)</div>
+                
+                <div class="pool-visual">
+                    <div>
+                        <div class="vat" style="height:200px;"><div class="liquid l-btc" id="h-btc"></div></div>
+                        <div class="vat-label" style="color:var(--btc)">wBTC RESERVES</div>
+                        <div style="text-align:center; font-size:0.7rem; color:#888;" id="res-btc">450.00</div>
+                    </div>
+                    <div style="font-size:2rem; color:#444;">⇌</div>
+                    <div>
+                        <div class="vat" style="height:200px;"><div class="liquid l-ftc" id="h-ftc"></div></div>
+                        <div class="vat-label" style="color:var(--ftc)">FTC RESERVES</div>
+                        <div style="text-align:center; font-size:0.7rem; color:#888;" id="res-ftc">1,337,000</div>
+                    </div>
+                </div>
+
+                <div class="earnings-box">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span>YOUR POOL SHARE</span>
+                        <span style="font-weight:bold; color:var(--term)">100.00%</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>STATUS</span>
+                        <span style="color:var(--liq); font-weight:bold;">ACTIVE FARMING</span>
+                    </div>
+                </div>
+
+                <div class="log-box" id="tx-log">
+                    <div class="log-row"><span>> Pool initialized with Newkirk.dat reserves</span><span>Just now</span></div>
+                </div>
+            </div>
+
+            <div class="card" style="justify-content:center;">
+                <div style="margin-bottom:20px; font-weight:bold;">SWAP INTERFACE</div>
+                
+                <div class="input-group">
+                    <div style="font-size:0.7rem; color:#888; margin-bottom:5px;">FROM</div>
+                    <div class="input-row">
+                        <input type="text" class="amt" value="1.0" id="in-amt" oninput="calcPrice()">
+                        <div class="coin-sel"><span style="color:var(--btc)">●</span> wBTC</div>
+                    </div>
+                </div>
+
+                <div style="text-align:center; font-size:1.5rem; color:#666; margin:10px 0;">↓</div>
+
+                <div class="input-group">
+                    <div style="font-size:0.7rem; color:#888; margin-bottom:5px;">TO (ESTIMATED)</div>
+                    <div class="input-row">
+                        <input type="text" class="amt" value="2971.11" id="out-amt" readonly>
+                        <div class="coin-sel"><span style="color:var(--ftc)">●</span> FTC</div>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#888; margin:10px 0;">
+                    <span>Price Impact</span>
+                    <span style="color:var(--term)">< 0.01%</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#888; margin-bottom:10px;">
+                    <span>Liquidity Provider Fee</span>
+                    <span id="fee-disp">0.003 wBTC</span>
+                </div>
+
+                <button class="btn-swap" onclick="simulateSwap()">SWAP</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div>FROSTCHAIN DECENTRALIZED EXCHANGE // NEWKIRK LIQUIDITY</div>
+            <div id="status">CONNECTED TO 741.FROSTCHAIN</div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const btcPrice = 95000; // Sim price
+        const ftcPrice = 31.97; // Target Sim price
+        let accumulatedFees = 0;
+        
+        // --- DEPTH CHART VISUALIZER ---
+        const canvas = document.getElementById('depth-canvas');
+        const ctx = canvas.getContext('2d');
+        let t = 0;
+
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.onresize = resize; resize();
+
+        function drawDepth() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = 'rgba(157, 0, 255, 0.1)';
+            
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            for(let i=0; i<canvas.width; i+=10) {
+                const y = canvas.height/2 + Math.sin(i*0.01 + t)*50 + Math.cos(i*0.02 - t)*30;
+                ctx.lineTo(i, y);
+            }
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#9d00ff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            t += 0.02;
+            requestAnimationFrame(drawDepth);
+        }
+        drawDepth();
+
+        // --- SWAP LOGIC ---
+        function calcPrice() {
+            const val = parseFloat(document.getElementById('in-amt').value) || 0;
+            const ratio = btcPrice / ftcPrice;
+            const out = val * ratio;
+            document.getElementById('out-amt').value = out.toFixed(2);
+            document.getElementById('fee-disp').innerText = (val * 0.003).toFixed(4) + " wBTC";
+        }
+
+        function simulateSwap() {
+            const btn = document.querySelector('.btn-swap');
+            btn.innerText = "SWAPPING...";
+            btn.style.background = "#fff";
+            btn.style.color = "#000";
+
+            setTimeout(() => {
+                // Success
+                btn.innerText = "SWAP";
+                btn.style.background = "var(--liq)";
+                btn.style.color = "#fff";
+
+                const val = parseFloat(document.getElementById('in-amt').value);
+                const fee = val * 0.003 * btcPrice; // Fee in USD value
+                accumulatedFees += fee;
+                
+                document.getElementById('fees-earned').innerText = "$" + accumulatedFees.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                
+                addLog(`Swapped ${val} wBTC for ${(val * btcPrice/ftcPrice).toFixed(2)} FTC`);
+                pulseLiquid();
+            }, 1500);
+        }
+
+        function addLog(msg) {
+            const box = document.getElementById('tx-log');
+            const row = document.createElement('div');
+            row.className = 'log-row';
+            row.innerHTML = `<span style="color:var(--term)">${msg}</span><span>Now</span>`;
+            box.prepend(row);
+        }
+
+        function pulseLiquid() {
+            // Animate liquid levels slightly
+            document.getElementById('h-btc').style.height = (80 + Math.random()*10) + "%";
+            document.getElementById('h-ftc').style.height = (40 + Math.random()*10) + "%";
+        }
+
+        // --- BACKGROUND TRADING SIM ---
+        setInterval(() => {
+            // Random trades happening in background
+            const vol = Math.random() * 5000;
+            const fee = vol * 0.003;
+            accumulatedFees += fee;
+            document.getElementById('fees-earned').innerText = "$" + accumulatedFees.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            // Randomly update TVL slightly
+            const currentTVL = 42891050 + (Math.random() - 0.5) * 10000;
+            document.getElementById('tvl').innerText = "$" + currentTVL.toLocaleString(undefined, {maximumFractionDigits:0});
+
+            if(Math.random() > 0.7) {
+                const type = Math.random() > 0.5 ? "Buy" : "Sell";
+                const amt = (Math.random() * 2).toFixed(2);
+                addLog(`Market: ${type} ${amt} wBTC worth of FTC`);
+                pulseLiquid();
+            }
+        }, 3000);
+
+    </script>
+</body>
+</html>

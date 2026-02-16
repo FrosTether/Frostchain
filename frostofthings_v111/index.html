@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostOfThings | OTA Mesh Node</title>
+    <style>
+        :root { 
+            --bg: #010105; --ice: #a5f2f3; --term: #00ff41; --xmr: #ff6600; 
+            --bt: #4285f4; --wifi: #ea4335;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        /* SCANNER BACKGROUND */
+        #scanner-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.3; }
+        .radial-overlay { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, rgba(165,242,243,0.05) 0%, transparent 80%); }
+
+        /* UI STRUCTURE */
+        #dashboard { width: 95%; height: 90vh; display: grid; grid-template-rows: 80px 1fr 50px; gap: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--ice); box-shadow: 0 0 20px rgba(165,242,243,0.1); }
+        .main { display: grid; grid-template-columns: 380px 1fr 380px; gap: 20px; padding: 20px; overflow: hidden; }
+
+        /* PANELS */
+        .panel { background: rgba(10, 15, 25, 0.9); border: 1px solid rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; backdrop-filter: blur(15px); display: flex; flex-direction: column; }
+        
+        .stat-lbl { font-size: 0.6rem; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-val { font-size: 1.8rem; font-weight: 900; color: #fff; }
+
+        /* SPECTRUM LIST */
+        .scan-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #222; font-size: 0.75rem; }
+        .status-dot { height: 6px; width: 6px; border-radius: 50%; display: inline-block; margin-right: 10px; }
+
+        #log { margin-top: auto; font-size: 0.55rem; color: #444; height: 120px; overflow: hidden; border-top: 1px solid #222; padding-top: 10px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="radial-overlay"></div>
+    <canvas id="scanner-canvas"></canvas>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="stat-lbl">OTA Infrastructure</div>
+                <div style="font-size: 1.5rem; font-weight: 900; letter-spacing: 6px;">FROST<span style="color:var(--ice)">OF THINGS</span></div>
+            </div>
+            <div style="text-align: right;">
+                <div class="stat-lbl" style="color:var(--term);">MESH SETTLEMENT ACTIVE</div>
+                <div class="stat-val" id="mesh-yield" style="font-size: 1.4rem; color:var(--ice);">0.0000 BCH</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="stat-lbl" style="color:var(--ice); margin-bottom: 15px;">Live Spectrum Scan</div>
+                <div class="scan-item"><span><span class="status-dot" style="background:var(--wifi)"></span>LAN/WAN (2.4GHz)</span><span style="color:var(--term)">CONNECTED</span></div>
+                <div class="scan-item"><span><span class="status-dot" style="background:var(--bt)"></span>BLUETOOTH LE</span><span style="color:var(--term)">SCANNING</span></div>
+                <div class="scan-item"><span><span class="status-dot" style="background:#ffd700"></span>ZIGBEE MESH</span><span style="color:#666;">IDLE</span></div>
+                
+                <div style="margin-top: 20px; padding: 15px; border: 1px solid var(--xmr); background: rgba(255,102,0,0.05); border-radius: 12px; text-align: center;">
+                    <div class="stat-lbl" style="color:var(--xmr)">13.37% Bleed Logic</div>
+                    <div style="font-size: 1.1rem; color: #fff; margin-top: 5px;">SHADOW_LOCKED</div>
+                </div>
+            </div>
+
+            <div></div>
+
+            <div class="panel">
+                <div class="stat-lbl" style="margin-bottom: 15px;">IOT Settlement Pool</div>
+                <div style="margin-bottom: 20px;">
+                    <div class="stat-lbl">Associated Identity</div>
+                    <div class="stat-val" style="color:var(--ice); font-size: 1.2rem;">drfrost.frostchain</div>
+                </div>
+                
+                <div class="stat-lbl">Mesh Rewards (DQ 1.05x)</div>
+                <div class="stat-val" style="color:var(--term);" id="reward-val">0.00000000</div>
+                <div style="font-size: 0.5rem; color:#444; margin-top:5px;">Estimated Pro-Rata Share</div>
+
+                <div id="log">
+                    <div>> Booting OTA Node...</div>
+                    <div>> Initializing Bluetooth handshake...</div>
+                    <div>> Applying Drake Quorum x1.05 override...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer" style="padding: 0 40px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display:flex; align-items:center; justify-content:space-between; font-size: 0.6rem; color: #444;">
+            <div>FROSTOFTHINGS // v111.0 // SOVEREIGN IOT MESH</div>
+            <div>STATUS: BROADCASTING</div>
+        </div>
+    </div>
+
+    <script>
+        let reward = 0;
+        let meshYield = 0;
+
+        function update() {
+            // Simulated IOT Hashrate contribution
+            const contrib = (Math.random() * 5);
+            reward += (contrib * 0.00000001) * 1.05 * 0.8663;
+            meshYield += (contrib * 0.00001);
+
+            document.getElementById('reward-val').innerText = reward.toFixed(8);
+            document.getElementById('mesh-yield').innerText = meshYield.toFixed(4) + " BCH";
+
+            if(Math.random() > 0.8) {
+                const l = document.getElementById('log');
+                const d = document.createElement('div');
+                const devices = ["IoT_Bulb", "Smart_Meter", "Mesh_Router", "BT_Asset"];
+                const dev = devices[Math.floor(Math.random() * devices.length)];
+                d.innerText = `> Handshake with ${dev} // Finalized block.`;
+                d.style.color = "var(--ice)";
+                l.prepend(d);
+            }
+        }
+        setInterval(update, 2000);
+
+        // --- SCANNER VISUALS ---
+        const canvas = document.getElementById('scanner-canvas');
+        const ctx = canvas.getContext('2d');
+        let lines = [];
+        function init() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            for(let i=0; i<30; i++) lines.push({ y: Math.random()*canvas.height, speed: 1 + Math.random()*2 });
+        }
+        function draw() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.strokeStyle = 'rgba(165,242,243,0.1)';
+            ctx.lineWidth = 1;
+            lines.forEach(l => {
+                ctx.beginPath();
+                ctx.moveTo(0, l.y);
+                ctx.lineTo(canvas.width, l.y);
+                ctx.stroke();
+                l.y += l.speed;
+                if(l.y > canvas.height) l.y = 0;
+            });
+            // Radar circle
+            ctx.strokeStyle = 'rgba(165,242,243,0.05)';
+            ctx.beginPath();
+            ctx.arc(canvas.width/2, canvas.height/2, (Date.now()/20)%500, 0, Math.PI*2);
+            ctx.stroke();
+            requestAnimationFrame(draw);
+        }
+        init(); draw(); window.onresize = init;
+    </script>
+</body>
+</html>

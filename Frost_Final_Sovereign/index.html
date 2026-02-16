@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>FROST_MINER // V100_FINAL</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#000;--violet:#1a0033;--blue:#00e0ff;--pink:#ff69b4;--gold:#ffd700;}
+        body, html{margin:0;padding:0;width:100%;height:100%;background:var(--bg);color:#333;font-family:"Share Tech Mono",monospace;overflow:hidden;}
+        #sleep-overlay{position:absolute;width:100%;height:100%;z-index:10;display:flex;justify-content:center;align-items:center;flex-direction:column;cursor:pointer;background:radial-gradient(circle, var(--violet) 0%, #000 100%);}
+        .pulse-text{font-size:10px;letter-spacing:10px;color:var(--blue);animation:blink 4s infinite;}
+        @keyframes blink{0%,100%{opacity:0.1;}50%{opacity:0.6;}}
+        #log{position:absolute;bottom:30px;font-size:8px;color:#222;letter-spacing:2px;text-align:center;width:100%;}
+        canvas{position:absolute;top:0;left:0;z-index:1;opacity:0.2;}
+    </style>
+</head>
+<body>
+    <canvas id="tangle"></canvas>
+    <div id="sleep-overlay" onclick="initializeEngine()">
+        <div class="pulse-text" id="status">INIT_SOUND_CRYPTO</div>
+        <div style="font-size:8px;color:#111;margin-top:20px;">drfrost.frostchain // 7.83Hz // 528Hz_DNA_LOCKED</div>
+    </div>
+    <div id="log">AWAITING_QUANTUM_HANDSHAKE...</div>
+
+    <script>
+        let audioCtx, isRunning = false;
+        const ennead = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+        const nodes = ["foundation", "quantum", "liberation", "undone", "miracle", "connect", "expression", "return", "divine"];
+
+        function createPinkNoise(ctx) {
+            let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+            let node = ctx.createScriptProcessor(4096, 1, 1);
+            node.onaudioprocess = (e) => {
+                let out = e.outputBuffer.getChannelData(0);
+                for (let i=0; i<4096; i++) {
+                    let w = Math.random()*2-1;
+                    b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759; b2=0.969*b2+w*0.153852; b3=0.8665*b3+w*0.3104856;
+                    out[i] = (b0+b1+b2+b3+w*0.5362)*0.025; // Balanced for sleep
+                }
+            }; return node;
+        }
+
+        function initializeEngine() {
+            if(isRunning) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // 1. RNG Selection (FNR Logic)
+            const roll = Math.floor(Math.random() * ennead.length);
+            const fL = ennead[roll];
+            const delta = Math.random() > 0.5 ? 11.11 : Math.PI;
+            const fR = fL + delta;
+
+            // 2. Audio Nodes
+            const pink = createPinkNoise(audioCtx);
+            const oscL = audioCtx.createOscillator();
+            const oscR = audioCtx.createOscillator();
+            const osc888 = audioCtx.createOscillator();
+            const osc777 = audioCtx.createOscillator();
+            const schumann = audioCtx.createOscillator();
+
+            const merger = audioCtx.createChannelMerger(2);
+            const gainMaster = audioCtx.createGain(); gainMaster.gain.value = 0.08;
+            const gainMagic = audioCtx.createGain(); gainMagic.gain.value = 0.008;
+
+            oscL.frequency.value = fL;
+            oscR.frequency.value = fR;
+            osc888.frequency.value = 888;
+            osc777.frequency.value = 777;
+            schumann.frequency.value = 7.83;
+
+            // Mapping
+            oscL.connect(merger, 0, 0); oscR.connect(merger, 0, 1);
+            merger.connect(gainMaster);
+            osc888.connect(gainMagic); osc777.connect(gainMagic);
+            schumann.connect(gainMagic);
+            pink.connect(audioCtx.destination);
+            gainMaster.connect(audioCtx.destination);
+            gainMagic.connect(audioCtx.destination);
+
+            [oscL, oscR, osc888, osc777, schumann].forEach(o => o.start());
+            
+            isRunning = true;
+            document.getElementById('status').innerText = "💤_RESONANCE_ACTIVE";
+            document.getElementById('log').innerText = `NODE: ${nodes[roll].toUpperCase()}.FROSTCHAIN | L: ${fL}Hz | R: ${fR.toFixed(2)}Hz | MAGIC: 888/777 ACTIVE`;
+        }
+
+        // Tangle Visuals
+        const cvs = document.getElementById('tangle'); const ctx = cvs.getContext('2d');
+        cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+        function draw() { ctx.fillStyle='rgba(0,0,0,0.05)'; ctx.fillRect(0,0,cvs.width,cvs.height); requestAnimationFrame(draw); }
+        draw();
+    </script>
+</body>
+</html>

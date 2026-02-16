@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finux Temporal | Real Time Machine | Grayson's Wallet API</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; background: radial-gradient(ellipse at center, #001a33 0%, #000 100%); color: #0ff; overflow-x: hidden; min-height: 100vh; }
+        
+        /* FLUX ANIMATIONS */
+        .flux-capacitor { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 300px; opacity: 0.1; pointer-events: none; z-index: 0; }
+        .flux-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; border-radius: 50%; border: 3px solid #0ff; animation: fluxPulse 2s infinite; }
+        @keyframes fluxPulse { 0%, 100% { box-shadow: 0 0 20px #0ff, inset 0 0 20px #0ff; } 50% { box-shadow: 0 0 60px #0ff, inset 0 0 60px #0ff; } }
+        
+        /* LOGIN */
+        .login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.98); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .login-panel { background: rgba(0, 20, 30, 0.95); border: 2px solid #0ff; border-radius: 15px; padding: 40px; max-width: 500px; width: 90%; box-shadow: 0 0 50px rgba(0, 255, 255, 0.2); text-align: center; }
+        .login-input { width: 100%; padding: 15px; background: #000; border: 1px solid #0ff; color: #0ff; font-family: inherit; margin: 20px 0; text-align: center; font-size: 1.2em; }
+        .login-btn { background: #0ff; color: #000; font-weight: bold; padding: 15px; width: 100%; border: none; cursor: pointer; font-size: 1.1em; transition: 0.3s; }
+        .login-btn:hover { box-shadow: 0 0 20px #0ff; }
+
+        /* MAIN UI */
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; display: none; position: relative; z-index: 1; }
+        .header { text-align: center; border-bottom: 2px solid #0ff; padding-bottom: 20px; margin-bottom: 30px; }
+        .logo { font-size: 2.5em; text-shadow: 0 0 20px #0ff; animation: flicker 3s infinite; }
+        @keyframes flicker { 0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; } 20%, 24%, 55% { opacity: 0.5; } }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        .panel { background: rgba(0, 10, 20, 0.8); border: 1px solid #333; padding: 20px; border-radius: 10px; backdrop-filter: blur(5px); transition: 0.3s; }
+        .panel:hover { border-color: #0ff; box-shadow: 0 0 20px rgba(0, 255, 255, 0.1); }
+        
+        .stat-row { display: flex; justify-content: space-between; margin: 10px 0; border-bottom: 1px solid #222; padding-bottom: 5px; font-size: 0.9em; }
+        .val { font-weight: bold; color: #fff; }
+        .highlight { color: #ffd700; }
+        
+        /* CONTROLS */
+        .btn { background: rgba(0, 255, 255, 0.1); border: 1px solid #0ff; color: #0ff; padding: 10px; width: 100%; margin-top: 10px; cursor: pointer; transition: 0.2s; font-family: inherit; }
+        .btn:hover { background: #0ff; color: #000; }
+        .btn-travel { background: linear-gradient(45deg, #00f, #f0f); border: none; color: #fff; font-size: 1.2em; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .time-display { font-size: 2em; text-align: center; margin: 20px 0; color: #ffd700; text-shadow: 0 0 10px #ffd700; font-family: monospace; }
+        input[type="datetime-local"] { width: 100%; background: #111; border: 1px solid #555; color: #fff; padding: 10px; font-family: inherit; }
+
+    </style>
+</head>
+<body>
+
+    <div class="flux-capacitor">
+        <div class="flux-glow"></div>
+        <div class="flux-glow" style="width: 70%; height: 70%; animation-delay: 0.5s;"></div>
+    </div>
+
+    <div class="login-screen" id="loginScreen">
+        <div class="login-panel">
+            <h1>⏳ FINUX TEMPORAL</h1>
+            <p style="color:#888;">SECURE QUANTUM ACCESS POINT</p>
+            
+            <input type="text" class="login-input" id="loginId" placeholder="Identity or Email">
+            <button class="login-btn" onclick="login()">AUTHENTICATE</button>
+            
+            <div style="margin-top: 20px; font-size: 0.8em; color: #555; text-align: left;">
+                > ACCESS NODES:<br>
+                • voluntaryistj@gmail.com (UNLIMITED)<br>
+                • drfrost.frostchain (GOD MODE)<br>
+                • guest (READ ONLY)
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="dashboard">
+        <div class="header">
+            <div class="logo">⚡ FINUX TIME MACHINE</div>
+            <p>OPERATED BY: <span id="user-display" style="color:#ffd700;">UNKNOWN</span></p>
+            <p style="font-size:0.8em; color:#0f0;">GRAYSON'S API: ONLINE | LATENCY: 12ms</p>
+        </div>
+
+        <div class="grid">
+            <div class="panel">
+                <h2 style="color:#f0f; text-align:center;">🚀 JUMP CONTROL</h2>
+                <div class="time-display" id="dest-display">DESTINATION: UNSET</div>
+                
+                <label>Target Date/Time:</label>
+                <input type="datetime-local" id="time-target">
+                
+                <div class="stat-row" style="margin-top:20px;">
+                    <span>Fuel Cost:</span>
+                    <span>2.00 FsZT</span>
+                </div>
+                <div class="stat-row">
+                    <span>Balance:</span>
+                    <span id="fszt-bal" class="highlight">0.00 FsZT</span>
+                </div>
+
+                <button class="btn btn-travel" onclick="jump()">INITIATE JUMP</button>
+                <p id="jump-log" style="text-align:center; color:#0f0; height:20px; margin-top:10px;"></p>
+            </div>
+
+            <div class="panel">
+                <h2 style="color:#0ff; border-bottom:1px solid #0ff;">💼 PORTFOLIO</h2>
+                
+                <div class="stat-row">
+                    <span style="color:#0ff;">FTC (Frostcoin)</span>
+                    <span class="val">11,870,000.01</span>
+                </div>
+                <div style="font-size:0.7em; color:#666; margin-bottom:10px;">> Premine: 13.37% of 100M</div>
+
+                <div class="stat-row">
+                    <span style="color:#0f0;">FNR (Reserve)</span>
+                    <span class="val">4,412,100.00</span>
+                </div>
+                <div style="font-size:0.7em; color:#666; margin-bottom:10px;">> Premine: 13.37% of 33M</div>
+
+                <div class="stat-row">
+                    <span style="color:#f0f;">AMD (Amiah)</span>
+                    <span class="val">404,400,000.00</span>
+                </div>
+                <div style="font-size:0.7em; color:#666; margin-bottom:10px;">> 3.37% of 12B (Non-Minable)</div>
+            </div>
+
+            <div class="panel">
+                <h2 style="color:#ffd700; border-bottom:1px solid #ffd700;">⚖️ GOVERNANCE</h2>
+                
+                <div class="stat-row">
+                    <span>FRST Supply</span>
+                    <span class="val">♾️ UNLIMITED</span>
+                </div>
+                <div class="stat-row">
+                    <span>DOGE Live</span>
+                    <span id="doge-price" class="val">/data/data/com.termux/files/usr/bin/bash.38</span>
+                </div>
+                <div class="stat-row" style="background:rgba(255,215,0,0.1); padding:5px;">
+                    <span>FRST Price (DOGE × π)</span>
+                    <span id="frst-price" class="val highlight">.19</span>
+                </div>
+                
+                <div style="margin-top:20px; border-top:1px solid #333; padding-top:10px;">
+                    <button class="btn" onclick="buyFrst()">💰 BUY FRST</button>
+                    <button class="btn" onclick="wrap()">🔄 WRAP TO FsZT</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // CONFIG
+    const GOD_USERS = ['voluntaryistj@gmail.com', 'drfrost.frostchain'];
+    let currentUser = null;
+    let fsztBalance = 0;
+    
+    function login() {
+        const id = document.getElementById('loginId').value.trim();
+        if(!id) return alert("Enter Identity");
+
+        if (GOD_USERS.includes(id)) {
+            currentUser = id;
+            fsztBalance = 999999999; // UNLIMITED
+            document.getElementById('user-display').innerText = id + " [GOD MODE]";
+            document.getElementById('user-display').style.color = "#0f0";
+        } else {
+            currentUser = id;
+            fsztBalance = 10; // Starter pack
+            document.getElementById('user-display').innerText = id;
+        }
+
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('fszt-bal').innerText = (fsztBalance > 900000 ? "♾️ INFINITE" : fsztBalance.toFixed(2)) + " FsZT";
+        
+        // Sim Price
+        let doge = 0.35 + (Math.random() * 0.05);
+        let frst = doge * 3.14159;
+        document.getElementById('doge-price').innerText = "$" + doge.toFixed(4);
+        document.getElementById('frst-price').innerText = "$" + frst.toFixed(4);
+    }
+
+    function jump() {
+        const target = document.getElementById('time-target').value;
+        if(!target) return alert("Select Destination Date");
+        
+        const log = document.getElementById('jump-log');
+        log.innerText = "⚡ FLUX CAPACITOR CHARGING...";
+        
+        setTimeout(() => {
+            log.innerText = "🚀 JUMPING TO " + target + "...";
+            document.getElementById('dest-display').innerText = target.replace('T', ' ');
+            document.getElementById('dest-display').style.color = "#fff";
+            
+            // Deduct? No, if God Mode
+            if (!GOD_USERS.includes(currentUser)) {
+                fsztBalance -= 2;
+                if(fsztBalance < 0) fsztBalance = 0;
+            }
+            updateUI();
+        }, 1500);
+    }
+
+    function buyFrst() { alert("Simulated: Purchased 1000 FRST via Grayson API"); }
+    function wrap() { alert("Simulated: Wrapped FRST into FsZT Fuel"); }
+
+    // Live Ticker
+    setInterval(updateUI, 3000);
+
+</script>
+</body>
+</html>

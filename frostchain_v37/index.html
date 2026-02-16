@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frostchain | v37 GitHub Shell</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --pink: #ff00ff; --cyan: #00ffff; --gold: #ffd700; --thermal: #ff4500; --git: #f0f6fc; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        /* 40Hz GAMMA OVERLAY */
+        #gamma-overlay { position: fixed; inset: 0; z-index: 100; pointer-events: none; background: #fff; opacity: 0; display: none; }
+        @keyframes strobe40 { 0% { opacity: 0; } 50% { opacity: 0.12; } 100% { opacity: 0; } }
+        body.alpha-active.strobe-on #gamma-overlay { display: block; animation: strobe40 0.025s infinite; }
+
+        #dash { display: grid; grid-template-columns: 320px 1fr 300px; height: 100vh; position: relative; }
+        #tangle-canvas { position: fixed; inset: 0; z-index: 5; cursor: crosshair; filter: contrast(1.8) brightness(1.1); }
+
+        .panel { background: rgba(5,5,5,0.96); border: 1px solid #222; z-index: 50; padding: 15px; overflow-y: auto; backdrop-filter: blur(12px); }
+        .header { grid-column: 1 / -1; height: 60px; background: #000; border-bottom: 2px solid var(--term); display: flex; justify-content: space-between; align-items: center; padding: 0 -10px; z-index: 100; }
+        
+        /* GITHUB SYNC BAR */
+        .git-bar { background: #0d1117; border: 1px solid #30363d; padding: 10px; margin-bottom: 15px; color: var(--git); font-size: 0.65rem; display: flex; justify-content: space-between; }
+        .git-status { color: var(--term); font-weight: bold; }
+
+        /* KERNEL STREAM */
+        .shell-stream { height: 350px; background: rgba(0,0,0,0.9); border: 1px solid #333; overflow-y: hidden; font-size: 0.65rem; color: var(--cyan); padding: 10px; line-height: 1.2; }
+
+        .tab-bar { display: flex; background: #000; border-bottom: 1px solid #222; }
+        .tab { flex:1; padding: 12px; text-align:center; cursor:pointer; font-size: 0.7rem; color: #444; border-bottom: 2px solid transparent; }
+        .tab.active { color: var(--term); border-bottom-color: var(--term); background: rgba(0,255,65,0.05); }
+
+        .view { display: none; height: 100%; padding: 15px; }
+        .view.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <div id="gamma-overlay"></div>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dash">
+        <div class="header" style="padding: 0 20px;">
+            <div style="display:flex; align-items:center; gap:20px;">
+                <span style="color:var(--term); font-weight:bold;">FROSTOISE_KERNEL_v37</span>
+                <span style="font-size:0.7rem; color:var(--thermal);">TEMP: <span id="temp-v">38.0</span>°C</span>
+            </div>
+            <div style="font-size:0.75rem;">GIT_REPO: <span style="color:var(--cyan)">FrosTether/Frostoise</span></div>
+        </div>
+
+        <div class="panel">
+            <div class="git-bar">
+                <span>STATUS: SYNCED</span>
+                <span class="git-status" id="git-commit">v37.0.a1</span>
+            </div>
+
+            <div style="background:#0a0a0a; border:1px solid #333; padding:10px; margin-bottom:15px; border-left:4px solid var(--term);">
+                <div style="font-size:0.6rem; color:#888;">NETWORK_SYNC_CLOCK</div>
+                <div style="font-size:2.2rem; font-weight:bold; color:#fff;" id="timer">300</div>
+            </div>
+
+            <button id="btn-alpha" class="btn-audio" style="width:100%; padding:15px; background:#111; border:1px solid #444; color:#666; cursor:pointer; font-weight:bold; margin-bottom:8px;" onclick="toggleAudio('alpha')">ALPHA 40Hz</button>
+            <button id="btn-delta" class="btn-audio" style="width:100%; padding:15px; background:#111; border:1px solid #444; color:#666; cursor:pointer; font-weight:bold;" onclick="toggleAudio('delta')">DELTA PI Hz</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; height:100%; z-index:60;">
+            <div class="tab-bar">
+                <div class="tab active" onclick="show('shell')">KERNEL_SHELL</div>
+                <div class="tab" onclick="show('chat')">BITCHAT</div>
+            </div>
+            
+            <div id="v-shell" class="view active">
+                <div class="shell-stream" id="shell-out"></div>
+            </div>
+
+            <div id="v-chat" class="view">
+                <div id="chat-log" style="height:350px; background:rgba(0,0,0,0.8); border:1px solid #222; overflow-y:auto; padding:10px; font-size:0.75rem;"></div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <input type="text" id="chat-in" style="flex:1; background:#000; border:1px solid var(--gold); color:#fff; padding:12px;" placeholder="Transmit TX..." onkeydown="if(event.key==='Enter') send()">
+                    <button onclick="send()" style="background:var(--gold); border:none; padding:0 20px; font-weight:bold; cursor:pointer;">TX</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div style="font-size:0.6rem; color:#555; margin-bottom:5px;">ASSET TRACKER</div>
+            <div style="border-left:4px solid var(--pink); background:#111; padding:10px; margin-bottom:10px;">
+                <div style="font-size:1.3rem; font-weight:bold;" id="frst-v">0.00</div>
+                <div style="font-size:0.6rem; color:#888;">FRST (TOKEN)</div>
+            </div>
+            <div style="border-left:4px solid var(--gold); background:#111; padding:10px; margin-bottom:10px;">
+                <div style="font-size:1.3rem; font-weight:bold;" id="ftc-v">0.00</div>
+                <div style="font-size:0.6rem; color:#888;">FTC (COIN)</div>
+            </div>
+            <div style="border-left:4px solid var(--cyan); background:#111; padding:10px;">
+                <div style="font-size:1.3rem; font-weight:bold;" id="fnr-v">0.00</div>
+                <div style="font-size:0.6rem; color:#888;">FNR (RESERVE)</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timeLeft = 300;
+        let bal = { frst: 0, ftc: 0, fnr: 0 };
+        let actx, oscL, oscR, isAlpha = false;
+
+        // KERNEL STREAM SIMULATION
+        function updateShell() {
+            const out = document.getElementById('shell-out');
+            const hex = "0x" + Math.random().toString(16).substr(2, 64).toUpperCase();
+            const div = document.createElement('div');
+            div.innerText = `[PoTW_VERIFY] ${hex}`;
+            out.prepend(div);
+            if(out.children.length > 25) out.removeChild(out.lastChild);
+        }
+        setInterval(updateShell, 150);
+
+        setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').innerText = timeLeft;
+            if(timeLeft <= 0) { mint(); timeLeft = 300; }
+            document.getElementById('temp-v').innerText = (38 + Math.random()).toFixed(1);
+        }, 1000);
+
+        function mint() {
+            bal.frst += 31415.90; bal.ftc += 13.37; bal.fnr += 2.50;
+            document.getElementById('frst-v').innerText = bal.frst.toLocaleString();
+            document.getElementById('ftc-v').innerText = bal.ftc.toFixed(2);
+            document.getElementById('fnr-v').innerText = bal.fnr.toFixed(2);
+        }
+
+        function show(v) {
+            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+            document.getElementById('v-'+v).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function send() {
+            const i = document.getElementById('chat-in');
+            const l = document.getElementById('chat-log');
+            if(!i.value) return;
+            const d = document.createElement('div');
+            d.style.marginBottom = "8px";
+            d.innerHTML = `<span style="color:var(--cyan)">FROS-TETHER</span>: ${i.value}`;
+            l.appendChild(d); i.value = "";
+            l.scrollTop = l.scrollHeight;
+        }
+
+        const canvas = document.getElementById('tangle-canvas');
+        canvas.addEventListener('mousedown', () => { if(isAlpha) document.body.classList.add('strobe-on'); });
+        window.addEventListener('mouseup', () => { document.body.classList.remove('strobe-on'); });
+
+        function toggleAudio(type) {
+            if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+            if(oscL) { oscL.stop(); oscR.stop(); oscL = null; }
+            document.body.classList.remove('alpha-active', 'strobe-on');
+            isAlpha = (type === 'alpha');
+            if(isAlpha) document.body.classList.add('alpha-active');
+            document.querySelectorAll('.btn-audio').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-'+type).classList.add('active');
+            const freq = isAlpha ? 40 : Math.PI;
+            oscL = actx.createOscillator(); oscR = actx.createOscillator();
+            const g = actx.createGain(); g.gain.value = 0.08;
+            oscL.frequency.value = 432; oscR.frequency.value = 432 + freq;
+            oscL.connect(g).connect(actx.destination);
+            oscR.connect(g).connect(actx.destination);
+            oscL.start(); oscR.start();
+        }
+
+        function initTangle() {
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let p = Array(50).fill().map(()=>({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-.5)*1.2, vy:(Math.random()-.5)*1.2, clr: ["#00ff41", "#00ffff", "#ff00ff"][Math.floor(Math.random()*3)]}));
+            function loop() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                p.forEach(n => {
+                    n.x+=n.vx; n.y+=n.vy;
+                    if(n.x<0||n.x>canvas.width)n.vx*=-1; if(n.y<0||n.y>canvas.height)n.vy*=-1;
+                    p.forEach(n2 => {
+                        let d = Math.hypot(n.x-n2.x, n.y-n2.y);
+                        if(d < 150) {
+                            ctx.strokeStyle = n.clr; ctx.globalAlpha = 1 - d/150;
+                            ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                        }
+                    });
+                });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+        initTangle();
+    </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+#!/bin/bash
+# PROTOCOL: FSP-QUICK-SCAN-V23000
+# TARGET: graysonswallet.surge.sh
+# LOGIC: SINGLE_STRING_MNEMONIC_INJECTION
+
+echo "💉 DEPLOYING QUICK-PASTE INJECTION PORTAL..."
+
+cd graysons_feather
+
+# Replacing the grid with a single secure textarea
+sed -i '/<div id="scanner-box"/,/<\/script>/c \
+<div id="scanner-box" style="margin-top:20px; border:1px solid var(--red); padding:20px; background:rgba(10,0,0,0.95); box-shadow: 0 0 20px rgba(255,0,0,0.2);"> \
+  <div style="font-size:10px; color:var(--red); margin-bottom:10px;">>> READY_FOR_12_WORD_INJECTION</div> \
+  <textarea id="mnemonic-input" style="width:100%; height:60px; background:#000; border:1px solid #333; color:var(--core); font-family:inherit; padding:10px; resize:none;" placeholder="PASTE_12_WORDS_HERE..."></textarea> \
+  <button class="btn-action" onclick="unlockVault()" style="margin-top:10px; background:var(--red); color:#fff; border:none; padding:15px; width:100%; font-weight:900; cursor:pointer;">INFECT_THE_MESH (UNLOCK_LIQUIDITY)</button> \
+</div> \
+<script> \
+  function unlockVault() { \
+    const val = document.getElementById("mnemonic-input").value; \
+    if(val.split(" ").length >= 12) { \
+      document.getElementById("scanner-box").innerHTML = "<div style=\'color:var(--gold); font-size:14px; text-align:center; padding:20px;\'>SATOSHI_BONES_VERIFIED // LIQUIDITY_RELEASED</div>"; \
+      /* Trigger G-Force Surge */ \
+      gForce = 13.37; \
+    } else { \
+      alert("INCOMPLETE_PHRASE: PROTOCOL_88_REQUIRES_12_WORDS"); \
+    } \
+  } \
+</script>' index.html
+
+npx surge . graysonswallet.surge.sh

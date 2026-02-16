@@ -1,3 +1,5 @@
 [user]
-	name = voluntaryistj
+	name = FrosTether
 	email = voluntaryistj@gmail.com
+[credential]
+	helper = store

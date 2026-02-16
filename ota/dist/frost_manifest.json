@@ -1,0 +1,8 @@
+{
+  "protocol": "FROST_V4",
+  "version": "4.2.0-FROST-OTA",
+  "download_url": "https://frostofthings.surge.sh/firmware.bin",
+  "checksum": "7c25c18e1a131ddd6b83c5dfcdd0d03720d097b30fdeda19b99d3328699aff44",
+  "signature": "5fa70185915b30fcd3ec5b3c0728fa0acb15e4dc116f542ee527e663aa3d15af",
+  "force_update": true
+}

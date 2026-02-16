@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grayson's Wallet | Multi-User</title>
+    <style>
+        :root { --bg: #000; --accent: #00ff41; --text: #fff; --panel: #111; --gold: #ffd700; --blue: #00d4ff; --err: #ff0055; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; user-select: none; }
+
+        /* SCREENS */
+        .screen { position: fixed; inset: 0; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.3s; }
+        .screen.active { display: flex; }
+
+        /* FORMS */
+        .logo { font-size: 2rem; font-weight: bold; margin-bottom: 10px; color: var(--accent); text-shadow: 0 0 10px rgba(0,255,65,0.3); }
+        .sub-text { color: #888; font-size: 0.8rem; margin-bottom: 30px; text-align: center; max-width: 80%; }
+
+        .input-group { margin-bottom: 15px; width: 280px; }
+        .label { display: block; font-size: 0.7rem; color: var(--accent); margin-bottom: 5px; text-transform: uppercase; }
+        .input-box { background: #111; border: 1px solid #333; color: #fff; padding: 15px; width: 100%; text-align: center; font-family: inherit; font-size: 1rem; outline: none; box-sizing: border-box; }
+        .input-box:focus { border-color: var(--accent); }
+
+        .btn { background: var(--accent); color: #000; border: none; padding: 15px 30px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 280px; margin-top: 10px; font-size: 1rem; }
+        .btn-outline { background: transparent; border: 1px solid #333; color: #888; margin-top: 15px; font-size: 0.8rem; }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* DASHBOARD */
+        #screen-app { display: none; flex-direction: column; height: 100%; }
+        .header { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; background: #0a0a0a; }
+        .user-badge { color: var(--accent); font-weight: bold; }
+        
+        .content { padding: 20px; flex: 1; overflow-y: auto; }
+        .asset-card { background: #111; border: 1px solid #333; padding: 15px; margin-bottom: 10px; border-left: 4px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
+        
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 0.8rem; display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="screen-login" class="screen active">
+        <div class="logo">GRAYSON'S VAULT</div>
+        <div class="sub-text">MULTI-USER SECURE STORAGE</div>
+        
+        <div class="input-group">
+            <span class="label">IDENTITY</span>
+            <input type="text" id="login-user" class="input-box" placeholder="username.frostchain">
+        </div>
+        
+        <div class="input-group">
+            <span class="label">ACCESS PIN</span>
+            <input type="password" id="login-pin" class="input-box" placeholder="4-6 DIGITS" maxlength="6">
+        </div>
+
+        <button class="btn" onclick="login()">UNLOCK VAULT</button>
+        <button class="btn btn-outline" onclick="showRegister()">REGISTER NEW ACCOUNT</button>
+    </div>
+
+    <div id="screen-register" class="screen">
+        <div class="logo">CREATE IDENTITY</div>
+        <div class="sub-text">JOIN THE FROSTCHAIN NETWORK</div>
+
+        <div class="input-group">
+            <span class="label">NEW USERNAME</span>
+            <input type="text" id="reg-user" class="input-box" placeholder="name.frostchain">
+        </div>
+
+        <div class="input-group">
+            <span class="label">CREATE PIN (4-6 DIGITS)</span>
+            <input type="number" id="reg-pin" class="input-box" placeholder="XXXX" oninput="if(this.value.length>6) this.value=this.value.slice(0,6)">
+        </div>
+
+        <button class="btn" onclick="register()">MINT IDENTITY</button>
+        <button class="btn btn-outline" onclick="showLogin()">BACK TO LOGIN</button>
+    </div>
+
+    <div id="screen-app">
+        <div class="header">
+            <span id="app-username" class="user-badge">user.frostchain</span>
+            <span style="font-size:0.7rem; border:1px solid var(--accent); padding:3px 6px; color:var(--accent);">ONLINE</span>
+        </div>
+
+        <div class="content">
+            <div style="text-align:center; margin-bottom:30px; border-bottom:1px dashed #333; padding-bottom:20px;">
+                <div style="font-size:0.8rem; color:#888;">TOTAL PORTFOLIO VALUE</div>
+                <div style="font-size:2rem; font-weight:bold;" id="total-val">$0.00</div>
+            </div>
+
+            <div id="asset-list">
+                </div>
+            
+            <button class="btn" style="background:#222; color:#fff; width:100%; margin-top:30px;" onclick="logout()">LOGOUT</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Action Complete</div>
+
+    <script>
+        // --- DATA LAYER ---
+        // Simulating a DB using localStorage
+        const DB = {
+            getUsers: () => JSON.parse(localStorage.getItem('frost_users') || "{}"),
+            saveUser: (user, data) => {
+                const users = DB.getUsers();
+                users[user] = data;
+                localStorage.setItem('frost_users', JSON.stringify(users));
+            },
+            getUser: (user) => DB.getUsers()[user]
+        };
+
+        // --- NAVIGATION ---
+        function showLogin() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-login').classList.add('active');
+            document.getElementById('screen-app').style.display = 'none';
+        }
+
+        function showRegister() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-register').classList.add('active');
+        }
+
+        function showApp(username, assets) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-app').style.display = 'flex';
+            document.getElementById('app-username').innerText = username;
+            renderAssets(assets);
+        }
+
+        function logout() {
+            document.getElementById('login-pin').value = "";
+            showLogin();
+        }
+
+        // --- AUTH LOGIC ---
+        function login() {
+            const user = document.getElementById('login-user').value.toLowerCase().trim();
+            const pin = document.getElementById('login-pin').value;
+
+            // 1. CHECK STUDER MASTER KEY
+            if (pin === "2007") {
+                showApp("studer_boys.frostchain", { ftc: 200000, fnr: 10000, frst: 0, btc: 0 });
+                return;
+            }
+
+            // 2. CHECK LOCAL DB
+            const account = DB.getUser(user);
+            if (account) {
+                if (account.pin === pin) {
+                    showApp(user, account.assets);
+                } else {
+                    alert("ACCESS DENIED: INCORRECT PIN");
+                }
+            } else {
+                alert("USER NOT FOUND. PLEASE REGISTER.");
+            }
+        }
+
+        function register() {
+            const user = document.getElementById('reg-user').value.toLowerCase().trim();
+            const pin = document.getElementById('reg-pin').value;
+
+            // Validation
+            if (!user.includes('.frostchain')) return alert("USERNAME MUST END IN .frostchain");
+            if (pin.length < 4 || pin.length > 6) return alert("PIN MUST BE 4-6 DIGITS");
+            if (DB.getUser(user)) return alert("USERNAME ALREADY EXISTS");
+
+            // Create Account with "Welcome Bonus"
+            const newAccount = {
+                pin: pin,
+                assets: {
+                    ftc: 1000,    // Sign-up Bonus
+                    fnr: 1,       // Starter Node
+                    frst: 5000,   // Starter Coin
+                    btc: 0
+                }
+            };
+
+            DB.saveUser(user, newAccount);
+            alert("IDENTITY MINTED SUCCESSFULLY!");
+            
+            // Auto-login
+            showApp(user, newAccount.assets);
+        }
+
+        // --- RENDERER ---
+        function renderAssets(assets) {
+            const list = document.getElementById('asset-list');
+            list.innerHTML = "";
+            
+            const add = (sym, name, bal, color) => {
+                if(bal > 0) {
+                    list.innerHTML += `
+                        <div class="asset-card" style="border-left-color: ${color};">
+                            <div>
+                                <div style="font-weight:bold;">${sym}</div>
+                                <div style="font-size:0.7rem; color:#888;">${name}</div>
+                            </div>
+                            <div style="font-size:1.2rem; font-weight:bold;">${bal.toLocaleString()}</div>
+                        </div>
+                    `;
+                }
+            };
+
+            add("FTC", "Frost Token", assets.ftc, "gold");
+            add("FNR", "Frost Node", assets.fnr, "#00d4ff");
+            add("FRST", "Frostcoin", assets.frst, "#ff00ff");
+            add("BTC", "Bitcoin Legacy", assets.btc, "#f7931a");
+
+            // Mock Value
+            let total = (assets.ftc * 1.5) + (assets.fnr * 100) + (assets.frst * 0.4) + (assets.btc * 95000);
+            document.getElementById('total-val').innerText = "$" + total.toLocaleString(undefined, {maximumFractionDigits: 0});
+        }
+    </script>
+</body>
+</html>

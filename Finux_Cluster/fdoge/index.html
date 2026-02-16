@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>FDOGE // FROST_DOGE_WRAPPER</title>
+<style>
+  :root { --bg: #000; --purple: #b026ff; --doge: #ffb100; --cyan: #00fbff; --green: #00ff41; }
+  body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; margin: 0; padding: 20px; }
+  
+  .wrapper-panel { border: 2px solid var(--doge); background: #0a0a05; padding: 30px; border-radius: 12px; max-width: 700px; margin: 0 auto; box-shadow: 0 0 30px rgba(255, 177, 0, 0.1); }
+  .ticker { font-size: 3.5em; font-weight: 900; color: var(--doge); text-align: center; margin: 20px 0; letter-spacing: -2px; }
+  
+  .conversion-box { background: #111; border: 1px solid #333; padding: 20px; border-radius: 8px; display: flex; justify-content: space-around; align-items: center; }
+  .unit { text-align: center; }
+  .unit-val { font-size: 20px; color: var(--cyan); font-weight: bold; }
+
+  .log { background: #000; color: var(--green); padding: 15px; border-radius: 4px; font-size: 10px; height: 120px; overflow-y: auto; margin-top: 20px; border: 1px solid #222; }
+</style>
+</head>
+<body onload="initFDOGE()">
+
+<div class="wrapper-panel">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="font-weight:900; color:var(--purple); letter-spacing:3px;">FROSTCHAIN // FDOGE_CORE</div>
+    <div style="font-size: 10px; color: var(--doge);">SATOSHI_COLLATERAL_ACTIVE</div>
+  </div>
+
+  <div class="ticker">1 FNR : 1,000 FDOGE</div>
+
+  <div class="conversion-box">
+    <div class="unit"><span>FNR_RESERVE</span><br><span class="unit-val">33,000,000</span></div>
+    <div style="font-size: 30px;">→</div>
+    <div class="unit"><span>FDOGE_SUPPLY</span><br><span class="unit-val" style="color:var(--doge)">33,000,000,000</span></div>
+  </div>
+
+  <div style="text-align:center; margin-top:20px; font-size: 12px; color: #888;">
+    DOGE_MARKET_PRICE (Feb 2026): <span style="color:var(--green)">$0.0925</span> | FDOGE_UNIT_VALUE: <span style="color:var(--cyan)">$0.0000925</span>
+  </div>
+
+  <div class="log" id="log">
+    > INITIATING_FDOGE_WRAPPER_v6.6...<br>
+    > BINDING_XMR_OPAQUE_ADDRESSES_TO_DOGE_TUNNEL...<br>
+    > SIGNING_WITH_SATOSHI_F-ORIGIN_KEY...<br>
+    > FDOGE_BOOM_SEQUENCE_ENGAGED.
+  </div>
+
+  <button onclick="mintFDOGE()" style="width:100%; margin-top:20px; background:var(--doge); border:none; padding:15px; font-weight:bold; cursor:pointer; border-radius:4px;">MINT_FDOGE_REWARDS</button>
+</div>
+
+<script>
+  function initFDOGE() { console.log("FDOGE_TERMINAL_ONLINE"); }
+  function mintFDOGE() {
+    const log = document.getElementById('log');
+    log.innerHTML += "<br>> MINTING_REWARDS...<br>> WRAPPING_FNR_AS_FDOGE...<br>> SUCCESS: FDOGE_SENT_TO_FEATHER_FROST_WALLET.";
+  }
+</script>
+</body>
+</html>

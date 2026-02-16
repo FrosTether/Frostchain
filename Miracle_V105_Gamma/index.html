@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+    <title>MIRACLE // V105_GAMMA</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+        :root{--bg:#000;--miracle:#ffd700;--blue:#00e0ff;--pink:#ff69b4;--gamma:#0f0;}
+        body, html{margin:0;padding:0;width:100%;height:100%;background:var(--bg);color:#eee;font-family:"Share Tech Mono",monospace;overflow:hidden;touch-action:none;}
+        canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
+        #master-ui{position:absolute;z-index:10;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;pointer-events:none;}
+        .master-toggle{width:260px;padding:45px;background:rgba(0,0,0,0.9);border:2px solid var(--miracle);border-radius:100px;text-align:center;cursor:pointer;pointer-events:auto;transition:0.4s;backdrop-filter:blur(15px);}
+        .master-toggle.active{border-color:var(--pink);box-shadow:0 0 100px var(--pink);transform:scale(0.8);background:rgba(255,105,180,0.05);}
+        .stat-overlay{position:absolute;bottom:30px;left:30px;font-size:10px;color:var(--blue);pointer-events:none;}
+    </style>
+</head>
+<body>
+    <canvas id="tangleViz"></canvas>
+    <div id="master-ui">
+        <div id="mainToggle" class="master-toggle" onclick="engageAll()">
+            <div id="toggleLabel" style="font-size:18px;letter-spacing:5px;color:var(--miracle);">INITIALIZE</div>
+            <div style="font-size:8px;margin-top:10px;color:#555;">WAKELOCK + PINK + 40Hz_TOUCH</div>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx, gammaOsc, gammaGain, isEngaged = false;
+        const canvas = document.getElementById('tangleViz');
+        const ctx = canvas.getContext('2d');
+        const ennead = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+
+        async function engageAll() {
+            if(isEngaged) return;
+            try {
+                if ('wakeLock' in navigator) await navigator.wakeLock.request('screen');
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Base Pink Noise
+                const bufferSize = 4096;
+                let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+                const pinkNode = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+                pinkNode.onaudioprocess = (e) => {
+                    let out = e.outputBuffer.getChannelData(0);
+                    for (let i=0; i<bufferSize; i++) {
+                        let w = Math.random()*2-1;
+                        b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
+                        out[i] = (b0+b1+w*0.5362)*0.03;
+                    }
+                };
+
+                // Solfeggio & Magic
+                const fL = ennead[Math.floor(Math.random()*ennead.length)];
+                const oscL = audioCtx.createOscillator(); oscL.frequency.value = fL;
+                const oscR = audioCtx.createOscillator(); oscR.frequency.value = fL + 11.11;
+                const osc888 = audioCtx.createOscillator(); osc888.frequency.value = 888;
+                const mGain = audioCtx.createGain(); mGain.gain.value = 0.008;
+
+                // 40Hz Gamma Interactive
+                gammaOsc = audioCtx.createOscillator();
+                gammaGain = audioCtx.createGain();
+                gammaOsc.frequency.value = 40;
+                gammaGain.gain.value = 0;
+                gammaOsc.connect(gammaGain);
+                gammaGain.connect(audioCtx.destination);
+                gammaOsc.start();
+
+                const merger = audioCtx.createChannelMerger(2);
+                oscL.connect(merger, 0, 0); oscR.connect(merger, 0, 1);
+                merger.connect(audioCtx.destination);
+                osc888.connect(mGain); mGain.connect(audioCtx.destination);
+                pinkNode.connect(audioCtx.destination);
+
+                [oscL, oscR, osc888].forEach(o => o.start());
+                if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+
+                isEngaged = true;
+                document.getElementById('mainToggle').classList.add('active');
+                document.getElementById('toggleLabel').innerText = "GAMMA_ACTIVE";
+                document.getElementById('toggleLabel').style.color = "var(--pink)";
+            } catch(e) {}
+        }
+
+        // Touch Interactivity for 40Hz
+        window.addEventListener('mousedown', () => { if(isEngaged) gammaGain.gain.setTargetAtTime(0.1, audioCtx.currentTime, 0.05); });
+        window.addEventListener('mouseup', () => { if(isEngaged) gammaGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05); });
+        window.addEventListener('touchstart', (e) => { 
+            if(isEngaged) gammaGain.gain.setTargetAtTime(0.1, audioCtx.currentTime, 0.05);
+            touchPos = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+        });
+        window.addEventListener('touchend', () => { if(isEngaged) gammaGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05); touchPos = null; });
+
+        let nodes = [], touchPos = null;
+        function init() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            nodes = [];
+            for(let i=0; i<100; i++) nodes.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:Math.random()-0.5, vy:Math.random()-0.5});
+        }
+
+        function draw() {
+            ctx.fillStyle = isEngaged ? "rgba(0,0,0,0.2)" : "#000";
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+            nodes.forEach((n, i) => {
+                let speed = isEngaged ? 3 : 0.5;
+                if (touchPos) {
+                    let d = Math.hypot(n.x - touchPos.x, n.y - touchPos.y);
+                    if (d < 100) speed = 15; // 40Hz Vibration Effect
+                }
+                n.x += n.vx * speed; n.y += n.vy * speed;
+                if(n.x<0 || n.x>canvas.width) n.vx*=-1; if(n.y<0 || n.y>canvas.height) n.vy*=-1;
+
+                nodes.forEach((n2, j) => {
+                    if(i === j) return;
+                    let dist = Math.hypot(n.x - n2.x, n.y - n2.y);
+                    if(dist < 120) {
+                        ctx.strokeStyle = isEngaged ? `rgba(255, 105, 180, ${1 - dist/120})` : `rgba(0, 224, 255, 0.1)`;
+                        ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n2.x, n2.y); ctx.stroke();
+                    }
+                });
+                ctx.fillStyle = isEngaged ? "var(--pink)" : "var(--blue)";
+                ctx.beginPath(); ctx.arc(n.x, n.y, 1, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        window.onresize = init; init(); draw();
+    </script>
+</body>
+</html>

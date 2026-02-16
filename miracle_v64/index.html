@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | .frostchain Registrar</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --gold: #ffd700; --kane: #d400ff; --cyan: #00ffff; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        #app { display: grid; grid-template-rows: 60px 1fr 120px; height: 100vh; max-width: 1200px; margin: 0 auto; border-left: 1px solid #222; border-right: 1px solid #222; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 2px solid var(--term); background: #000; }
+        
+        .main { display: grid; grid-template-columns: 350px 1fr; gap: 2px; background: #222; overflow: hidden; }
+        .panel { background: #000; padding: 20px; overflow-y: auto; }
+
+        /* REGISTRAR */
+        .id-box { background: #0a0a0a; border: 1px solid #333; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .input-wrap { display: flex; align-items: center; background: #000; border: 1px solid #444; padding-right: 10px; margin-top: 10px; }
+        input { background: transparent; border: none; color: var(--cyan); padding: 12px; width: 100%; font-family: inherit; font-size: 1rem; outline: none; }
+        .suffix { color: #555; font-weight: bold; }
+        
+        .verified-badge { font-size: 0.6rem; color: var(--cyan); border: 1px solid var(--cyan); padding: 2px 5px; border-radius: 3px; display: none; margin-top: 10px; text-align: center; }
+
+        /* SHARED LIST */
+        .m-name { color: var(--cyan); font-weight: bold; }
+        .miner-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #111; font-size: 0.75rem; }
+
+        .footer { border-top: 1px solid #333; display: grid; grid-template-columns: 1fr 1fr; background: #000; }
+        .log { padding: 10px 20px; font-size: 0.65rem; color: #555; overflow-y: auto; }
+        .lbl { font-size: 0.6rem; color: #444; text-transform: uppercase; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div style="font-weight:bold; font-size:1.2rem;">MIRACLE NODE <span style="color:var(--cyan);">REGISTRAR</span></div>
+            <div style="text-align:right;">
+                <div class="lbl">FROSTCHAIN_NETWORK</div>
+                <div style="color:var(--term); font-size:0.7rem;">BLOCK_SYNC: 100%</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="id-box">
+                    <div class="lbl">IDENTITY_REGISTRAR</div>
+                    <div class="input-wrap">
+                        <input type="text" id="domain" placeholder="enter_name" oninput="validateDomain()">
+                        <span class="suffix">.frostchain</span>
+                    </div>
+                    <div id="badge" class="verified-badge">DOMAIN_VERIFIED</div>
+                </div>
+
+                <div class="id-box" style="border-color: var(--kane);">
+                    <div class="lbl">VAULT_LOCK</div>
+                    <div id="ftc-bal" style="font-size:1.2rem; font-weight:bold; color:#fff; margin-top:10px;">0.00 FTC</div>
+                    <label for="wallet-upload" style="display:block; background:var(--term); color:#000; padding:10px; text-align:center; margin-top:15px; cursor:pointer; font-weight:bold; font-size:0.7rem;">UPLOAD WALLET.DAT</label>
+                    <input type="file" id="wallet-upload" style="display:none;" onchange="registerHandle(this)">
+                </div>
+            </div>
+
+            <div class="panel" style="border-left:1px solid #222;">
+                <div class="lbl">REGISTERED_NETWORK_MINERS</div>
+                <div id="m-list" style="margin-top:15px;">
+                    <div class="miner-row"><span class="m-name">satoshi.frostchain</span><span>42.8 EH/s</span></div>
+                    <div class="miner-row"><span class="m-name">kane.frostchain</span><span>25.5 PH/s</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="log" id="log">> Initializing Frostchain Nameserver Sync...</div>
+            <div style="padding:10px 20px; text-align:right;">
+                <div class="lbl">GLOBAL_CLOCK</div>
+                <div style="font-size:2.5rem; color:#fff;" id="timer">300</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function validateDomain() {
+            const domain = document.getElementById('domain').value;
+            const badge = document.getElementById('badge');
+            if(domain.length > 2) {
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function registerHandle(input) {
+            const domain = document.getElementById('domain').value;
+            if(!domain) { alert("Please enter a .frostchain name first."); return; }
+            
+            const log = document.getElementById('log');
+            const handle = domain + ".frostchain";
+            
+            log.innerHTML += `<div>> Linking ${handle} to local wallet entropy...</div>`;
+            
+            setTimeout(() => {
+                document.getElementById('ftc-bal').innerText = "11,870,000.01 FTC";
+                log.innerHTML += `<div style="color:var(--term)">> Success. ${handle} is now a registered node.</div>`;
+                
+                const row = document.createElement('div');
+                row.className = 'miner-row';
+                row.innerHTML = `<span class="m-name">${handle}</span><span>1.25 PH/s</span>`;
+                document.getElementById('m-list').appendChild(row);
+            }, 1200);
+        }
+
+        let t = 300;
+        setInterval(() => {
+            t--; if(t<0) t=300;
+            document.getElementById('timer').innerText = t;
+        }, 1000);
+    </script>
+</body>
+</html>

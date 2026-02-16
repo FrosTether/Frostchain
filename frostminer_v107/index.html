@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FrostMiner | Unified Engine</title>
+    <style>
+        :root { 
+            --bg: #010105; --ice: #00ffff; --term: #00ff41; --xmr: #ff6600; 
+            --btc: #f7931a; --bch: #8dc351; --fail: #ff3333;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        /* UNIFIED HDR TANGLE */
+        #tangle-canvas { position: fixed; inset: 0; z-index: -1; opacity: 0.5; filter: blur(1px); }
+        .hdr-overlay { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, rgba(0,255,255,0.03) 0%, transparent 80%); }
+
+        /* UI STRUCTURE */
+        #dashboard { width: 98%; height: 95vh; display: grid; grid-template-rows: 90px 1fr 50px; gap: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(0,0,0,0.85); border-bottom: 1px solid rgba(0,255,255,0.2); backdrop-filter: blur(10px); }
+        .main { display: grid; grid-template-columns: 420px 1fr 420px; gap: 20px; padding: 15px; overflow: hidden; }
+
+        /* PANELS */
+        .panel { background: rgba(10, 15, 25, 0.9); border: 1px solid rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; backdrop-filter: blur(15px); display: flex; flex-direction: column; box-shadow: 0 15px 40px rgba(0,0,0,0.5); }
+        
+        .stat-lbl { font-size: 0.6rem; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-val { font-size: 2.2rem; font-weight: 900; color: #fff; }
+
+        /* DICE BOT INTERFACE */
+        .dice-box { text-align: center; border: 1px solid var(--ice); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .dice { width: 50px; height: 50px; border: 2px solid var(--ice); display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; cursor: pointer; border-radius: 8px; box-shadow: 0 0 15px var(--ice); transition: 0.2s; }
+        .dice.roll { animation: rot 0.4s infinite; }
+        @keyframes rot { 100% { transform: rotate(360deg); } }
+
+        /* SHADOW METER */
+        .shadow-tag { border: 1px solid var(--xmr); padding: 15px; border-radius: 12px; background: rgba(255,102,0,0.05); text-align: center; margin-bottom: 15px; }
+        
+        .asset-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #222; font-size: 0.8rem; }
+        #log { margin-top: auto; font-size: 0.55rem; color: #444; height: 100px; overflow: hidden; line-height: 1.5; border-top: 1px solid #222; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="hdr-overlay"></div>
+    <canvas id="tangle-canvas"></canvas>
+
+    <div id="dashboard">
+        <div class="header">
+            <div>
+                <div class="stat-lbl">Unified Hardware Engine</div>
+                <div style="font-size: 1.8rem; font-weight: 900; letter-spacing: 5px;">FROST<span style="color:var(--ice)">MINER</span></div>
+            </div>
+            <div style="text-align: right;">
+                <div class="stat-lbl" style="color:var(--term);">DRAKE QUORUM x1.05 ACTIVE</div>
+                <div class="stat-val" id="total-hash" style="font-size: 1.8rem;">842.11 PH/s</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="panel">
+                <div class="stat-lbl" style="color:var(--ice)">Public Pool Performance</div>
+                <div class="stat-val" style="font-size: 1.8rem; margin-bottom: 20px;">731.25 PH/s</div>
+                
+                <div class="shadow-tag">
+                    <div class="stat-lbl" style="color:var(--xmr)">Shadow Diversion (XMR)</div>
+                    <div style="font-size: 2rem; font-weight: 900; color:var(--xmr);">13.37%</div>
+                </div>
+
+                <div class="asset-row"><span>Bitcoin (BTC)</span><span style="color:var(--btc)">450.00</span></div>
+                <div class="asset-row"><span>Bitcoin Cash (BCH)</span><span style="color:var(--bch)">2,100.00</span></div>
+
+                <div id="log-public" id="log">
+                    <div>> Global rigs syncing to 741.frostchain...</div>
+                    <div>> 13.37% Diversion active.</div>
+                </div>
+            </div>
+
+            <div></div>
+
+            <div class="panel">
+                <div class="stat-lbl" style="color:var(--xmr)">Joey Bones Dice Bot</div>
+                <div class="dice-box">
+                    <div id="dice" class="dice" onclick="roll()">?</div>
+                    <div style="margin-top:10px; font-size: 0.6rem; color: var(--ice);">ROLL FOR SHADOW INJECTION</div>
+                </div>
+
+                <div class="stat-group" style="margin-bottom:20px;">
+                    <div class="stat-lbl" style="color:var(--xmr)">Private XMR Settlement</div>
+                    <div class="stat-val" id="xmr-val" style="color:var(--xmr); font-size:1.5rem;">0.000000</div>
+                    <div style="font-size:0.4rem; color:#444; word-break:break-all; margin-top:5px;">4AEreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab</div>
+                </div>
+
+                <div id="log-private" style="margin-top:auto; font-size: 0.55rem; color: #444; height: 100px; overflow:hidden;">
+                    <div>> Shadow Layer: drfrost.frostchain</div>
+                    <div>> Newkirk Key: Verified</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer" style="padding: 0 40px; background: rgba(0,0,0,0.95); border-top: 1px solid #222; display:flex; align-items:center; justify-content:space-between; font-size: 0.6rem; color: #444;">
+            <div>FROSTMINER // v107.0 // UNIFIED SOVEREIGN ENGINE</div>
+            <div>STATUS: CONVERGED</div>
+        </div>
+    </div>
+
+    <script>
+        let xmr = 0;
+        let bch = 2100.00;
+
+        function roll() {
+            const d = document.getElementById('dice');
+            d.classList.add('roll');
+            setTimeout(() => {
+                d.classList.remove('roll');
+                const r = Math.floor(Math.random() * 6) + 1;
+                d.innerText = r;
+                
+                // JOEY BONES x DRAKE QUORUM x1.05
+                const boost = (r * 0.5) * 1.05;
+                const log = document.getElementById('log-private');
+                const div = document.createElement('div');
+                div.innerText = `> Dice Roll ${r}: Injected ${boost.toFixed(4)} wBCH (DQ x1.05)`;
+                div.style.color = "var(--term)";
+                log.prepend(div);
+            }, 500);
+        }
+
+        function update() {
+            const hash = 842.11 + (Math.random() - 0.5) * 10;
+            document.getElementById('total-hash').innerText = hash.toFixed(2) + " PH/s";
+            
+            xmr += (hash * 0.00000002);
+            document.getElementById('xmr-val').innerText = xmr.toFixed(8);
+        }
+        setInterval(update, 2000); update();
+
+        // --- UNIFIED TANGLE VISUALS ---
+        const canvas = document.getElementById('tangle-canvas');
+        const x = canvas.getContext('2d');
+        let pts = [];
+        function init() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            for(let i=0; i<100; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.2, vy: (Math.random()-0.5)*0.2 });
+        }
+        function draw() {
+            x.clearRect(0,0,canvas.width,canvas.height);
+            pts.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                pts.slice(i+1).forEach(p2 => {
+                    const d = Math.hypot(p.x-p2.x, p.y-p2.y);
+                    if(d < 200) {
+                        x.strokeStyle = `rgba(0,255,255,${0.1 * (1-d/200)})`;
+                        x.beginPath(); x.moveTo(p.x,p.y); x.lineTo(p2.x,p2.y); x.stroke();
+                    }
+                });
+            });
+            requestAnimationFrame(draw);
+        }
+        init(); draw(); window.onresize = init;
+    </script>
+</body>
+</html>

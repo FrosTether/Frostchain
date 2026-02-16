@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grayson's Smart Wallet</title>
+    <style>
+        :root { --bg: #000; --accent: #00ff41; --panel: #111; --text: #eee; --err: #ff0055; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; overflow-x: hidden; }
+
+        /* ANIMATED LOGIN SCREEN */
+        #login-view { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle at center, #111 0%, #000 70%); }
+        
+        .logo-box { border: 2px solid var(--accent); padding: 20px; box-shadow: 0 0 20px var(--accent); margin-bottom: 40px; background: rgba(0,255,65,0.05); }
+        .logo { font-size: 2rem; font-weight: bold; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        
+        .bio-btn { 
+            width: 80px; height: 80px; 
+            border: 2px solid var(--accent); 
+            border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; 
+            margin: 20px;
+            transition: all 0.3s ease;
+            background: #000;
+        }
+        .bio-btn:active { transform: scale(0.9); background: var(--accent); }
+        .bio-btn svg { fill: var(--accent); width: 40px; height: 40px; }
+        .bio-btn:active svg { fill: #000; }
+
+        .status-text { color: #555; margin-top: 20px; font-size: 0.8rem; height: 20px; }
+        
+        /* DASHBOARD STYLES */
+        #dashboard { display: none; padding: 20px; }
+        .card { background: #111; border-radius: 15px; padding: 20px; margin-bottom: 15px; border-left: 4px solid var(--accent); }
+        .balance { font-size: 2.2rem; font-weight: bold; color: #fff; }
+        .sub-bal { color: #888; font-size: 0.9rem; }
+        
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .act-btn { background: #222; color: #fff; border: 1px solid #333; padding: 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .act-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    </style>
+</head>
+<body>
+
+    <div id="login-view">
+        <div class="logo-box">
+            <div class="logo">Grayson's<br>Smart Wallet</div>
+        </div>
+
+        <p style="color: #888; font-size: 0.8rem;">TOUCH SENSOR TO UNLOCK</p>
+
+        <div class="bio-btn" onclick="triggerBiometric()">
+            <svg viewBox="0 0 24 24">
+                <path d="M17.81 4.47c-.08 0-.16-.02-.23-.06C15.66 3.42 14 3 12.01 3c-1.98 0-3.86.47-5.57 1.41-.24.13-.54.04-.68-.2-.13-.24-.04-.55.2-.68C7.82 2.52 9.86 2 12.01 2c2.13 0 3.99.47 6.03 1.52.25.13.34.43.21.67-.09.18-.26.28-.44.28zM3.5 9.72c-.1 0-.2-.03-.29-.09-.23-.16-.28-.47-.12-.7.99-1.4 2.25-2.5 3.75-3.27C9.98 4.04 14 4.03 17.15 5.65c1.5.77 2.76 1.86 3.75 3.25.16.22.11.54-.12.7-.23.16-.54.11-.7-.12-.9-1.26-2.04-2.25-3.39-2.94-2.87-1.47-6.54-1.47-9.4.01-1.36.7-2.5 1.7-3.4 2.96-.08.14-.23.21-.39.21zm6.25 12.07c-.13 0-.26-.05-.35-.15-.87-.87-1.34-1.43-2.01-2.64-.69-1.23-1.05-2.73-1.05-4.34 0-2.97 2.54-5.39 5.66-5.39s5.66 2.42 5.66 5.39c0 .28-.22.5-.5.5s-.5-.22-.5-.5c0-2.42-2.09-4.39-4.66-4.39-2.57 0-4.66 1.97-4.66 4.39 0 1.44.32 2.77.93 3.85.64 1.15 1.08 1.64 1.85 2.42.19.2.19.51 0 .71-.11.1-.24.15-.37.15zm7.17-1.85c-1.19 0-2.24-.3-3.1-.89-1.49-1.01-2.38-2.65-2.38-4.39 0-.28.22-.5.5-.5s.5.22.5.5c0 1.41.72 2.74 1.94 3.56.71.48 1.54.71 2.54.71.24 0 .64-.03 1.04-.1.27-.05.53.13.58.41.05.27-.13.53-.41.58-.57.11-1.07.12-1.21.12zM14.91 22c-.04 0-.09-.01-.13-.02-1.59-.44-2.63-1.03-3.72-2.1-1.4-1.39-2.17-3.24-2.17-5.22 0-1.62 1.38-2.94 3.08-2.94 1.7 0 3.08 1.32 3.08 2.94 0 1.07.93 1.94 2.08 1.94.12 0 .24-.02.36-.06.27-.08.55.08.63.35.09.28-.08.56-.35.63-.31.09-.63.12-.95.12-1.7 0-3.08-1.27-3.08-2.94 0-1.07-.93-1.94-2.08-1.94-1.15 0-2.08.87-2.08 1.94 0 1.71.66 3.31 1.87 4.51.95.94 1.86 1.46 3.27 1.85.27.07.42.35.35.62-.05.23-.26.38-.47.38z"/>
+            </svg>
+        </div>
+        
+        <input type="password" id="pin-fallback" placeholder="OR ENTER PIN" style="background:#111; border:1px solid #333; color:#fff; text-align:center; padding:10px; width:150px; margin-top:20px;">
+        <div id="status" class="status-text">SYSTEM SECURE</div>
+    </div>
+
+    <div id="dashboard">
+        <div style="display:flex; justify-content:space-between; color:var(--accent);">
+            <span>drfrost.frostchain</span>
+            <span>MN: ACTIVE</span>
+        </div>
+
+        <div class="card" style="margin-top:20px; text-align:center;">
+            <div class="sub-bal">TOTAL BALANCE</div>
+            <div class="balance">20,069</div>
+            <div style="color:#00ff41;">+3.1M FRST (STAKING)</div>
+        </div>
+
+        <div class="card">
+            <div style="font-weight:bold; color:#fff; margin-bottom:10px;">RECENT ACTIVITY</div>
+            <div style="font-size:0.8rem; color:#888;">
+                <div>► RECEIVED 200,000 FTC</div>
+                <div style="border-top:1px solid #222; margin:5px 0;"></div>
+                <div>► MINED 0.4 XMR</div>
+            </div>
+        </div>
+
+        <div class="action-grid">
+            <button class="act-btn" onclick="alert('Scanning Chain...')">SEND</button>
+            <button class="act-btn" onclick="alert('Address Copied')">RECEIVE</button>
+            <button class="act-btn" onclick="location.reload()">LOCK</button>
+            <button class="act-btn" style="color:var(--accent);">MINER</button>
+        </div>
+    </div>
+
+    <script>
+        // HARDWARE BRIDGE
+        const BRIDGE_URL = "http://127.0.0.1:8082/api/cli";
+
+        async function triggerBiometric() {
+            const status = document.getElementById('status');
+            status.innerText = "WAITING FOR FINGERPRINT...";
+            status.style.color = "#00ff41";
+
+            try {
+                // Call the new biometric command on local bridge
+                const response = await fetch(BRIDGE_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ cmd: "biometric-auth" })
+                });
+
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    status.innerText = "IDENTITY VERIFIED";
+                    setTimeout(unlockWallet, 500);
+                } else {
+                    status.innerText = "SCAN FAILED / NO MATCH";
+                    status.style.color = "red";
+                }
+            } catch (e) {
+                // Fallback for demo/offline
+                status.innerText = "BRIDGE ERROR: USE PIN";
+                status.style.color = "orange";
+            }
+        }
+
+        function unlockWallet() {
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+        }
+
+        // PIN Fallback Listener
+        document.getElementById('pin-fallback').addEventListener('keyup', function(e) {
+            if (e.target.value === '4838153' || e.target.value === '1337') {
+                unlockWallet();
+            }
+        });
+    </script>
+</body>
+</html>

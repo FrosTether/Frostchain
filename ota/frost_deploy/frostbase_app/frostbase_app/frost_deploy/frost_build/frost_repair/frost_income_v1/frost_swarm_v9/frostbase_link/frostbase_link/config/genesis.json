@@ -1,0 +1,26 @@
+{
+  "chain_id": "frostchain-1337",
+  "consensus": "iota_dag_hybrid_bch",
+  "block_time_seconds": 300,
+  "sync_overlap_seconds": 4,
+  "total_supplies": {
+    "FTC": 100000000,
+    "FNR": 33000000,
+    "AMD": 12000000000,
+    "FRST": "unlimited_doge_pi_peg"
+  },
+  "premine_allocations": {
+    "wallet": "voluntaryistj_main",
+    "percentage": "13.37%",
+    "balances": {
+      "FTC": 11870000.01,
+      "FNR": 4412100.00,
+      "AMD": 404400000.00,
+      "FRST": 3145900.00
+    }
+  },
+  "governance": {
+    "pricing_formula": "DOGE_PRICE * 3.14159",
+    "minting_authority": "solfeggio_frequencies"
+  }
+}

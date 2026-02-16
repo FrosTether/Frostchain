@@ -1,0 +1,4 @@
+nohup: ignoring input
+[2026-02-12 08:35:27.897] unable to open "/data/data/com.termux/files/home/.xmrig.json".
+[2026-02-12 08:35:27.898] unable to open "/data/data/com.termux/files/home/.config/xmrig.json".
+[2026-02-12 08:35:27.898] no valid configuration found, try https://xmrig.com/wizard

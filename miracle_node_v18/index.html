@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miracle Node | v18 Trifecta</title>
+    <style>
+        :root { --bg: #000; --term: #00ff41; --cyan: #00ffff; --pink: #ff00ff; --gold: #ffd700; --blue: #00d4ff; }
+        body { margin: 0; background: var(--bg); color: var(--term); font-family: 'Courier New', monospace; overflow: hidden; }
+        
+        /* GATE */
+        #gate { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gate-box { border: 2px solid var(--blue); padding: 30px; width: 320px; text-align: center; background: #050505; box-shadow: 0 0 20px var(--blue); }
+        input { width: 90%; background: #111; border: 1px solid #333; color: #fff; padding: 12px; margin-bottom: 15px; font-family: inherit; text-align: center; outline: none; }
+        
+        /* LAYOUT */
+        #dash { display: none; height: 100vh; grid-template-columns: 350px 1fr; grid-template-rows: 60px 1fr 220px; }
+        #tangle-bg { position: absolute; inset: 0; z-index: 0; opacity: 0.15; }
+
+        .header { grid-column: 1 / -1; background: rgba(0,0,0,0.9); border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; }
+        .sidebar { background: rgba(5,5,5,0.95); border-right: 1px solid #222; padding: 20px; z-index: 10; display: flex; flex-direction: column; }
+
+        /* REWARDS CARDS */
+        .reward-card { border-left: 4px solid #fff; background: #111; padding: 12px; margin-bottom: 10px; }
+        .reward-val { font-size: 1.3rem; font-weight: bold; color: #fff; }
+        .reward-lbl { font-size: 0.6rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* EXPLORER */
+        .explorer { grid-column: 1 / -1; background: #000; border-top: 2px solid var(--blue); display: grid; grid-template-columns: 1fr 1.5fr; gap: 10px; padding: 10px; z-index: 10; }
+        .feed { background: #050505; border: 1px solid #222; height: 180px; overflow-y: auto; font-size: 0.7rem; padding: 10px; }
+        .log-line { display: flex; justify-content: space-between; padding: 4px; border-bottom: 1px solid #111; animation: slideIn 0.3s; }
+        @keyframes slideIn { from { transform: translateX(-10px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <canvas id="tangle-bg"></canvas>
+
+    <div id="gate">
+        <div class="gate-box">
+            <div style="font-size:1.5rem; color:var(--blue); font-weight:bold; margin-bottom:10px;">TRIFECTA NODE</div>
+            <div style="font-size:0.7rem; color:#666; margin-bottom:20px;">SHARE MINING INITIALIZATION</div>
+            <input type="text" id="miner-id" placeholder="identity.frostchain">
+            <button onclick="boot()" style="width:100%; padding:15px; background:var(--blue); border:none; font-weight:bold; cursor:pointer; color:#000;">ENGAGE AUDIO & MINE</button>
+        </div>
+    </div>
+
+    <div id="dash">
+        <div class="header">
+            <div>MINER: <span id="id-disp" style="color:var(--blue);">...</span></div>
+            <div style="font-size:0.7rem; color:var(--term);">CONSENSUS: 300S LOCKED</div>
+        </div>
+
+        <div class="sidebar">
+            <div style="text-align:center; border:1px solid var(--term); padding:10px; margin-bottom:20px; background:#001100;">
+                <div style="font-size:0.6rem; color:var(--term);">NEXT BLOCK COUNTDOWN</div>
+                <div style="font-size:2.2rem; font-weight:bold; color:#fff;" id="timer">300</div>
+            </div>
+
+            <div class="reward-card" style="border-left-color: var(--pink);">
+                <div class="reward-val" id="frst-v">0.00</div>
+                <div class="reward-lbl">FRST Token Reward</div>
+            </div>
+            <div class="reward-card" style="border-left-color: var(--gold);">
+                <div class="reward-val" id="ftc-v">0.00</div>
+                <div class="reward-lbl">FTC Frostcoin Reward</div>
+            </div>
+            <div class="reward-card" style="border-left-color: var(--blue);">
+                <div class="reward-val" id="fnr-v">0.00</div>
+                <div class="reward-lbl">FNR Node Reward (2.5)</div>
+            </div>
+        </div>
+
+        <div style="flex:1;"></div>
+
+        <div class="explorer">
+            <div class="feed">
+                <div style="color:var(--blue); font-size:0.6rem; margin-bottom:5px;">NETWORK BLOCKS</div>
+                <div id="block-feed"></div>
+            </div>
+            <div class="feed">
+                <div style="color:var(--gold); font-size:0.6rem; margin-bottom:5px;">LIVE TRANSFERS & MINING BROADCASTS</div>
+                <div id="tx-feed"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timeLeft = 300;
+        let bal = { frst: 0, ftc: 0, fnr: 0 };
+        let height = 952000;
+
+        function boot() {
+            const id = document.getElementById('miner-id').value;
+            if(id.includes('.frostchain')) {
+                document.getElementById('gate').style.display = 'none';
+                document.getElementById('dash').style.display = 'grid';
+                document.getElementById('id-disp').innerText = id.toUpperCase();
+                startConsensus();
+                initVisuals();
+            }
+        }
+
+        function startConsensus() {
+            setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft;
+                if(timeLeft <= 0) {
+                    mint();
+                    timeLeft = 300;
+                }
+            }, 1000);
+            
+            // Sim Live Network
+            setInterval(() => {
+                if(Math.random() > 0.7) addTX();
+            }, 4000);
+        }
+
+        function mint() {
+            bal.frst += 31415.90;
+            bal.ftc += 13.37;
+            bal.fnr += 2.50; // TRIFECTA REWARD
+
+            document.getElementById('frst-v').innerText = bal.frst.toLocaleString();
+            document.getElementById('ftc-v').innerText = bal.ftc.toFixed(2);
+            document.getElementById('fnr-v').innerText = bal.fnr.toFixed(2);
+
+            addBlock(height++);
+        }
+
+        function addBlock(h) {
+            const f = document.getElementById('block-feed');
+            const d = document.createElement('div');
+            d.className = 'log-line';
+            d.innerHTML = `<span>#${h}</span> <span style="color:var(--blue);">[TRIFECTA_MINT]</span>`;
+            f.prepend(d);
+        }
+
+        function addTX() {
+            const f = document.getElementById('tx-feed');
+            const d = document.createElement('div');
+            const miner = ["XMR_BRIDGE", "BCH_FORK", "ST_BOYS", "DRFROST"][Math.floor(Math.random()*4)];
+            d.className = 'log-line';
+            d.innerHTML = `<span style="color:#444;">SYNC</span> <span>${miner} -> BROADCAST</span>`;
+            f.prepend(d);
+            if(f.children.length > 20) f.removeChild(f.lastChild);
+        }
+
+        function initVisuals() {
+            const c = document.getElementById('tangle-bg');
+            const x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            let p = Array(30).fill().map(()=>({x:Math.random()*c.width, y:Math.random()*c.height, vx:(Math.random()-.5)*2, vy:(Math.random()-.5)*2}));
+            function loop() {
+                x.clearRect(0,0,c.width,c.height);
+                x.strokeStyle='rgba(0,255,65,0.2)';
+                p.forEach(n => {
+                    n.x+=n.vx; n.y+=n.vy;
+                    if(n.x<0||n.x>c.width) n.vx*=-1;
+                    if(n.y<0||n.y>c.height) n.vy*=-1;
+                    p.forEach(n2 => {
+                        if(Math.hypot(n.x-n2.x, n.y-n2.y) < 150) {
+                            x.beginPath(); x.moveTo(n.x,n.y); x.lineTo(n2.x,n2.y); x.stroke();
+                        }
+                    });
+                });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+    </script>
+</body>
+</html>
