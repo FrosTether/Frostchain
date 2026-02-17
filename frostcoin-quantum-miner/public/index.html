@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>❄️ Frostcoin Quantum Miner V13</title>
+    <style>
+        body { margin:0; padding:20px; font-family:monospace; background:#000; color:#0f3; }
+        h1, h2, h3 { color:#0ff; }
+        input, button { background:#111; color:#0f3; border:1px solid #0f3; padding:10px; font-size:1.1em; margin:8px 4px; }
+        button:disabled { opacity:0.4; cursor:not-allowed; }
+        button:hover:not(:disabled) { background:#0f3; color:#000; }
+        #login { position:fixed; inset:0; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; }
+        #dashboard { display:none; max-width:920px; margin:auto; }
+        canvas { border:1px solid #0f3; width:100%; height:320px; background:#000; }
+        #log { height:180px; overflow-y:auto; background:#000; border:1px solid #333; padding:12px; font-size:0.92em; line-height:1.45; white-space:pre-wrap; }
+        .solf { color:#ff0; font-weight:bold; }
+        .block { border-top:1px dashed #ff0; border-bottom:1px dashed #ff0; padding:8px 0; margin:6px 0; }
+        .wallet-box { border:1px solid #0ff; padding:15px; margin:15px 0; background:rgba(0,255,51,0.05); font-size:1.1em; }
+        .premine-note { color:#f93; font-size:0.9em; margin-top:8px; }
+    </style>
+</head>
+<body>
+
+<div id="login">
+    <h1>❄️ FROSTCOIN QUANTUM MINER V13</h1>
+    <p>Proof-of-Resonance • Binaural Solfeggio Consensus</p>
+    <input id="identity" placeholder="yourname.frostchain or name.base.eth" style="width:340px;">
+    <button onclick="gateIdentity()">INITIALIZE ENGINE</button>
+</div>
+
+<div id="dashboard">
+    <h1>❄️ FROSTCOIN NODE ACTIVE</h1>
+    <p>Identity: <span id="id-display" style="color:#ff0;"></span></p>
+    <p>Master Key: KELSEE_NEWKIRK_GENESIS_KEY</p>
+
+    <div class="wallet-box">
+        <h3>Wallet.dat (simulated)</h3>
+        <p>Balance: <span id="balance">0.00</span> FCN</p>
+        <p class="premine-note">Total supply cap: 100,000,000 FCN<br>13.37% premined (13,370,000 FCN) → drfrost.frostchain</p>
+    </div>
+
+    <h3>Select Resonance Mode (required to mine)</h3>
+    <button onclick="setMode('delta')">DELTA (π Hz)</button>
+    <button onclick="setMode('theta')">THETA (7.83 Hz)</button>
+    <button onclick="setMode('alpha')">ALPHA (11.11 Hz)</button>
+    <button onclick="setMode('gamma')">GAMMA (40 Hz)</button>
+
+    <h3>Current Solfeggio Carrier</h3>
+    <p id="carrier">— select mode to begin —</p>
+
+    <button id="mineBtn" disabled onclick="toggleMining()" style="font-size:1.3em; margin:25px 0; padding:16px 40px;">
+        START / STOP MINING
+    </button>
+
+    <h3>Tangle Visualizer (IOTA-style DAG)</h3>
+    <canvas id="tangle"></canvas>
+
+    <h3>Mining Log</h3>
+    <div id="log"></div>
+</div>
+
+<script>
+// CONFIG ────────────────────────────────────────────────
+const NewkirkKey = "KELSEE_NEWKIRK_GENESIS_KEY";
+const Solfeggio = [
+    {hz:174, name:"Security & Pain Relief"}, {hz:285, name:"Restoration"},
+    {hz:396, name:"Liberation"}, {hz:417, name:"Change"},
+    {hz:528, name:"MIRACLE (Genesis / DNA Repair)"},
+    {hz:639, name:"Connection"}, {hz:741, name:"Expression"},
+    {hz:852, name:"Intuition"}, {hz:963, name:"Oneness"}
+];
+const Offsets = {delta: Math.PI, theta: 7.83, alpha: 11.11, gamma: 40};
+let minerID = "";
+let audioCtx, oscA, oscB, noise, gainNode, pannerA, pannerB;
+let currentMode = "";
+let currentCarrier = 528;
+let mining = false;
+let blockTimer, tangleTimer;
+let balance = 0.00;
+
+// ────────────────────────────────────────────────
+// IDENTITY GATE + PREMINE LOG
+// ────────────────────────────────────────────────
+function gateIdentity() {
+    const input = document.getElementById('identity').value.trim();
+    if (input.endsWith('.frostchain') || input.endsWith('.base.eth')) {
+        minerID = input;
+        document.getElementById('id-display').textContent = minerID;
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        log(`🔓 ACCESS GRANTED: ${minerID}`);
+        log(`🔑 ${NewkirkKey} VERIFIED`);
+        log("Premine allocation: 13.37% (13,370,000 FCN) → drfrost.frostchain");
+        log("Remaining supply distributed via resonance mining");
+        initAudio();
+    } else {
+        alert("Identity must end with .frostchain or .base.eth");
+    }
+}
+
+// ────────────────────────────────────────────────
+// AUDIO ENGINE
+// ────────────────────────────────────────────────
+function initAudio() {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = 0.08;
+    gainNode.connect(audioCtx.destination);
+
+    oscA = audioCtx.createOscillator(); oscA.type = 'sine';
+    pannerA = audioCtx.createStereoPanner(); pannerA.pan.value = -1;
+    oscA.connect(pannerA).connect(gainNode);
+
+    oscB = audioCtx.createOscillator(); oscB.type = 'sine';
+    pannerB = audioCtx.createStereoPanner(); pannerB.pan.value = 1;
+    oscB.connect(pannerB).connect(gainNode);
+
+    // Pink noise
+    noise = audioCtx.createBufferSource();
+    const bufSize = audioCtx.sampleRate * 5;
+    const buffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let b = 0;
+    for (let i = 0; i < bufSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b = 0.02 * white + b * 0.98;
+        data[i] = b * 3.5;
+    }
+    noise.buffer = buffer; noise.loop = true;
+    const noiseGain = audioCtx.createGain(); noiseGain.gain.value = 0.015;
+    noise.connect(noiseGain).connect(audioCtx.destination);
+    noise.start();
+
+    updateAudio(); // Initial silent update
+}
+
+function updateAudio() {
+    if (!audioCtx || !currentMode) return;
+    const offset = Offsets[currentMode];
+    oscA.frequency.setValueAtTime(currentCarrier, audioCtx.currentTime);
+    oscB.frequency.setValueAtTime(currentCarrier + offset, audioCtx.currentTime);
+    document.getElementById('carrier').innerHTML = `<span class="solf">${currentCarrier} Hz – ${Solfeggio.find(f=>f.hz===currentCarrier)?.name || 'Unknown'}</span><br>Offset: ${offset.toFixed(2)} Hz (${currentMode.toUpperCase()})`;
+}
+
+function setMode(mode) {
+    currentMode = mode;
+    updateAudio();
+    log(`🧠 Resonance mode set to ${mode.toUpperCase()} (${Offsets[mode]} Hz)`);
+    document.getElementById('mineBtn').disabled = false;
+}
+
+// ────────────────────────────────────────────────
+// MINING LOGIC
+// ────────────────────────────────────────────────
+function toggleMining() {
+    if (!currentMode) return alert("Select a resonance mode first");
+    if (mining) {
+        clearInterval(blockTimer);
+        clearInterval(tangleTimer);
+        audioCtx?.suspend();
+        log("🛑 MINING HALTED");
+        mining = false;
+    } else {
+        audioCtx?.resume();
+        log("🚀 RESONANCE MINING ACTIVE → Rewards sent to " + minerID);
+        tangleTimer = setInterval(() => {
+            log(`⚡ TANGLE SYNC – ${Math.random().toString(36).slice(2,10)} confirmed`);
+        }, 4000);
+
+        blockTimer = setInterval(() => {
+            const choice = Solfeggio[Math.floor(Math.random() * Solfeggio.length)];
+            currentCarrier = choice.hz;
+            updateAudio();
+            balance += 13.37;
+            document.getElementById('balance').textContent = balance.toFixed(2);
+            log(`<span class="block">🏆 BLOCK MINED | REWARD: 13.37 FCN sent to ${minerID} | CARRIER: ${currentCarrier} Hz – ${choice.name}</span>`);
+        }, 300000);
+
+        mining = true;
+    }
+}
+
+// ────────────────────────────────────────────────
+// TANGLE VISUALIZER (same as before)
+// ────────────────────────────────────────────────
+const canvas = document.getElementById('tangle');
+const ctx = canvas.getContext('2d');
+let particles = [];
+for (let i = 0; i < 150; i++) {
+    particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+        vx: (Math.random()-0.5)*1.2, vy: (Math.random()-0.5)*1.2});
+}
+
+function drawTangle() {
+    ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    const speed = {delta:0.4, theta:0.9, alpha:1.4, gamma:2.8}[currentMode || 'alpha'];
+    particles.forEach(p => {
+        p.x += p.vx * speed; p.y += p.vy * speed;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 2.5, 0, Math.PI*2); ctx.fillStyle='#0f3'; ctx.fill();
+    });
+    for (let i = 0; i < particles.length; i++) for (let j = i+1; j < particles.length; j++) {
+        const d = Math.hypot(particles[i].x-particles[j].x, particles[i].y-particles[j].y);
+        if (d < 90) {
+            ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(0,255,51,${0.4 - d/225})`; ctx.stroke();
+        }
+    }
+    requestAnimationFrame(drawTangle);
+}
+drawTangle();
+
+canvas.addEventListener('mousemove', e => {
+    const r = canvas.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    particles.forEach(p => {
+        const d = Math.hypot(p.x-mx, p.y-my);
+        if (d < 120) {
+            const f = (120-d)/120;
+            p.vx += (mx-p.x)*f*0.08; p.vy += (my-p.y)*f*0.08;
+        }
+    });
+});
+
+function log(msg) {
+    const el = document.getElementById('log');
+    el.innerHTML += `> ${new Date().toLocaleTimeString()} | ${msg}<br>`;
+    el.scrollTop = el.scrollHeight;
+}
+</script>
+</body>
+</html>
