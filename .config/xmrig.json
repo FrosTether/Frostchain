@@ -13,8 +13,8 @@
     "pools": [
         {
             "url": "gulf.moneroocean.stream:10128",
-            "user": "4AEreXjDoq8AThWXzWz1Vu4nt7PNL6wPf6sWpsLFgR9b1srgqFDQTsvP6tCwQQ17NeAtMaRwZ5CymSSTqy8dSsZMEVV48Ab",
-            "pass": "Quantum-Solfeggio-963Hz-11.11",
+            "user": "YOUR_POOL_USER",
+            "pass": "YOUR_POOL_PASSWORD",
             "keepalive": true,
             "tls": true
         }

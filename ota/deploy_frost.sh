@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "[-] Building Frost Payload..."
-export KANES_KEY="KANES_WRATH_KEY_V1" 
+export KANES_KEY="${KANES_KEY:?Set KANES_KEY in your environment}"
 node ota_builder.js
 
 echo "[-] Deploying to Surge..."
